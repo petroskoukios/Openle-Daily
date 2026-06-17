@@ -142,6 +142,12 @@ function compare(guess, target) {
   };
 }
 
+function confirmedDepth(state) {
+  let best = state.hintPlies || 0;
+  for (const cmp of state.results) best = Math.max(best, cmp.sharedPlies);
+  return Math.min(best, state.target.moves.length);
+}
+
 /* ---------- 4. Move-notation formatting ---------- */
 function esc(s) { return s.replace(/[&<>]/g, c => ({ "&": "&amp;", "<": "&lt;", ">": "&gt;" }[c])); }
 function trunc(s, n) { return s.length > n ? s.slice(0, n - 1) + "…" : s; }
@@ -194,8 +200,7 @@ function buildTree(state) {
   };
 
   // Deepest confirmed-shared depth across all guesses.
-  let best = 0;
-  for (const cmp of state.results) best = Math.max(best, cmp.sharedPlies);
+  let best = confirmedDepth(state);
 
   let tip = root;
   if (state.solved || state.gaveUp) {
@@ -221,7 +226,7 @@ function buildTree(state) {
 
 function renderTree(state) {
   const el = document.getElementById("tree");
-  if (!state.results.length && !state.solved && !state.gaveUp) {
+  if (!state.results.length && !state.solved && !state.gaveUp && confirmedDepth(state) === 0) {
     el.innerHTML = `<span class="root">Root (starting position)</span>\n` +
       `<span class="conn">└── </span><span class="hint">？ make a guess to grow the tree</span>`;
     return;
@@ -242,7 +247,9 @@ function renderTree(state) {
     }
     if (node === tip && !state.solved && !state.gaveUp && node !== root) {
       const more = state.target.moves.length - node.depth;
-      s += `<span class="tag tag-tip">target continues ↓ (+${more})</span>`;
+      s += more > 0
+        ? `<span class="tag tag-tip">target continues ↓ (+${more})</span>`
+        : `<span class="tag tag-tip">full line found - guess the name</span>`;
     }
     return s;
   };
@@ -301,7 +308,7 @@ function renderBoard(state) {
   // depth shown = deepest confirmed-shared line, or the whole target once finished.
   let depth = 0;
   if (done) depth = tgt.moves.length;
-  else for (const c of state.results) depth = Math.max(depth, c.sharedPlies);
+  else depth = confirmedDepth(state);
 
   const board = OTChess.positionAfter(tgt.moves, depth);
   const prev = OTChess.positionAfter(tgt.moves, Math.max(0, depth - 1));
@@ -488,13 +495,13 @@ function loadDiff() {
 }
 let difficulty = loadDiff();        // current difficulty, shared across modes
 
-let state = null; // {mode, difficulty, target, dayNo, results:[cmp], guessedIds:Set, solved, gaveUp}
+let state = null; // {mode, difficulty, target, dayNo, results:[cmp], guessedIds:Set, solved, gaveUp, hintPlies}
 
 function freshDaily(diff) {
   diff = diff || difficulty;
   const dayNo = localDayNumber();
   const target = dailyTarget(dayNo, diff);
-  const st = { mode: "daily", difficulty: diff, target, dayNo, results: [], guessedIds: new Set(), solved: false, gaveUp: false };
+  const st = { mode: "daily", difficulty: diff, target, dayNo, results: [], guessedIds: new Set(), solved: false, gaveUp: false, hintPlies: 0 };
   const saved = LS.get(kDaily(dayNo, diff), null);
   if (saved && saved.guesses) {
     for (const id of saved.guesses) {
@@ -503,6 +510,7 @@ function freshDaily(diff) {
     }
     st.solved = !!saved.solved;
     st.gaveUp = !!saved.gaveUp;
+    st.hintPlies = Math.min(saved.hintPlies || 0, target.moves.length);
   }
   return st;
 }
@@ -510,14 +518,14 @@ function freshPractice(diff) {
   diff = diff || difficulty;
   const pool = POOLS[diff];
   const target = pool[Math.floor(Math.random() * pool.length)];
-  return { mode: "practice", difficulty: diff, target, dayNo: null, results: [], guessedIds: new Set(), solved: false, gaveUp: false };
+  return { mode: "practice", difficulty: diff, target, dayNo: null, results: [], guessedIds: new Set(), solved: false, gaveUp: false, hintPlies: 0 };
 }
 
 function saveDaily() {
   if (state.mode !== "daily") return;
   LS.set(kDaily(state.dayNo, state.difficulty), {
     guesses: state.results.map(r => r.guessId),
-    solved: state.solved, gaveUp: state.gaveUp,
+    solved: state.solved, gaveUp: state.gaveUp, hintPlies: state.hintPlies || 0,
   });
 }
 
@@ -549,6 +557,15 @@ function giveUp() {
   if (!confirm("Reveal the target opening and end this puzzle?")) return;
   state.gaveUp = true;
   if (state.mode === "daily") { saveDaily(); recordDaily(false); }
+  render();
+}
+
+function requestHint() {
+  if (state.solved || state.gaveUp) return;
+  const depth = confirmedDepth(state);
+  if (depth >= state.target.moves.length) { toast("The full line is already revealed."); return; }
+  state.hintPlies = depth + 1;
+  if (state.mode === "daily") saveDaily();
   render();
 }
 
@@ -669,6 +686,7 @@ function render() {
   // actions
   const done = state.solved || state.gaveUp;
   document.getElementById("shareBtn").style.display = (done && state.solved) ? "" : "none";
+  document.getElementById("hintBtn").style.display = (!done && confirmedDepth(state) < state.target.moves.length) ? "" : "none";
   document.getElementById("newBtn").style.display = (state.mode === "practice") ? "" : "none";
   document.getElementById("giveUpBtn").style.display = (!done && state.results.length >= 5) ? "" : "none";
 }
@@ -720,6 +738,7 @@ document.addEventListener("keydown", e => { if (e.key === "Escape") document.que
 document.getElementById("howBtn").addEventListener("click", () => modal("howModal", true));
 document.getElementById("statsBtn").addEventListener("click", openStats);
 document.getElementById("shareBtn").addEventListener("click", doShare);
+document.getElementById("hintBtn").addEventListener("click", requestHint);
 document.getElementById("giveUpBtn").addEventListener("click", giveUp);
 document.getElementById("newBtn").addEventListener("click", () => {
   if (state.results.length && !state.solved && !state.gaveUp) recordPractice(false);
@@ -753,7 +772,7 @@ boot();
 
 // expose a little debug hook
 window.__OT = {
-  OPENINGS, POOLS, DIFFS, tierOf, obscurityScore, dailyTarget, compare, submitGuess,
+  OPENINGS, POOLS, DIFFS, tierOf, obscurityScore, dailyTarget, compare, submitGuess, requestHint,
   byName: n => OPENINGS.find(o => o.name === n),
   byMoves: m => OPENINGS.find(o => o.movesStr === m),
   get state() { return state; },
