@@ -100,7 +100,6 @@ const POOLS = {
 };
 
 /* ---------- 2. Deterministic daily selection ---------- */
-const EPOCH = Date.UTC(2024, 0, 1);          // puzzle #1 = 2024-01-01 (local date)
 function localDayNumber(d = new Date()) {
   const local = new Date(d.getFullYear(), d.getMonth(), d.getDate());
   return Math.floor((local - new Date(2024, 0, 1)) / 86400000);
@@ -206,7 +205,7 @@ function fmtMoves(moves, cls) {
   return out.trim();
 }
 
-// History line: shared (green) + first diverging move (red) + rest (dim).
+// History line: shared path + first diverging move + rest.
 function fmtGuessLine(guess, cmp) {
   const m = guess.moves, k = cmp.sharedPlies;
   let out = "", n = 1;
@@ -520,6 +519,13 @@ function animateBoardProgress(fromDepth, toDepth) {
 /* ---------- 7. Autocomplete ---------- */
 const input = document.getElementById("guessInput");
 const suggestEl = document.getElementById("suggest");
+const moveSearchToggle = document.getElementById("moveSearchToggle");
+const MOVE_SEARCH_KEY = "ot.moveSearch";
+function loadMoveSearchEnabled() {
+  try { return JSON.parse(localStorage.getItem(MOVE_SEARCH_KEY)) === true; } catch { return false; }
+}
+let moveSearchEnabled = loadMoveSearchEnabled();
+moveSearchToggle.checked = moveSearchEnabled;
 let activeIdx = -1, currentList = [];
 
 function scoreMatch(o, tokens, raw) {
@@ -572,7 +578,7 @@ function moveSearch(raw) {
 function search(q) {
   const raw = q.trim().toLowerCase();
   if (!raw) return { mode: "name", list: [] };
-  if (looksLikeMoves(raw)) return { mode: "move", list: moveSearch(raw) };
+  if (moveSearchEnabled && looksLikeMoves(raw)) return { mode: "move", list: moveSearch(raw) };
   const tokens = raw.split(/\s+/).filter(Boolean);
   const out = [];
   for (const o of activePool()) {
@@ -634,6 +640,12 @@ function setActive(i) {
 
 input.addEventListener("input", () => renderSuggest(input.value));
 input.addEventListener("focus", () => { if (input.value.trim()) renderSuggest(input.value); });
+moveSearchToggle.addEventListener("change", () => {
+  moveSearchEnabled = moveSearchToggle.checked;
+  try { localStorage.setItem(MOVE_SEARCH_KEY, JSON.stringify(moveSearchEnabled)); } catch {}
+  if (input.value.trim()) renderSuggest(input.value);
+  input.focus();
+});
 input.addEventListener("keydown", e => {
   if (!suggestEl.classList.contains("open")) {
     if (e.key === "ArrowDown" && input.value.trim()) renderSuggest(input.value);
@@ -1009,7 +1021,7 @@ document.addEventListener("keydown", e => {
     return;
   }
   const typing = e.target.closest?.("input, textarea, select, [contenteditable='true']");
-  if (typing || suggestEl.classList.contains("open")) return;
+  if (typing || suggestEl.classList.contains("open") || document.querySelector(".modal-bg.open")) return;
   if (e.key === "ArrowLeft") { e.preventDefault(); stepBoard(-1); }
   else if (e.key === "ArrowRight") { e.preventDefault(); stepBoard(1); }
 });
@@ -1074,6 +1086,7 @@ window.__OT = {
   OPENINGS, POOLS, DIFFS, DIFF_LIMITS, GUESS_LIMITS, HINT_COST, guessLimit, tierOf, obscurityScore, dailyTarget, compare, submitGuess, requestHint,
   byName: n => OPENINGS.find(o => o.name === n),
   byMoves: m => OPENINGS.find(o => o.movesStr === m),
+  get moveSearchEnabled() { return moveSearchEnabled; },
   get state() { return state; },
 };
 

@@ -12,9 +12,7 @@
   --good: #5b9bd5;        /* blue — on the target path / shared */
   --good-dim: #38567a;
   --gold: #f0c75e;        /* the target (yellow highlight) */
-  --bad: #d76b5c;         /* diverged */
   --miss: #9ba1aa;        /* diverged tree paths */
-  --cold: #7da3c8;        /* far away */
   --accent: #5b9bd5;      /* blue accent everywhere */
   --accent-dark: #3f79b2; /* raised-button bottom edge */
   --accent-hover: #79b1e6;
@@ -65,6 +63,17 @@ body {
   transition: color .12s, background .12s;
 }
 .iconbtn:hover { color: #fff; background: var(--border-solid); }
+.move-toggle {
+  display: inline-flex; align-items: center; gap: 7px;
+  height: 36px; padding: 0 12px; flex-shrink: 0;
+  background: var(--panel-2); border-radius: 8px;
+  color: var(--muted); font-size: 12.5px; font-weight: 700;
+  cursor: pointer; user-select: none; white-space: nowrap;
+  transition: color .12s, background .12s;
+}
+.move-toggle:hover { color: var(--text); }
+.move-toggle input { width: 14px; height: 14px; margin: 0; accent-color: var(--good); cursor: pointer; }
+.move-toggle:has(input:checked) { color: var(--text); background: rgba(91,155,213,.16); }
 
 /* ---- Puzzle meta ---- */
 .meta { display: flex; align-items: baseline; gap: 14px; flex-wrap: wrap; margin-bottom: 16px; font-size: 16px; }

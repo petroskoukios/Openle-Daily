@@ -21,6 +21,10 @@
       <button data-mode="practice">Practice</button>
     </div>
     <div class="spacer"></div>
+    <label class="move-toggle" title="Search openings by move order instead of name">
+      <input id="moveSearchToggle" type="checkbox" />
+      <span>search using moves</span>
+    </label>
     <button class="iconbtn" id="howBtn" title="How to play">?</button>
     <button class="iconbtn" id="statsBtn" title="Statistics">📊</button>
   </header>
@@ -47,7 +51,7 @@
     <div class="col-left">
       <div class="search">
         <input id="guessInput" type="text" autocomplete="off" spellcheck="false"
-               placeholder="Search an opening to guess — e.g. Sicilian, Ruy Lopez, 1. e4…" />
+               placeholder="Search an opening to guess — e.g. Sicilian, Ruy Lopez…" />
         <ul class="suggest" id="suggest"></ul>
       </div>
 
@@ -105,7 +109,7 @@
     </ul>
     <h3>Guesses and hints</h3>
     <ul>
-      <li>Search by opening name, ECO code, or moves.</li>
+      <li>Search by opening name or ECO code. Turn on <b>search using moves</b> in the top bar to search by move order.</li>
       <li>Hints reveal one move and cost <b>3</b> guesses.</li>
       <li>Easy has 10 guesses, Medium 15, Hard 20, Expert 25.</li>
     </ul>

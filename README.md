@@ -15,16 +15,16 @@ before your line splits away from the target's. The goal is to feel like you're
   for everyone playing that tier. Switch tiers freely; each keeps its own progress.
 - **Difficulty-specific guess budgets**: Easy gets 10 guesses, Medium 15, Hard 20,
   and Expert 25. Guesses are selected through an autocomplete search. You don't need
-  to type exact names — search by name (`najdorf`), ECO code (`B90`), or even by
-  **moves** (`1. e4 e5 Nf3`).
+  to type exact names — search by name (`najdorf`) or ECO code (`B90`). A **Moves**
+  toggle enables move-order search (`1. e4 e5 Nf3`).
 - **Hints reveal one more target move** on the tree and board, and each hint costs
   **3 guesses** from that tier's budget.
 - For every guess the game finds the **deepest common prefix of moves** with the
   target — the point where your line splits away from the target's.
 - The feedback is the **opening tree itself** — that's the whole game. Confirmed-shared
   moves form a blue trunk; each guess's wrong turn branches off in gray; the tip of the
-  trunk shows how deep you've confirmed; the target line is revealed in gold ★ only when
-  you win, give up, or run out of guesses, so the tree never spoils the answer.
+  trunk shows how deep you've confirmed. The target path turns gold ★ only when you
+  solve it; revealed-but-unsolved answers stay blue in the tree.
 - A minimal **guess log** under the tree shows each guess's line with shared moves in
   blue and the diverging move in gray — nothing else to read.
 - A **chess board** beside the tree shows *how far you've gotten* — the position at the
@@ -60,7 +60,6 @@ the shareable text is still shown in the Stats panel so you can copy it manually
 | `game.js` | Game logic: comparison engine, tree builder, board rendering, autocomplete, difficulty/daily selection, stats, sharing. |
 | `chess.js` | Tiny SAN engine — replays a move list to reconstruct the board position. |
 | `openings.js` | The opening database (`window.OPENINGS`), generated. |
-| `tools/` | The source ECO data (`*.tsv`) and `generate.js` that builds `openings.js`. |
 
 ## The data
 
@@ -83,16 +82,9 @@ estimated from three structural proxies and bucketed into four tiers:
 Openings are ranked from least to most obscure using those proxies, then each tier
 uses a cumulative target pool: **Easy 32 · Medium 64 · Hard 128 · Expert 512**.
 That means Medium includes all Easy targets, Hard includes all Medium targets, and
-Expert includes all Hard targets. Every one of the 3,167 openings stays **guessable**
-in all tiers — difficulty only controls which opening can be the hidden *target*.
+Expert includes all Hard targets. The autocomplete is limited to the current tier's
+cumulative pool, so difficulty controls both targets and allowed guesses.
 
 > Note: with no popularity data, a *single*-variation name of a famous family can't be
 > told apart structurally from a famous one (e.g. "Caro-Kann: Classical" vs. an obscure
-> sideline), so Medium can still surface the occasional offbeat line. Easy avoids this
-> entirely by only ever using base opening names.
-
-To rebuild the database:
-
-```bash
-node tools/generate.js
-```
+> sideline), so the ranking is still an approximation.
