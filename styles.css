@@ -193,9 +193,10 @@ body {
 .sq.d { background: #6f8fb2; }            /* chess.com blue board — dark */
 .sq.hl::after { content: ""; position: absolute; inset: 0; background: rgba(64, 154, 224, .42); }
 .pc {
-  position: relative; z-index: 1; line-height: 1;
-  font-family: "Segoe UI Symbol", "Noto Sans Symbols 2", "Apple Symbols", "DejaVu Sans", sans-serif;
-  font-size: clamp(20px, 8.8cqw, 50px);
+  position: relative; z-index: 1;
+  width: 100%; height: 100%; object-fit: contain;
+  pointer-events: none; user-select: none; -webkit-user-drag: none;
+  filter: drop-shadow(0 1.5px 1px rgba(0,0,0,.3));
 }
 .pc.hide { visibility: hidden; }
 .move-ghost {
@@ -217,8 +218,6 @@ body {
     top: calc((7 - var(--to-r)) * 12.5%);
   }
 }
-.pc.w { color: #ffffff; text-shadow: 0 1.5px 1.5px rgba(0,0,0,.35); -webkit-text-stroke: 1.2px #555a5e; }
-.pc.b { color: #262421; text-shadow: 0 1px 1px rgba(255,255,255,.12); -webkit-text-stroke: 1px #000; }
 .sq .rk, .sq .fl { position: absolute; font-size: 9px; font-weight: 700; font-family: var(--sans); z-index: 1; }
 .sq .rk { top: 1px; left: 3px; }
 .sq .fl { bottom: 0px; right: 3px; }

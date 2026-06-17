@@ -60,6 +60,7 @@ the shareable text is still shown in the Stats panel so you can copy it manually
 | `game.js` | Game logic: comparison engine, tree builder, board rendering, autocomplete, difficulty/daily selection, stats, sharing. |
 | `chess.js` | Tiny SAN engine — replays a move list to reconstruct the board position. |
 | `openings.js` | The opening database (`window.OPENINGS`), generated. |
+| `pieces-svg/` | Chess piece SVGs drawn on the board (CC BY-SA — see Credits). |
 
 ## The data
 
@@ -88,3 +89,11 @@ cumulative pool, so difficulty controls both targets and allowed guesses.
 > Note: with no popularity data, a *single*-variation name of a famous family can't be
 > told apart structurally from a famous one (e.g. "Caro-Kann: Classical" vs. an obscure
 > sideline), so the ranking is still an approximation.
+
+## Credits
+
+- **Opening data**: [lichess-org/chess-openings](https://github.com/lichess-org/chess-openings) (CC0).
+- **Chess piece graphics** (`pieces-svg/`): by Uray M. János, derived from the Wikipedia
+  ["Cburnett" set](https://en.wikipedia.org/wiki/File:Chess_klt45.svg) — licensed
+  [CC BY-SA](https://creativecommons.org/licenses/by-sa/3.0/). The attribution comments
+  inside each SVG are preserved, and any redistribution of the graphics stays under CC BY-SA.

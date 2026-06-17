@@ -342,8 +342,13 @@ function renderHistory(state) {
 }
 
 /* ---------- 6b. Board: how far you've gotten ---------- */
-const GLYPH = { p: "♟", n: "♞", b: "♝", r: "♜", q: "♛", k: "♚" };
+const PIECE_NAME = { p: "pawn", n: "knight", b: "bishop", r: "rook", q: "queen", k: "king" };
 const pieceColor = p => (p === p.toUpperCase() ? "w" : "b");
+// Board pieces are CC BY-SA SVGs by Uray M. János in pieces-svg/ (see README credits).
+function pieceImg(p, cls = "") {
+  const color = pieceColor(p);
+  return `<img class="pc ${color}${cls}" src="pieces-svg/${PIECE_NAME[p.toLowerCase()]}-${color}.svg" alt="" draggable="false">`;
+}
 let boardPlaybackDepth = null;
 let boardSlideFromDepth = null;
 let boardPlaybackTimers = [];
@@ -407,7 +412,7 @@ function renderBoard(state) {
     for (let f = 0; f < 8; f++) {
       const p = shownBoard[r][f];
       const hidden = hide.has(r * 8 + f) ? " hide" : "";
-      const glyph = p ? `<span class="pc ${pieceColor(p)}${hidden}">${GLYPH[p.toLowerCase()]}</span>` : "";
+      const glyph = p ? pieceImg(p, hidden) : "";
       const cls = ((r + f) % 2 === 0 ? "d" : "l") + (changed.has(r * 8 + f) ? " hl" : "");
       const coord = (f === 0 ? `<span class="rk">${r + 1}</span>` : "") +
                     (r === 0 ? `<span class="fl">${OTChess.FILES[f]}</span>` : "");
@@ -416,7 +421,7 @@ function renderBoard(state) {
   }
   for (const m of slides) {
     html += `<div class="move-ghost" style="--from-f:${m.fromF};--from-r:${m.fromR};--to-f:${m.toF};--to-r:${m.toR}">` +
-      `<span class="pc ${pieceColor(m.p)}">${GLYPH[m.p.toLowerCase()]}</span></div>`;
+      `${pieceImg(m.p)}</div>`;
   }
   document.getElementById("board").innerHTML = html;
 
@@ -951,7 +956,7 @@ function render() {
   input.disabled = state.solved || state.gaveUp;
   input.placeholder = state.solved || state.gaveUp
     ? "Puzzle complete"
-    : "Search an opening to guess — e.g. Sicilian, Ruy Lopez, 1. e4…";
+    : "Search an opening to guess — e.g. Sicilian, Ruy Lopez…";
 
   // panels
   renderTree(state);
