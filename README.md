@@ -20,11 +20,11 @@ before your line splits away from the target's. The goal is to feel like you're
 - For every guess the game finds the **deepest common prefix of moves** with the
   target — the point where your line splits away from the target's.
 - The feedback is the **opening tree itself** — that's the whole game. Confirmed-shared
-  moves form a green trunk; each guess's wrong turn branches off in red; the tip of the
+  moves form a blue trunk; each guess's wrong turn branches off in red; the tip of the
   trunk shows how deep you've confirmed; the target line is revealed in gold ★ only when
-  you win, so the tree never spoils the answer.
+  you win, give up, or run out of guesses, so the tree never spoils the answer.
 - A minimal **guess log** under the tree shows each guess's line with shared moves in
-  green and the diverging move in red — nothing else to read.
+  blue and the diverging move in red — nothing else to read.
 - A **chess board** beside the tree shows *how far you've gotten* — the position at the
   end of the deepest line you've confirmed shared with the target (the full target
   position once you win). The position is rebuilt from the moves by a small built-in
