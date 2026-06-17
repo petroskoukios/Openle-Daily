@@ -1,0 +1,138 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="utf-8" />
+<meta name="viewport" content="width=device-width, initial-scale=1" />
+<title>Opening Tree — a daily chess opening puzzle</title>
+<meta name="description" content="Guess the daily chess opening. Feedback is based on how deep your guess shares the opening tree with the hidden target." />
+<link rel="preconnect" href="https://fonts.googleapis.com" />
+<link rel="preconnect" href="https://fonts.gstatic.com" crossorigin />
+<link href="https://fonts.googleapis.com/css2?family=Montserrat:wght@500;600;700;800&display=swap" rel="stylesheet" />
+<link rel="stylesheet" href="styles.css" />
+<link rel="icon" href="data:image/svg+xml,<svg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 100 100'><text y='.9em' font-size='90'>🌳</text></svg>" />
+</head>
+<body>
+<div class="wrap">
+
+  <header class="appbar">
+    <div class="brand"><span class="leaf">🌳</span> Opening&nbsp;Tree <small>daily chess puzzle</small></div>
+    <div class="modes" id="modes">
+      <button data-mode="daily" class="active">Daily</button>
+      <button data-mode="practice">Practice</button>
+    </div>
+    <div class="spacer"></div>
+    <button class="iconbtn" id="howBtn" title="How to play">?</button>
+    <button class="iconbtn" id="statsBtn" title="Statistics">📊</button>
+  </header>
+
+  <div class="meta">
+    <span class="title" id="metaTitle">Daily</span>
+    <span class="sub" id="metaSub"></span>
+    <span class="modes diff" id="diff">
+      <button data-diff="easy">Easy</button>
+      <button data-diff="medium" class="active">Medium</button>
+      <button data-diff="hard">Hard</button>
+      <button data-diff="expert">Expert</button>
+    </span>
+    <span class="gcount" id="gcount"></span>
+  </div>
+
+  <div class="banner" id="banner">
+    <span class="b-title" id="bannerTitle">Solved!</span>
+    <span class="b-name" id="bannerName"></span>
+    <span class="b-sub" id="bannerSub"></span>
+  </div>
+
+  <div class="layout">
+    <div class="col-left">
+      <div class="search">
+        <input id="guessInput" type="text" autocomplete="off" spellcheck="false"
+               placeholder="Search an opening to guess — e.g. Sicilian, Ruy Lopez, 1. e4…" />
+        <ul class="suggest" id="suggest"></ul>
+      </div>
+
+      <section class="panel">
+        <h2>Opening Tree</h2>
+        <pre class="tree" id="tree"></pre>
+      </section>
+
+      <section class="panel history" id="historyPanel" style="display:none">
+        <h2>Your guesses</h2>
+        <div id="historyBody"></div>
+      </section>
+
+      <div class="actions">
+        <button class="btn primary" id="shareBtn" style="display:none">Share result</button>
+        <button class="btn" id="newBtn" style="display:none">New practice puzzle</button>
+        <button class="btn ghost" id="giveUpBtn" style="display:none">Give up</button>
+      </div>
+    </div>
+
+    <aside class="col-right">
+      <section class="panel board-panel">
+        <h2 id="boardTitle">How far you've gotten</h2>
+        <div class="board-wrap">
+          <div class="board" id="board"></div>
+        </div>
+        <div class="board-cap" id="boardCap"></div>
+      </section>
+    </aside>
+  </div>
+
+</div>
+
+<div class="toast" id="toast"></div>
+
+<!-- How-to-play modal -->
+<div class="modal-bg" id="howModal">
+  <div class="modal">
+    <button class="iconbtn close" data-close>✕</button>
+    <h2>🌳 How to play</h2>
+    <p>A hidden <b>target opening</b> is chosen each day. Guess openings to discover it.
+       Your only clue is how far you travel down the <b>same branches of the opening tree</b> before your line splits away from the target's.</p>
+
+    <h3>The clue: the opening tree</h3>
+    <p>For every guess we find the <b>deepest shared sequence of moves</b> with the target. Your guesses grow a tree, and where each one branches away tells you how close it was.</p>
+    <div class="ex">Target:  1.e4 e5  2.Nf3 Nc6  3.Bb5      (Ruy Lopez)
+Guess:   1.e4 e5  2.Nf3 Nc6  3.Bc4      (Italian Game)
+
+→  shared through 2...Nc6, then your line splits off.</div>
+    <p>The deeper your guesses run with the target, the warmer you are. When a guess's whole line matches the target, you win.</p>
+
+    <h3>Reading the tree</h3>
+    <ul>
+      <li><span style="color:var(--good);font-weight:600">Green moves</span> are confirmed to be on the target's path.</li>
+      <li><span style="color:var(--bad)">Red moves</span> are where one of your guesses branched away.</li>
+      <li>The <span style="color:var(--good)">tip</span> of the green trunk is as deep as you've confirmed — the target continues somewhere beyond it.</li>
+      <li>On a win, the full target line is revealed in <span style="color:var(--gold);font-weight:600">gold ★</span>.</li>
+    </ul>
+    <div class="legend">
+      <span><i class="dot good"></i> on target path</span>
+      <span><i class="dot bad"></i> diverged guess</span>
+      <span><i class="dot gold"></i> target (on win)</span>
+    </div>
+    <p>The <b>board</b> on the right shows how far you've gotten — the position at the end of the deepest line you've confirmed shared with the target.</p>
+
+    <h3>Difficulty</h3>
+    <p>Each day has <b>four</b> puzzles — <b>Easy / Medium / Hard / Expert</b> — and you can play any of them. Easy is the famous main openings; Expert reaches deep into obscure theory.</p>
+
+    <p class="hint">Search by name (<b>najdorf</b>), ECO code (<b>B90</b>), or moves (<b>1. e4 e5 Nf3</b>). Unlimited guesses. Daily puzzles are the same for everyone; Practice mode is endless random openings with its own stats.</p>
+  </div>
+</div>
+
+<!-- Stats modal -->
+<div class="modal-bg" id="statsModal">
+  <div class="modal">
+    <button class="iconbtn close" data-close>✕</button>
+    <h2 id="statsTitle">Statistics</h2>
+    <div class="stats-grid" id="statsGrid"></div>
+    <div class="dist" id="statsDist"></div>
+    <div id="shareArea"></div>
+  </div>
+</div>
+
+<script src="openings.js"></script>
+<script src="chess.js"></script>
+<script src="game.js"></script>
+</body>
+</html>
