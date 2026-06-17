@@ -348,7 +348,14 @@ const pieceColor = p => (p === p.toUpperCase() ? "w" : "b");
 let boardPlaybackDepth = null;
 let boardSlideFromDepth = null;
 let boardPlaybackTimers = [];
-const BOARD_PLAYBACK_STEP_MS = 420;
+let boardStepTimer = null;
+const BOARD_PLAYBACK_STEP_MS = 280;
+let boardManualDepth = null;
+let boardQueuedDepth = null;
+
+function boardMaxDepth(state) {
+  return (state.solved || state.gaveUp) ? state.target.moves.length : confirmedDepth(state);
+}
 
 function movingPieces(fromBoard, toBoard) {
   const removed = [], added = [];
@@ -374,14 +381,16 @@ function renderBoard(state) {
   const tgt = state.target;
   const done = state.solved || state.gaveUp;
   const playing = boardPlaybackDepth != null;
+  const sliding = boardSlideFromDepth != null;
   // depth shown = deepest confirmed-shared line, or the whole target once finished.
   let depth = 0;
   if (playing) depth = boardPlaybackDepth;
-  else if (done) depth = tgt.moves.length;
-  else depth = confirmedDepth(state);
+  else if (boardManualDepth != null) depth = Math.min(boardManualDepth, boardMaxDepth(state));
+  else depth = boardMaxDepth(state);
+  if (boardManualDepth != null && boardManualDepth !== depth) boardManualDepth = depth;
 
   const board = OTChess.positionAfter(tgt.moves, depth);
-  const slideFrom = playing && boardSlideFromDepth != null ? OTChess.positionAfter(tgt.moves, boardSlideFromDepth) : null;
+  const slideFrom = sliding ? OTChess.positionAfter(tgt.moves, boardSlideFromDepth) : null;
   const shownBoard = slideFrom || board;
   const prev = OTChess.positionAfter(tgt.moves, Math.max(0, depth - 1));
   const changed = new Set();
@@ -414,6 +423,14 @@ function renderBoard(state) {
 
   const title = document.getElementById("boardTitle");
   const cap = document.getElementById("boardCap");
+  const prevBtn = document.getElementById("boardPrev");
+  const nextBtn = document.getElementById("boardNext");
+  const maxDepth = boardMaxDepth(state);
+  if (prevBtn && nextBtn) {
+    const queued = boardQueuedDepth ?? depth;
+    prevBtn.disabled = playing || queued <= 0;
+    nextBtn.disabled = playing || queued >= maxDepth;
+  }
   if (playing) {
     title.textContent = "How far you've gotten";
     cap.innerHTML = depth === 0
@@ -435,13 +452,53 @@ function renderBoard(state) {
 
 function clearBoardPlayback() {
   for (const t of boardPlaybackTimers) clearTimeout(t);
+  clearTimeout(boardStepTimer);
   boardPlaybackTimers = [];
+  boardStepTimer = null;
   boardPlaybackDepth = null;
   boardSlideFromDepth = null;
+  boardQueuedDepth = null;
+}
+
+function resetBoardNav() {
+  boardManualDepth = null;
+  boardQueuedDepth = null;
+}
+
+function currentBoardDepth() {
+  return boardManualDepth == null ? boardMaxDepth(state) : boardManualDepth;
+}
+
+function playQueuedBoardStep() {
+  if (!state || boardPlaybackDepth != null || boardSlideFromDepth != null || boardQueuedDepth == null) return;
+  const maxDepth = boardMaxDepth(state);
+  const current = currentBoardDepth();
+  if (boardQueuedDepth === current) { boardQueuedDepth = null; renderBoard(state); return; }
+  const next = current + Math.sign(boardQueuedDepth - current);
+  boardSlideFromDepth = current;
+  boardManualDepth = Math.max(0, Math.min(maxDepth, next));
+  renderBoard(state);
+  boardStepTimer = setTimeout(() => {
+    boardSlideFromDepth = null;
+    boardStepTimer = null;
+    if (boardQueuedDepth !== boardManualDepth) playQueuedBoardStep();
+    else { boardQueuedDepth = null; renderBoard(state); }
+  }, BOARD_PLAYBACK_STEP_MS);
+}
+
+function stepBoard(delta) {
+  if (!state || boardPlaybackDepth != null) return;
+  const maxDepth = boardMaxDepth(state);
+  const base = boardQueuedDepth ?? currentBoardDepth();
+  const next = Math.max(0, Math.min(maxDepth, base + delta));
+  if (next === base) return;
+  boardQueuedDepth = next;
+  playQueuedBoardStep();
 }
 
 function animateBoardProgress(fromDepth, toDepth) {
   clearBoardPlayback();
+  resetBoardNav();
   if (toDepth <= fromDepth) return;
   boardPlaybackDepth = fromDepth;
   for (let d = fromDepth + 1; d <= toDepth; d++) {
@@ -655,6 +712,7 @@ function toast(msg) {
 
 function finishOutOfGuesses() {
   clearBoardPlayback();
+  resetBoardNav();
   state.gaveUp = true;
   if (state.mode === "daily") { saveDaily(); recordDaily(false); }
   else recordPractice(false);
@@ -674,7 +732,7 @@ function submitGuess(opening) {
   const afterDepth = (state.solved || state.gaveUp) ? state.target.moves.length : confirmedDepth(state);
   const shouldAnimateBoard = afterDepth > beforeDepth;
   if (shouldAnimateBoard) boardPlaybackDepth = beforeDepth;
-  else clearBoardPlayback();
+  else { clearBoardPlayback(); resetBoardNav(); }
 
   input.value = "";
   suggestEl.classList.remove("open");
@@ -694,6 +752,7 @@ function giveUp() {
   if (state.solved || state.gaveUp) return;
   if (!confirm("Reveal the target opening and end this puzzle?")) return;
   clearBoardPlayback();
+  resetBoardNav();
   state.gaveUp = true;
   if (state.mode === "daily") { saveDaily(); recordDaily(false); }
   else recordPractice(false);
@@ -703,6 +762,7 @@ function giveUp() {
 function requestHint() {
   if (state.solved || state.gaveUp) return;
   clearBoardPlayback();
+  resetBoardNav();
   if (guessBudgetLeft(state) < HINT_COST) {
     toast(`Hints cost ${HINT_COST} guesses.`);
     return;
@@ -790,6 +850,7 @@ function openWinModal() {
 
 function startPracticeFromWin() {
   clearBoardPlayback();
+  resetBoardNav();
   document.querySelectorAll("#modes button").forEach(x => x.classList.toggle("active", x.dataset.mode === "practice"));
   state = freshPractice();
   input.value = "";
@@ -942,7 +1003,16 @@ document.querySelectorAll("[data-close]").forEach(b =>
   b.addEventListener("click", () => b.closest(".modal-bg").classList.remove("open")));
 document.querySelectorAll(".modal-bg").forEach(bg =>
   bg.addEventListener("click", e => { if (e.target === bg) bg.classList.remove("open"); }));
-document.addEventListener("keydown", e => { if (e.key === "Escape") document.querySelectorAll(".modal-bg.open").forEach(m => m.classList.remove("open")); });
+document.addEventListener("keydown", e => {
+  if (e.key === "Escape") {
+    document.querySelectorAll(".modal-bg.open").forEach(m => m.classList.remove("open"));
+    return;
+  }
+  const typing = e.target.closest?.("input, textarea, select, [contenteditable='true']");
+  if (typing || suggestEl.classList.contains("open")) return;
+  if (e.key === "ArrowLeft") { e.preventDefault(); stepBoard(-1); }
+  else if (e.key === "ArrowRight") { e.preventDefault(); stepBoard(1); }
+});
 
 /* ---------- 15. Wiring ---------- */
 document.getElementById("howBtn").addEventListener("click", () => modal("howModal", true));
@@ -958,11 +1028,14 @@ document.getElementById("statsDiff").addEventListener("click", e => {
 document.getElementById("shareBtn").addEventListener("click", doShare);
 document.getElementById("winShareBtn").addEventListener("click", doShare);
 document.getElementById("winPracticeBtn").addEventListener("click", startPracticeFromWin);
+document.getElementById("boardPrev").addEventListener("click", () => stepBoard(-1));
+document.getElementById("boardNext").addEventListener("click", () => stepBoard(1));
 document.getElementById("hintBtn").addEventListener("click", requestHint);
 document.getElementById("giveUpBtn").addEventListener("click", giveUp);
 document.getElementById("newBtn").addEventListener("click", () => {
   if (guessBudgetUsed(state) && !state.solved && !state.gaveUp) recordPractice(false);
   clearBoardPlayback();
+  resetBoardNav();
   state = freshPractice(); input.value = ""; render(); input.focus();
 });
 document.getElementById("diff").addEventListener("click", e => {
@@ -971,6 +1044,7 @@ document.getElementById("diff").addEventListener("click", e => {
   // abandoning an in-progress practice game counts as a loss; daily just switches.
   if (state.mode === "practice" && guessBudgetUsed(state) && !state.solved && !state.gaveUp) recordPractice(false);
   clearBoardPlayback();
+  resetBoardNav();
   difficulty = d; LS.set(K_DIFF, d);
   state = state.mode === "daily" ? freshDaily(d) : freshPractice(d);
   input.value = ""; render(); if (!input.disabled) input.focus();
@@ -981,6 +1055,7 @@ document.getElementById("modes").addEventListener("click", e => {
   document.querySelectorAll("#modes button").forEach(x => x.classList.toggle("active", x === b));
   if (state.mode === "practice" && guessBudgetUsed(state) && !state.solved && !state.gaveUp) recordPractice(false);
   clearBoardPlayback();
+  resetBoardNav();
   state = (mode === "daily") ? freshDaily() : freshPractice();
   input.value = ""; render(); if (!input.disabled) input.focus();
 });
