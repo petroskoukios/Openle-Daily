@@ -12,9 +12,11 @@ before your line splits away from the target's. The goal is to feel like you're
 - **Four daily puzzles every day** — one per difficulty (Easy / Medium / Hard /
   Expert). Each is chosen deterministically from the calendar date, so it's the same
   for everyone playing that tier. Switch tiers freely; each keeps its own progress.
-- **Unlimited guesses**, selected through an autocomplete search. You don't need to
+- **15 guesses total**, selected through an autocomplete search. You don't need to
   type exact names — search by name (`najdorf`), ECO code (`B90`), or even by
   **moves** (`1. e4 e5 Nf3`).
+- **Hints reveal one more target move** on the tree and board, and each hint costs
+  **3 guesses** from that 15-guess budget.
 - For every guess the game finds the **deepest common prefix of moves** with the
   target — the point where your line splits away from the target's.
 - The feedback is the **opening tree itself** — that's the whole game. Confirmed-shared

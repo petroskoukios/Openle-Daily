@@ -80,6 +80,8 @@ function tierOf(o) {
 
 const DIFFS = ["easy", "medium", "hard", "expert"];
 const DIFF_LABEL = { easy: "Easy", medium: "Medium", hard: "Hard", expert: "Expert" };
+const MAX_GUESSES = 15;
+const HINT_COST = 3;
 const POOLS = { easy: [], medium: [], hard: [], expert: [] };
 for (const o of OPENINGS) if (o.plies >= 2) POOLS[tierOf(o)].push(o);
 
@@ -146,6 +148,26 @@ function confirmedDepth(state) {
   let best = state.hintPlies || 0;
   for (const cmp of state.results) best = Math.max(best, cmp.sharedPlies);
   return Math.min(best, state.target.moves.length);
+}
+
+function hintsUsed(state) {
+  return state.hintCount || 0;
+}
+
+function guessBudgetUsed(state) {
+  return state.results.length + hintsUsed(state) * HINT_COST;
+}
+
+function guessBudgetLeft(state) {
+  return Math.max(0, MAX_GUESSES - guessBudgetUsed(state));
+}
+
+function guessWord(n) {
+  return n + (n === 1 ? " guess" : " guesses");
+}
+
+function hintWord(n) {
+  return n + (n === 1 ? " hint" : " hints");
 }
 
 /* ---------- 4. Move-notation formatting ---------- */
@@ -495,13 +517,13 @@ function loadDiff() {
 }
 let difficulty = loadDiff();        // current difficulty, shared across modes
 
-let state = null; // {mode, difficulty, target, dayNo, results:[cmp], guessedIds:Set, solved, gaveUp, hintPlies}
+let state = null; // {mode, difficulty, target, dayNo, results:[cmp], guessedIds:Set, solved, gaveUp, hintPlies, hintCount}
 
 function freshDaily(diff) {
   diff = diff || difficulty;
   const dayNo = localDayNumber();
   const target = dailyTarget(dayNo, diff);
-  const st = { mode: "daily", difficulty: diff, target, dayNo, results: [], guessedIds: new Set(), solved: false, gaveUp: false, hintPlies: 0 };
+  const st = { mode: "daily", difficulty: diff, target, dayNo, results: [], guessedIds: new Set(), solved: false, gaveUp: false, hintPlies: 0, hintCount: 0 };
   const saved = LS.get(kDaily(dayNo, diff), null);
   if (saved && saved.guesses) {
     for (const id of saved.guesses) {
@@ -511,6 +533,7 @@ function freshDaily(diff) {
     st.solved = !!saved.solved;
     st.gaveUp = !!saved.gaveUp;
     st.hintPlies = Math.min(saved.hintPlies || 0, target.moves.length);
+    st.hintCount = saved.hintCount || 0;
   }
   return st;
 }
@@ -518,14 +541,14 @@ function freshPractice(diff) {
   diff = diff || difficulty;
   const pool = POOLS[diff];
   const target = pool[Math.floor(Math.random() * pool.length)];
-  return { mode: "practice", difficulty: diff, target, dayNo: null, results: [], guessedIds: new Set(), solved: false, gaveUp: false, hintPlies: 0 };
+  return { mode: "practice", difficulty: diff, target, dayNo: null, results: [], guessedIds: new Set(), solved: false, gaveUp: false, hintPlies: 0, hintCount: 0 };
 }
 
 function saveDaily() {
   if (state.mode !== "daily") return;
   LS.set(kDaily(state.dayNo, state.difficulty), {
     guesses: state.results.map(r => r.guessId),
-    solved: state.solved, gaveUp: state.gaveUp, hintPlies: state.hintPlies || 0,
+    solved: state.solved, gaveUp: state.gaveUp, hintPlies: state.hintPlies || 0, hintCount: hintsUsed(state),
   });
 }
 
@@ -536,20 +559,29 @@ function toast(msg) {
   clearTimeout(toast._t); toast._t = setTimeout(() => t.classList.remove("show"), 1900);
 }
 
+function finishOutOfGuesses() {
+  state.gaveUp = true;
+  if (state.mode === "daily") { saveDaily(); recordDaily(false); }
+  else recordPractice(false);
+  toast("Out of guesses.");
+}
+
 function submitGuess(opening) {
   if (!opening || state.solved || state.gaveUp) return;
+  if (guessBudgetLeft(state) < 1) { finishOutOfGuesses(); render(); return; }
   if (state.guessedIds.has(opening.id)) { toast("Already guessed that one."); input.select(); return; }
   const cmp = compare(opening, state.target);
   state.results.push(cmp);
   state.guessedIds.add(opening.id);
   if (cmp.isWin) state.solved = true;
+  else if (guessBudgetLeft(state) === 0) finishOutOfGuesses();
 
   input.value = "";
   suggestEl.classList.remove("open");
   if (state.mode === "daily") saveDaily();
   if (cmp.isWin) onSolve();
   render();
-  if (!state.solved) input.focus();
+  if (!state.solved && !state.gaveUp) input.focus();
 }
 
 function giveUp() {
@@ -562,9 +594,15 @@ function giveUp() {
 
 function requestHint() {
   if (state.solved || state.gaveUp) return;
+  if (guessBudgetLeft(state) < HINT_COST) {
+    toast(`Hints cost ${HINT_COST} guesses.`);
+    return;
+  }
   const depth = confirmedDepth(state);
   if (depth >= state.target.moves.length) { toast("The full line is already revealed."); return; }
   state.hintPlies = depth + 1;
+  state.hintCount = hintsUsed(state) + 1;
+  if (guessBudgetLeft(state) === 0) finishOutOfGuesses();
   if (state.mode === "daily") saveDaily();
   render();
 }
@@ -579,7 +617,7 @@ function recordDaily(won) {
     s.won++;
     s.streak = (s.lastDay === state.dayNo - 1) ? s.streak + 1 : 1;
     s.maxStreak = Math.max(s.maxStreak, s.streak);
-    const g = state.results.length;
+    const g = guessBudgetUsed(state);
     s.dist[g] = (s.dist[g] || 0) + 1;
   } else {
     s.streak = 0;
@@ -593,8 +631,9 @@ function recordPractice(won) {
   s.played++;
   if (won) {
     s.won++;
-    s.totalGuesses += state.results.length;
-    s.best = s.best == null ? state.results.length : Math.min(s.best, state.results.length);
+    const spent = guessBudgetUsed(state);
+    s.totalGuesses += spent;
+    s.best = s.best == null ? spent : Math.min(s.best, spent);
   }
   LS.set(key, s);
 }
@@ -615,11 +654,11 @@ function closenessSquare(cmp) {
   return "🟩";
 }
 function shareText() {
-  const n = state.results.length;
-  const guessWord = g => g + (g === 1 ? " guess" : " guesses");
+  const n = guessBudgetUsed(state);
+  const h = hintsUsed(state);
   const head = state.mode === "daily"
-    ? `Opening Tree #${state.dayNo} · ${DIFF_LABEL[state.difficulty]} — ${state.solved ? guessWord(n) : "X"}`
-    : `Opening Tree · ${DIFF_LABEL[state.difficulty]} practice — ${guessWord(n)}`;
+    ? `Opening Tree #${state.dayNo} · ${DIFF_LABEL[state.difficulty]} — ${state.solved ? `${guessWord(n)}/15` : "X"}${h ? ` · ${hintWord(h)}` : ""}`
+    : `Opening Tree · ${DIFF_LABEL[state.difficulty]} practice — ${guessWord(n)}/15${h ? ` · ${hintWord(h)}` : ""}`;
   const squares = state.results.map(closenessSquare);
   // group into rows of 5 for a tidy grid
   let grid = "";
@@ -654,7 +693,10 @@ function render() {
   // difficulty selector is available in both modes
   diff.querySelectorAll("button").forEach(x => x.classList.toggle("active", x.dataset.diff === state.difficulty));
   const gc = document.getElementById("gcount");
-  gc.innerHTML = state.results.length ? `<b>${state.results.length}</b> ${state.results.length === 1 ? "guess" : "guesses"}` : "";
+  const spent = guessBudgetUsed(state), left = guessBudgetLeft(state), hintN = hintsUsed(state);
+  gc.innerHTML = spent
+    ? `<b>${spent}</b>/${MAX_GUESSES} guesses` + (hintN ? ` · ${hintWord(hintN)}` : "")
+    : `<b>${MAX_GUESSES}</b> guesses`;
 
   // banner
   const banner = document.getElementById("banner");
@@ -667,7 +709,7 @@ function render() {
       `${esc(state.target.name)} <span class="eco">${esc(state.target.eco)}</span>`;
     document.getElementById("bannerSub").innerHTML =
       `<span style="font-family:var(--mono)">${fmtMoves(state.target.moves, "")}</span>` +
-      (win ? ` &nbsp;·&nbsp; in ${state.results.length} ${state.results.length === 1 ? "guess" : "guesses"}` : "");
+      (win ? ` &nbsp;·&nbsp; in ${guessWord(guessBudgetUsed(state))}` : "");
   } else {
     banner.classList.remove("show");
   }
@@ -686,9 +728,9 @@ function render() {
   // actions
   const done = state.solved || state.gaveUp;
   document.getElementById("shareBtn").style.display = (done && state.solved) ? "" : "none";
-  document.getElementById("hintBtn").style.display = (!done && confirmedDepth(state) < state.target.moves.length) ? "" : "none";
+  document.getElementById("hintBtn").style.display = (!done && confirmedDepth(state) < state.target.moves.length && left >= HINT_COST) ? "" : "none";
   document.getElementById("newBtn").style.display = (state.mode === "practice") ? "" : "none";
-  document.getElementById("giveUpBtn").style.display = (!done && state.results.length >= 5) ? "" : "none";
+  document.getElementById("giveUpBtn").style.display = (!done && spent >= 5) ? "" : "none";
 }
 
 /* ---------- 13. Stats modal ---------- */
@@ -706,7 +748,7 @@ function openStats() {
     ].map(([l, n]) => `<div class="stat"><div class="n">${n}</div><div class="l">${l}</div></div>`).join("");
     const keys = Object.keys(s.dist).map(Number).sort((a, b) => a - b);
     const maxC = Math.max(1, ...keys.map(k => s.dist[k]));
-    const curG = state.solved ? state.results.length : -1;
+    const curG = state.solved ? guessBudgetUsed(state) : -1;
     dist.innerHTML = `<div class="l" style="color:var(--muted);font-size:11px;letter-spacing:.04em;text-transform:uppercase">Guess distribution</div>` +
       (keys.length ? keys.map(k =>
         `<div class="dist-row"><span class="k">${k}</span>
@@ -741,14 +783,14 @@ document.getElementById("shareBtn").addEventListener("click", doShare);
 document.getElementById("hintBtn").addEventListener("click", requestHint);
 document.getElementById("giveUpBtn").addEventListener("click", giveUp);
 document.getElementById("newBtn").addEventListener("click", () => {
-  if (state.results.length && !state.solved && !state.gaveUp) recordPractice(false);
+  if (guessBudgetUsed(state) && !state.solved && !state.gaveUp) recordPractice(false);
   state = freshPractice(); input.value = ""; render(); input.focus();
 });
 document.getElementById("diff").addEventListener("click", e => {
   const b = e.target.closest("button[data-diff]"); if (!b) return;
   const d = b.dataset.diff; if (d === state.difficulty) return;
   // abandoning an in-progress practice game counts as a loss; daily just switches.
-  if (state.mode === "practice" && state.results.length && !state.solved && !state.gaveUp) recordPractice(false);
+  if (state.mode === "practice" && guessBudgetUsed(state) && !state.solved && !state.gaveUp) recordPractice(false);
   difficulty = d; LS.set(K_DIFF, d);
   state = state.mode === "daily" ? freshDaily(d) : freshPractice(d);
   input.value = ""; render(); if (!input.disabled) input.focus();
@@ -757,6 +799,7 @@ document.getElementById("modes").addEventListener("click", e => {
   const b = e.target.closest("button[data-mode]"); if (!b) return;
   const mode = b.dataset.mode; if (mode === state.mode) return;
   document.querySelectorAll("#modes button").forEach(x => x.classList.toggle("active", x === b));
+  if (state.mode === "practice" && guessBudgetUsed(state) && !state.solved && !state.gaveUp) recordPractice(false);
   state = (mode === "daily") ? freshDaily() : freshPractice();
   input.value = ""; render(); if (!input.disabled) input.focus();
 });
@@ -772,7 +815,7 @@ boot();
 
 // expose a little debug hook
 window.__OT = {
-  OPENINGS, POOLS, DIFFS, tierOf, obscurityScore, dailyTarget, compare, submitGuess, requestHint,
+  OPENINGS, POOLS, DIFFS, MAX_GUESSES, HINT_COST, tierOf, obscurityScore, dailyTarget, compare, submitGuess, requestHint,
   byName: n => OPENINGS.find(o => o.name === n),
   byMoves: m => OPENINGS.find(o => o.movesStr === m),
   get state() { return state; },
