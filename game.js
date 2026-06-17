@@ -323,37 +323,82 @@ function renderHistory(state) {
 /* ---------- 6b. Board: how far you've gotten ---------- */
 const GLYPH = { p: "♟", n: "♞", b: "♝", r: "♜", q: "♛", k: "♚" };
 const pieceColor = p => (p === p.toUpperCase() ? "w" : "b");
+let boardPlaybackDepth = null;
+let boardSlideFromDepth = null;
+let boardPlaybackTimers = [];
+const BOARD_PLAYBACK_STEP_MS = 420;
+
+function movingPieces(fromBoard, toBoard) {
+  const removed = [], added = [];
+  for (let r = 0; r < 8; r++) for (let f = 0; f < 8; f++) {
+    const from = fromBoard[r][f], to = toBoard[r][f];
+    if (from !== to) {
+      if (from) removed.push({ f, r, p: from });
+      if (to) added.push({ f, r, p: to });
+    }
+  }
+  const moves = [];
+  for (const a of added) {
+    let idx = removed.findIndex(x => x.p === a.p);
+    if (idx < 0) idx = removed.findIndex(x => pieceColor(x.p) === pieceColor(a.p));
+    if (idx < 0) continue;
+    const src = removed.splice(idx, 1)[0];
+    moves.push({ fromF: src.f, fromR: src.r, toF: a.f, toR: a.r, p: a.p });
+  }
+  return moves;
+}
 
 function renderBoard(state) {
   const tgt = state.target;
   const done = state.solved || state.gaveUp;
+  const playing = boardPlaybackDepth != null;
   // depth shown = deepest confirmed-shared line, or the whole target once finished.
   let depth = 0;
-  if (done) depth = tgt.moves.length;
+  if (playing) depth = boardPlaybackDepth;
+  else if (done) depth = tgt.moves.length;
   else depth = confirmedDepth(state);
 
   const board = OTChess.positionAfter(tgt.moves, depth);
+  const slideFrom = playing && boardSlideFromDepth != null ? OTChess.positionAfter(tgt.moves, boardSlideFromDepth) : null;
+  const shownBoard = slideFrom || board;
   const prev = OTChess.positionAfter(tgt.moves, Math.max(0, depth - 1));
   const changed = new Set();
   if (depth > 0) for (let r = 0; r < 8; r++) for (let f = 0; f < 8; f++)
     if (board[r][f] !== prev[r][f]) changed.add(r * 8 + f);
+  const slides = slideFrom ? movingPieces(slideFrom, board) : [];
+  const hide = new Set();
+  for (const m of slides) {
+    hide.add(m.fromR * 8 + m.fromF);
+    hide.add(m.toR * 8 + m.toF);
+  }
 
   let html = "";
   for (let r = 7; r >= 0; r--) {
     for (let f = 0; f < 8; f++) {
-      const p = board[r][f];
-      const glyph = p ? `<span class="pc ${pieceColor(p)}">${GLYPH[p.toLowerCase()]}</span>` : "";
+      const p = shownBoard[r][f];
+      const hidden = hide.has(r * 8 + f) ? " hide" : "";
+      const glyph = p ? `<span class="pc ${pieceColor(p)}${hidden}">${GLYPH[p.toLowerCase()]}</span>` : "";
       const cls = ((r + f) % 2 === 0 ? "d" : "l") + (changed.has(r * 8 + f) ? " hl" : "");
       const coord = (f === 0 ? `<span class="rk">${r + 1}</span>` : "") +
                     (r === 0 ? `<span class="fl">${OTChess.FILES[f]}</span>` : "");
       html += `<div class="sq ${cls}">${coord}${glyph}</div>`;
     }
   }
+  for (const m of slides) {
+    html += `<div class="move-ghost" style="--from-f:${m.fromF};--from-r:${m.fromR};--to-f:${m.toF};--to-r:${m.toR}">` +
+      `<span class="pc ${pieceColor(m.p)}">${GLYPH[m.p.toLowerCase()]}</span></div>`;
+  }
   document.getElementById("board").innerHTML = html;
 
   const title = document.getElementById("boardTitle");
   const cap = document.getElementById("boardCap");
-  if (done) {
+  if (playing) {
+    title.textContent = "How far you've gotten";
+    cap.innerHTML = depth === 0
+      ? `<span class="muted">starting position</span>`
+      : `<span class="ln">${fmtMoves(tgt.moves.slice(0, depth), "")}</span>` +
+        `<span class="muted"> · ${depth} ${depth === 1 ? "ply" : "plies"} into the target</span>`;
+  } else if (done) {
     title.textContent = state.solved ? "Solved — target position" : "Revealed — target position";
     cap.innerHTML = `<span class="ln">${fmtMoves(tgt.moves, "")}</span>`;
   } else if (depth === 0) {
@@ -363,6 +408,33 @@ function renderBoard(state) {
     title.textContent = "How far you've gotten";
     cap.innerHTML = `<span class="ln">${fmtMoves(tgt.moves.slice(0, depth), "")}</span>` +
       `<span class="muted"> · ${depth} ${depth === 1 ? "ply" : "plies"} into the target</span>`;
+  }
+}
+
+function clearBoardPlayback() {
+  for (const t of boardPlaybackTimers) clearTimeout(t);
+  boardPlaybackTimers = [];
+  boardPlaybackDepth = null;
+  boardSlideFromDepth = null;
+}
+
+function animateBoardProgress(fromDepth, toDepth) {
+  clearBoardPlayback();
+  if (toDepth <= fromDepth) return;
+  boardPlaybackDepth = fromDepth;
+  for (let d = fromDepth + 1; d <= toDepth; d++) {
+    boardPlaybackTimers.push(setTimeout(() => {
+      boardPlaybackDepth = d;
+      boardSlideFromDepth = d - 1;
+      renderBoard(state);
+      if (d === toDepth) {
+        boardPlaybackTimers.push(setTimeout(() => {
+          boardPlaybackDepth = null;
+          boardSlideFromDepth = null;
+          renderBoard(state);
+        }, BOARD_PLAYBACK_STEP_MS));
+      }
+    }, (d - fromDepth) * BOARD_PLAYBACK_STEP_MS));
   }
 }
 
@@ -560,6 +632,7 @@ function toast(msg) {
 }
 
 function finishOutOfGuesses() {
+  clearBoardPlayback();
   state.gaveUp = true;
   if (state.mode === "daily") { saveDaily(); recordDaily(false); }
   else recordPractice(false);
@@ -570,23 +643,35 @@ function submitGuess(opening) {
   if (!opening || state.solved || state.gaveUp) return;
   if (guessBudgetLeft(state) < 1) { finishOutOfGuesses(); render(); return; }
   if (state.guessedIds.has(opening.id)) { toast("Already guessed that one."); input.select(); return; }
+  const beforeDepth = confirmedDepth(state);
   const cmp = compare(opening, state.target);
   state.results.push(cmp);
   state.guessedIds.add(opening.id);
   if (cmp.isWin) state.solved = true;
   else if (guessBudgetLeft(state) === 0) finishOutOfGuesses();
+  const afterDepth = (state.solved || state.gaveUp) ? state.target.moves.length : confirmedDepth(state);
+  const shouldAnimateBoard = afterDepth > beforeDepth;
+  if (shouldAnimateBoard) boardPlaybackDepth = beforeDepth;
+  else clearBoardPlayback();
 
   input.value = "";
   suggestEl.classList.remove("open");
   if (state.mode === "daily") saveDaily();
-  if (cmp.isWin) onSolve();
+  if (cmp.isWin) {
+    const modalDelay = shouldAnimateBoard
+      ? (afterDepth - beforeDepth + 1) * BOARD_PLAYBACK_STEP_MS + 250
+      : 700;
+    onSolve(modalDelay);
+  }
   render();
+  if (shouldAnimateBoard) animateBoardProgress(beforeDepth, afterDepth);
   if (!state.solved && !state.gaveUp) input.focus();
 }
 
 function giveUp() {
   if (state.solved || state.gaveUp) return;
   if (!confirm("Reveal the target opening and end this puzzle?")) return;
+  clearBoardPlayback();
   state.gaveUp = true;
   if (state.mode === "daily") { saveDaily(); recordDaily(false); }
   render();
@@ -594,6 +679,7 @@ function giveUp() {
 
 function requestHint() {
   if (state.solved || state.gaveUp) return;
+  clearBoardPlayback();
   if (guessBudgetLeft(state) < HINT_COST) {
     toast(`Hints cost ${HINT_COST} guesses.`);
     return;
@@ -638,13 +724,13 @@ function recordPractice(won) {
   LS.set(key, s);
 }
 
-function onSolve() {
+function onSolve(delayMs = 700) {
   if (state.mode === "daily") recordDaily(true);
   else recordPractice(true);
   clearTimeout(openWinModal._timer);
   openWinModal._timer = setTimeout(() => {
     if (state.solved && !state.gaveUp) openWinModal();
-  }, 700);
+  }, delayMs);
 }
 
 function winStatsForCurrentState() {
@@ -680,6 +766,7 @@ function openWinModal() {
 }
 
 function startPracticeFromWin() {
+  clearBoardPlayback();
   document.querySelectorAll("#modes button").forEach(x => x.classList.toggle("active", x.dataset.mode === "practice"));
   state = freshPractice();
   input.value = "";
@@ -833,6 +920,7 @@ document.getElementById("hintBtn").addEventListener("click", requestHint);
 document.getElementById("giveUpBtn").addEventListener("click", giveUp);
 document.getElementById("newBtn").addEventListener("click", () => {
   if (guessBudgetUsed(state) && !state.solved && !state.gaveUp) recordPractice(false);
+  clearBoardPlayback();
   state = freshPractice(); input.value = ""; render(); input.focus();
 });
 document.getElementById("diff").addEventListener("click", e => {
@@ -840,6 +928,7 @@ document.getElementById("diff").addEventListener("click", e => {
   const d = b.dataset.diff; if (d === state.difficulty) return;
   // abandoning an in-progress practice game counts as a loss; daily just switches.
   if (state.mode === "practice" && guessBudgetUsed(state) && !state.solved && !state.gaveUp) recordPractice(false);
+  clearBoardPlayback();
   difficulty = d; LS.set(K_DIFF, d);
   state = state.mode === "daily" ? freshDaily(d) : freshPractice(d);
   input.value = ""; render(); if (!input.disabled) input.focus();
@@ -849,6 +938,7 @@ document.getElementById("modes").addEventListener("click", e => {
   const mode = b.dataset.mode; if (mode === state.mode) return;
   document.querySelectorAll("#modes button").forEach(x => x.classList.toggle("active", x === b));
   if (state.mode === "practice" && guessBudgetUsed(state) && !state.solved && !state.gaveUp) recordPractice(false);
+  clearBoardPlayback();
   state = (mode === "daily") ? freshDaily() : freshPractice();
   input.value = ""; render(); if (!input.disabled) input.focus();
 });

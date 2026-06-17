@@ -170,6 +170,7 @@ body {
 .board {
   display: grid; grid-template-columns: repeat(8, 1fr); grid-template-rows: repeat(8, 1fr);
   aspect-ratio: 1 / 1; width: 100%; container-type: inline-size;
+  position: relative;
   border-radius: 6px; overflow: hidden; box-shadow: 0 6px 20px rgba(0,0,0,.4);
 }
 .sq { position: relative; display: flex; align-items: center; justify-content: center; min-width: 0; min-height: 0; }
@@ -180,6 +181,26 @@ body {
   position: relative; z-index: 1; line-height: 1;
   font-family: "Segoe UI Symbol", "Noto Sans Symbols 2", "Apple Symbols", "DejaVu Sans", sans-serif;
   font-size: clamp(20px, 8.8cqw, 50px);
+}
+.pc.hide { visibility: hidden; }
+.move-ghost {
+  position: absolute;
+  left: calc(var(--from-f) * 12.5%);
+  top: calc((7 - var(--from-r)) * 12.5%);
+  width: 12.5%;
+  height: 12.5%;
+  z-index: 4;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  pointer-events: none;
+  animation: piece-slide .34s ease-in-out forwards;
+}
+@keyframes piece-slide {
+  to {
+    left: calc(var(--to-f) * 12.5%);
+    top: calc((7 - var(--to-r)) * 12.5%);
+  }
 }
 .pc.w { color: #ffffff; text-shadow: 0 1.5px 1.5px rgba(0,0,0,.35); -webkit-text-stroke: 1.2px #555a5e; }
 .pc.b { color: #262421; text-shadow: 0 1px 1px rgba(255,255,255,.12); -webkit-text-stroke: 1px #000; }
