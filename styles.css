@@ -9,13 +9,15 @@
   --text: #f3f3f6;
   --muted: #aaaeb9;
   --muted-2: #7a7e89;
-  --good: #5b9bd5;        /* blue — on the target path / shared */
-  --good-dim: #38567a;
+  --good: #6198ca;        /* lightly softened blue — on the target path / shared */
+  --good-dim: #3b5778;
   --gold: #f0c75e;        /* the target (yellow highlight) */
   --miss: #9ba1aa;        /* diverged tree paths */
-  --accent: #5b9bd5;      /* blue accent everywhere */
-  --accent-dark: #3f79b2; /* raised-button bottom edge */
-  --accent-hover: #79b1e6;
+  --accent: #6198ca;      /* lightly softened blue accent everywhere */
+  --accent-dark: #4476a7; /* raised-button bottom edge */
+  --accent-hover: #7daedc;
+  --board-light: #b9c3ce;
+  --board-dark: #596f85;
   --shadow: 0 8px 28px rgba(0,0,0,.45);
   --mono: "SFMono-Regular", ui-monospace, "Cascadia Code", Consolas, "Liberation Mono", Menlo, monospace;
   --sans: "Montserrat", system-ui, -apple-system, "Segoe UI", Roboto, Helvetica, Arial, sans-serif;
@@ -74,7 +76,7 @@ body {
 }
 .move-toggle:hover { color: var(--text); }
 .move-toggle input { width: 14px; height: 14px; margin: 0; accent-color: var(--good); cursor: pointer; }
-.move-toggle:has(input:checked) { color: var(--text); background: rgba(91,155,213,.16); }
+.move-toggle:has(input:checked) { color: var(--text); background: rgba(97,152,202,.16); }
 
 /* ---- Puzzle meta ---- */
 .meta { display: flex; align-items: baseline; gap: 14px; flex-wrap: wrap; margin-bottom: 16px; font-size: 16px; }
@@ -94,7 +96,7 @@ body {
   transition: border-color .15s, box-shadow .15s;
 }
 .search input::placeholder { color: var(--muted-2); }
-.search input:focus { border-color: var(--accent); box-shadow: 0 0 0 3px rgba(91,155,213,.22); }
+.search input:focus { border-color: var(--accent); box-shadow: 0 0 0 3px rgba(97,152,202,.22); }
 .search input:disabled { opacity: .55; cursor: not-allowed; }
 
 .suggest {
@@ -153,15 +155,15 @@ body {
 .tree .mv-off { color: var(--miss); }
 .tree .tag { font-family: var(--sans); font-size: 11.5px; padding: 1px 7px; border-radius: 6px; margin-left: 7px; vertical-align: middle; }
 .tree .tag-guess { background: rgba(155,161,170,.16); color: var(--miss); }
-.tree .tag-tip   { background: rgba(91,155,213,.22); color: var(--good); }
+.tree .tag-tip   { background: rgba(97,152,202,.22); color: var(--good); }
 .tree .tag-tgt   { background: rgba(240,199,94,.20); color: var(--gold); font-weight: 700; }
-.tree .tag-reveal { background: rgba(91,155,213,.18); color: var(--good); font-weight: 700; }
-.tree .tag-here  { background: rgba(91,155,213,.16); color: var(--good); }
+.tree .tag-reveal { background: rgba(97,152,202,.18); color: var(--good); font-weight: 700; }
+.tree .tag-here  { background: rgba(97,152,202,.16); color: var(--good); }
 
 /* ---- Guess log ---- */
 .ghist-item { padding: 10px 12px; border-radius: 6px; border: 1px solid transparent; margin-bottom: 6px; background: var(--surface); }
 .ghist-item:last-child { margin-bottom: 0; }
-.ghist-item.best { background: rgba(91,155,213,.12); border-color: var(--good-dim); }
+.ghist-item.best { background: rgba(97,152,202,.12); border-color: var(--good-dim); }
 .ghist-item.win  { background: rgba(240,199,94,.12); border-color: rgba(240,199,94,.4); }
 .ghist-item .gn { font-weight: 700; }
 .ghist-item .gn .eco { color: var(--muted); font-family: var(--mono); font-size: 11.5px; margin-left: 6px; }
@@ -190,9 +192,9 @@ body {
   border-radius: 0; overflow: hidden; box-shadow: 0 6px 20px rgba(0,0,0,.4);
 }
 .sq { position: relative; display: flex; align-items: center; justify-content: center; min-width: 0; min-height: 0; }
-.sq.l { background: #e8edf1; }            /* chess.com blue board — light */
-.sq.d { background: #6f8fb2; }            /* chess.com blue board — dark */
-.sq.hl::after { content: ""; position: absolute; inset: 0; background: rgba(64, 154, 224, .42); }
+.sq.l { background: var(--board-light); }
+.sq.d { background: var(--board-dark); }
+.sq.hl::after { content: ""; position: absolute; inset: 0; background: rgba(83, 151, 208, .45); }
 .pc {
   position: relative; z-index: 1;
   width: 100%; height: 100%; object-fit: contain;
@@ -222,8 +224,8 @@ body {
 .sq .rk, .sq .fl { position: absolute; font-size: 9px; font-weight: 700; font-family: var(--sans); z-index: 1; }
 .sq .rk { top: 1px; left: 3px; }
 .sq .fl { bottom: 0px; right: 3px; }
-.sq.l .rk, .sq.l .fl { color: rgba(58,78,102,.65); }
-.sq.d .rk, .sq.d .fl { color: rgba(232,237,241,.85); }
+.sq.l .rk, .sq.l .fl { color: rgba(39,49,61,.72); }
+.sq.d .rk, .sq.d .fl { color: rgba(243,243,246,.82); }
 .board-footer { display: flex; align-items: center; gap: 12px; margin-top: 12px; }
 .board-cap { flex: 1; min-width: 0; font-family: var(--mono); font-size: 13px; line-height: 1.6; }
 .board-cap .ln { color: var(--good); }
