@@ -79,13 +79,11 @@ estimated from three structural proxies and bucketed into four tiers:
 - **move depth** — how many plies you must reproduce exactly;
 - **name nesting** — how deep the variation name runs.
 
-The distribution is deliberately skewed toward the hard end. Target counts are
-**Easy 39 · Medium 663 · Hard 653 · Expert 1,792**. **Easy** is reserved for the
-recognizable *base* openings only (no variation clause — "Sicilian Defense", "Ruy
-Lopez", "Queen's Gambit Declined", …); named variations move up to Medium/Hard; and
-the large **Expert** pool is the deep / obscure tail. Every one of the 3,167 openings
-stays **guessable** in all tiers — difficulty only controls which opening is the
-hidden *target*.
+Openings are ranked from least to most obscure using those proxies, then each tier
+uses a cumulative target pool: **Easy 32 · Medium 64 · Hard 128 · Expert 512**.
+That means Medium includes all Easy targets, Hard includes all Medium targets, and
+Expert includes all Hard targets. Every one of the 3,167 openings stays **guessable**
+in all tiers — difficulty only controls which opening can be the hidden *target*.
 
 > Note: with no popularity data, a *single*-variation name of a famous family can't be
 > told apart structurally from a famous one (e.g. "Caro-Kann: Classical" vs. an obscure

@@ -80,10 +80,24 @@ function tierOf(o) {
 
 const DIFFS = ["easy", "medium", "hard", "expert"];
 const DIFF_LABEL = { easy: "Easy", medium: "Medium", hard: "Hard", expert: "Expert" };
+const DIFF_LIMITS = { easy: 32, medium: 64, hard: 128, expert: 512 };
 const GUESS_LIMITS = { easy: 10, medium: 15, hard: 20, expert: 25 };
 const HINT_COST = 3;
-const POOLS = { easy: [], medium: [], hard: [], expert: [] };
-for (const o of OPENINGS) if (o.plies >= 2) POOLS[tierOf(o)].push(o);
+const TIER_ORDER = { easy: 0, medium: 1, hard: 2, expert: 3 };
+function rankOpening(a, b) {
+  return TIER_ORDER[tierOf(a)] - TIER_ORDER[tierOf(b)]
+    || obscurityScore(a) - obscurityScore(b)
+    || a.segs - b.segs
+    || a.plies - b.plies
+    || a.name.localeCompare(b.name);
+}
+const RANKED_OPENINGS = OPENINGS.filter(o => o.plies >= 2).sort(rankOpening);
+const POOLS = {
+  easy: RANKED_OPENINGS.slice(0, DIFF_LIMITS.easy),
+  medium: RANKED_OPENINGS.slice(0, DIFF_LIMITS.medium),
+  hard: RANKED_OPENINGS.slice(0, DIFF_LIMITS.hard),
+  expert: RANKED_OPENINGS.slice(0, DIFF_LIMITS.expert),
+};
 
 /* ---------- 2. Deterministic daily selection ---------- */
 const EPOCH = Date.UTC(2024, 0, 1);          // puzzle #1 = 2024-01-01 (local date)
@@ -319,7 +333,7 @@ function renderHistory(state) {
     const g = OPENINGS[cmp.guessId];
     const cls = cmp.isWin ? "win" : (cmp.sharedPlies === bestPlies && !state.solved ? "best" : "");
     return `<div class="ghist-item ${cls}">
-      <div class="gn">${cmp.isWin ? "🎯 " : ""}${esc(g.name)}<span class="eco">${esc(g.eco)}</span></div>
+      <div class="gn">${cmp.isWin ? "★ " : ""}${esc(g.name)}<span class="eco">${esc(g.eco)}</span></div>
       <div class="line">${fmtGuessLine(g, cmp)}</div>
     </div>`;
   });
@@ -783,7 +797,7 @@ function startPracticeFromWin() {
 
 /* ---------- 11. Sharing ---------- */
 function closenessSquare(cmp) {
-  if (cmp.isWin) return "🎯";
+  if (cmp.isWin) return "★";
   const r = cmp.sharedPlies / state.target.plies;
   if (cmp.sharedPlies === 0) return "⬛";
   if (r < 0.34) return "🟥";
@@ -844,7 +858,7 @@ function render() {
     banner.classList.add("show");
     const win = state.solved;
     banner.classList.toggle("win", win);
-    document.getElementById("bannerTitle").textContent = win ? "🎯 Solved!" : "Revealed";
+    document.getElementById("bannerTitle").textContent = win ? "★ Solved!" : "Revealed";
     document.getElementById("bannerTitle").style.color = "";
     document.getElementById("bannerName").innerHTML =
       `${esc(state.target.name)} <span class="eco">${esc(state.target.eco)}</span>`;
@@ -962,7 +976,7 @@ boot();
 
 // expose a little debug hook
 window.__OT = {
-  OPENINGS, POOLS, DIFFS, GUESS_LIMITS, HINT_COST, guessLimit, tierOf, obscurityScore, dailyTarget, compare, submitGuess, requestHint,
+  OPENINGS, POOLS, DIFFS, DIFF_LIMITS, GUESS_LIMITS, HINT_COST, guessLimit, tierOf, obscurityScore, dailyTarget, compare, submitGuess, requestHint,
   byName: n => OPENINGS.find(o => o.name === n),
   byMoves: m => OPENINGS.find(o => o.movesStr === m),
   get state() { return state; },
