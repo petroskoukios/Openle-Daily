@@ -60,6 +60,7 @@ the shareable text is still shown in the Stats panel so you can copy it manually
 | `game.js` | Game logic: comparison engine, tree builder, board rendering, autocomplete, difficulty/daily selection, stats, sharing. |
 | `chess.js` | Tiny SAN engine — replays a move list to reconstruct the board position. |
 | `openings.js` | The opening database (`window.OPENINGS`), generated. |
+| `assets/` | Static image assets, including the Openle wordmark. |
 | `pieces-svg/` | Chess piece SVGs drawn on the board (CC BY-SA — see Credits). |
 
 ## The data

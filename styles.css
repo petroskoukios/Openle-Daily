@@ -44,6 +44,7 @@ body {
 }
 .brand { display: flex; align-items: center; gap: 12px; font-weight: 800; font-size: 24px; letter-spacing: 0; color: #fff; }
 .brand .leaf { font-size: 29px; }
+.brand-logo { display: block; width: auto; height: 36px; }
 .brand small { color: var(--muted); font-weight: 600; font-size: 12px; letter-spacing: .05em; text-transform: uppercase; }
 
 .modes { display: flex; gap: 3px; margin-left: 8px; background: var(--surface); border-radius: 8px; padding: 3px; }
