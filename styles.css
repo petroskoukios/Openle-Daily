@@ -66,12 +66,12 @@ body {
 .iconbtn:hover { color: #fff; background: var(--border-solid); }
 
 /* ---- Puzzle meta ---- */
-.meta { display: flex; align-items: baseline; gap: 12px; flex-wrap: wrap; margin-bottom: 14px; }
-.meta .title { font-size: 15px; font-weight: 600; }
-.meta .sub { color: var(--muted); font-size: 13px; }
+.meta { display: flex; align-items: baseline; gap: 14px; flex-wrap: wrap; margin-bottom: 16px; font-size: 16px; }
+.meta .title { font-size: 18px; font-weight: 700; }
+.meta .sub { color: var(--muted); font-size: 15px; }
 .meta .diff { padding: 2px; }
-.meta .diff button { padding: 3px 10px; font-size: 12px; }
-.meta .gcount { margin-left: auto; color: var(--muted); font-size: 13px; }
+.meta .diff button { padding: 5px 12px; font-size: 14px; }
+.meta .gcount { margin-left: auto; color: var(--muted); font-size: 15px; }
 .meta .gcount b { color: var(--text); }
 
 /* ---- Search / autocomplete ---- */
@@ -122,6 +122,8 @@ body {
 .banner .b-name { font-weight: 700; }
 .banner .b-name .eco { color: var(--muted); font-family: var(--mono); font-size: 12px; }
 .banner .b-sub { color: var(--muted); font-size: 13px; width: 100%; }
+.banner.win { border-left-color: var(--gold); }
+.banner.win .b-title { color: var(--gold); }
 
 /* ---- Panels ---- */
 .panel { background: var(--panel); border: 1px solid var(--border-solid); border-radius: 8px; padding: 16px 18px; margin-bottom: 16px; }
@@ -173,7 +175,7 @@ body {
 .sq { position: relative; display: flex; align-items: center; justify-content: center; min-width: 0; min-height: 0; }
 .sq.l { background: #e8edf1; }            /* chess.com blue board — light */
 .sq.d { background: #6f8fb2; }            /* chess.com blue board — dark */
-.sq.hl::after { content: ""; position: absolute; inset: 0; background: rgba(247, 224, 92, .52); }
+.sq.hl::after { content: ""; position: absolute; inset: 0; background: rgba(64, 154, 224, .42); }
 .pc {
   position: relative; z-index: 1; line-height: 1;
   font-family: "Segoe UI Symbol", "Noto Sans Symbols 2", "Apple Symbols", "DejaVu Sans", sans-serif;

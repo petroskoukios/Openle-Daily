@@ -703,8 +703,9 @@ function render() {
   if (state.solved || state.gaveUp) {
     banner.classList.add("show");
     const win = state.solved;
+    banner.classList.toggle("win", win);
     document.getElementById("bannerTitle").textContent = win ? "🎯 Solved!" : "Revealed";
-    document.getElementById("bannerTitle").style.color = win ? "var(--good)" : "var(--gold)";
+    document.getElementById("bannerTitle").style.color = "";
     document.getElementById("bannerName").innerHTML =
       `${esc(state.target.name)} <span class="eco">${esc(state.target.eco)}</span>`;
     document.getElementById("bannerSub").innerHTML =
@@ -712,6 +713,7 @@ function render() {
       (win ? ` &nbsp;·&nbsp; in ${guessWord(guessBudgetUsed(state))}` : "");
   } else {
     banner.classList.remove("show");
+    banner.classList.remove("win");
   }
 
   // input lock
