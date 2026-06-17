@@ -425,7 +425,7 @@ function renderBoard(state) {
     cap.innerHTML = `<span class="ln">${fmtMoves(tgt.moves, "")}</span>`;
   } else if (depth === 0) {
     title.textContent = "How far you've gotten";
-    cap.innerHTML = `<span class="muted">starting position — no shared moves yet</span>`;
+    cap.innerHTML = `<span class="muted">Starting position — no shared moves yet</span>`;
   } else {
     title.textContent = "How far you've gotten";
     cap.innerHTML = `<span class="ln">${fmtMoves(tgt.moves.slice(0, depth), "")}</span>` +
