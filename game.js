@@ -1,5 +1,5 @@
 /* ===================================================================
-   Opening Tree — daily chess opening puzzle
+   Openle — daily chess opening puzzle
    Pure client-side. Data: window.OPENINGS = [{n,e,m}, ...]
    =================================================================== */
 (function () {
@@ -419,7 +419,7 @@ function renderBoard(state) {
     cap.innerHTML = depth === 0
       ? `<span class="muted">starting position</span>`
       : `<span class="ln">${fmtMoves(tgt.moves.slice(0, depth), "")}</span>` +
-        `<span class="muted"> · ${depth} ${depth === 1 ? "ply" : "plies"} into the target</span>`;
+        `<span class="muted"> · ${depth} opening ${depth === 1 ? "move" : "moves"} matched</span>`;
   } else if (done) {
     title.textContent = state.solved ? "Solved — target position" : "Revealed — target position";
     cap.innerHTML = `<span class="ln">${fmtMoves(tgt.moves, "")}</span>`;
@@ -429,7 +429,7 @@ function renderBoard(state) {
   } else {
     title.textContent = "How far you've gotten";
     cap.innerHTML = `<span class="ln">${fmtMoves(tgt.moves.slice(0, depth), "")}</span>` +
-      `<span class="muted"> · ${depth} ${depth === 1 ? "ply" : "plies"} into the target</span>`;
+      `<span class="muted"> · ${depth} opening ${depth === 1 ? "move" : "moves"} matched</span>`;
   }
 }
 
@@ -606,8 +606,8 @@ const kStats = (mode, diff) => `ot.stats.${mode}.${diff}`;
 const K_DIFF = "ot.diff";           // last-used difficulty
 
 function loadDiff() {
-  const d = LS.get(K_DIFF, "medium");
-  return DIFFS.includes(d) ? d : "medium";
+  const d = LS.get(K_DIFF, "easy");
+  return DIFFS.includes(d) ? d : "easy";
 }
 let difficulty = loadDiff();        // current difficulty, shared across modes
 
@@ -813,13 +813,13 @@ function shareText() {
   const h = hintsUsed(state);
   const limit = guessLimit(state);
   const head = state.mode === "daily"
-    ? `Opening Tree #${state.dayNo} · ${DIFF_LABEL[state.difficulty]} — ${state.solved ? `${guessWord(n)}/${limit}` : "X"}${h ? ` · ${hintWord(h)}` : ""}`
-    : `Opening Tree · ${DIFF_LABEL[state.difficulty]} practice — ${guessWord(n)}/${limit}${h ? ` · ${hintWord(h)}` : ""}`;
+    ? `Openle #${state.dayNo} · ${DIFF_LABEL[state.difficulty]} — ${state.solved ? `${guessWord(n)}/${limit}` : "X"}${h ? ` · ${hintWord(h)}` : ""}`
+    : `Openle · ${DIFF_LABEL[state.difficulty]} practice — ${guessWord(n)}/${limit}${h ? ` · ${hintWord(h)}` : ""}`;
   const squares = state.results.map(closenessSquare);
   // group into rows of 5 for a tidy grid
   let grid = "";
   for (let i = 0; i < squares.length; i += 5) grid += squares.slice(i, i + 5).join("") + "\n";
-  return `${head}\n${grid}🌳 openings as a tree`;
+  return `${head}\n${grid}♟ guess the chess opening`;
 }
 async function doShare() {
   const text = shareText();

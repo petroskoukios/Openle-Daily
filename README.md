@@ -1,6 +1,7 @@
-# 🌳 Opening Tree
+# Openle
 
-A daily puzzle game in the spirit of Wordle and Metazooa, but for **chess openings**.
+Guess the chess opening. A daily puzzle game in the spirit of Wordle and Metazooa,
+but for **chess openings**.
 
 Each day a hidden **target opening** is chosen. You guess other openings, and the
 only feedback is how far you travel down the **same branches of the opening tree**
