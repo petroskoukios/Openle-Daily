@@ -280,8 +280,10 @@ function renderTree(state) {
       ? (state.solved ? "mv-target" : "mv-on")
       : "mv-off";
     let s = `<span class="${cls}">${esc(node.move)}</span>`;
-    if (node.isTargetEnd)
-      s += `<span class="tag tag-tgt">★ ${esc(state.target.name)} (${esc(state.target.eco)})</span>`;
+    if (node.isTargetEnd) {
+      const tagCls = state.solved ? "tag-tgt" : "tag-reveal";
+      s += `<span class="tag ${tagCls}">★ ${esc(state.target.name)} (${esc(state.target.eco)})</span>`;
+    }
     else for (const g of node.guesses) {
       // a guess sitting on the confirmed trunk is a correct sub-line ("you've been here").
       const onPath = node.onTarget;
@@ -694,6 +696,7 @@ function giveUp() {
   clearBoardPlayback();
   state.gaveUp = true;
   if (state.mode === "daily") { saveDaily(); recordDaily(false); }
+  else recordPractice(false);
   render();
 }
 
@@ -827,7 +830,8 @@ async function doShare() {
     toast("Copy the result from the Stats panel.");
   }
   // also surface in stats modal
-  document.getElementById("shareArea").innerHTML = `<div class="shareout">${esc(text)}</div>`;
+  if (statsMode === state.mode && statsDiff === state.difficulty)
+    document.getElementById("shareArea").innerHTML = `<div class="shareout">${esc(text)}</div>`;
 }
 
 /* ---------- 12. Master render ---------- */
@@ -890,28 +894,32 @@ function render() {
 }
 
 /* ---------- 13. Stats modal ---------- */
-function openStats() {
-  const isDaily = state.mode === "daily";
-  document.getElementById("statsTitle").textContent =
-    `${DIFF_LABEL[state.difficulty]} · ${isDaily ? "Daily" : "Practice"} statistics`;
+let statsMode = "daily";
+let statsDiff = "easy";
+
+function renderStatsView(mode = statsMode, diff = statsDiff) {
+  statsMode = mode;
+  statsDiff = diff;
+  const isDaily = mode === "daily";
+  document.querySelectorAll("#statsMode button").forEach(x => x.classList.toggle("active", x.dataset.statsMode === mode));
+  document.querySelectorAll("#statsDiff button").forEach(x => x.classList.toggle("active", x.dataset.statsDiff === diff));
   const grid = document.getElementById("statsGrid");
   const dist = document.getElementById("statsDist");
   if (isDaily) {
-    const s = LS.get(kStats("daily", state.difficulty), { played: 0, won: 0, streak: 0, maxStreak: 0, dist: {} });
-    const pct = s.played ? Math.round((s.won / s.played) * 100) : 0;
+    const s = LS.get(kStats("daily", diff), { played: 0, won: 0, streak: 0, maxStreak: 0, dist: {} });
     grid.innerHTML = [
-      ["Played", s.played], ["Win %", pct], ["Streak", s.streak], ["Max streak", s.maxStreak],
+      ["Played", s.played], ["Solved", s.won], ["Streak", s.streak], ["Max streak", s.maxStreak],
     ].map(([l, n]) => `<div class="stat"><div class="n">${n}</div><div class="l">${l}</div></div>`).join("");
     const keys = Object.keys(s.dist).map(Number).sort((a, b) => a - b);
     const maxC = Math.max(1, ...keys.map(k => s.dist[k]));
-    const curG = state.solved ? guessBudgetUsed(state) : -1;
+    const curG = state.solved && state.mode === mode && state.difficulty === diff ? guessBudgetUsed(state) : -1;
     dist.innerHTML = `<div class="l" style="color:var(--muted);font-size:11px;letter-spacing:.04em;text-transform:uppercase">Guess distribution</div>` +
       (keys.length ? keys.map(k =>
         `<div class="dist-row"><span class="k">${k}</span>
          <span class="bar ${k === curG ? "cur" : ""}" style="width:${Math.round((s.dist[k] / maxC) * 100)}%">${s.dist[k]}</span></div>`).join("")
         : `<div class="hint" style="margin-top:6px">No solves yet.</div>`);
   } else {
-    const s = LS.get(kStats("practice", state.difficulty), { played: 0, won: 0, totalGuesses: 0, best: null });
+    const s = LS.get(kStats("practice", diff), { played: 0, won: 0, totalGuesses: 0, best: null });
     const avg = s.won ? (s.totalGuesses / s.won).toFixed(1) : "—";
     grid.innerHTML = [
       ["Played", s.played], ["Solved", s.won], ["Avg guesses", avg], ["Best", s.best ?? "—"],
@@ -920,7 +928,11 @@ function openStats() {
   }
   // share area
   const sa = document.getElementById("shareArea");
-  sa.innerHTML = (state.solved && isDaily) ? `<div class="shareout">${esc(shareText())}</div>` : "";
+  sa.innerHTML = (state.solved && isDaily && state.mode === mode && state.difficulty === diff) ? `<div class="shareout">${esc(shareText())}</div>` : "";
+}
+
+function openStats() {
+  renderStatsView(state.mode, state.difficulty);
   modal("statsModal", true);
 }
 
@@ -935,6 +947,14 @@ document.addEventListener("keydown", e => { if (e.key === "Escape") document.que
 /* ---------- 15. Wiring ---------- */
 document.getElementById("howBtn").addEventListener("click", () => modal("howModal", true));
 document.getElementById("statsBtn").addEventListener("click", openStats);
+document.getElementById("statsMode").addEventListener("click", e => {
+  const b = e.target.closest("button[data-stats-mode]"); if (!b) return;
+  renderStatsView(b.dataset.statsMode, statsDiff);
+});
+document.getElementById("statsDiff").addEventListener("click", e => {
+  const b = e.target.closest("button[data-stats-diff]"); if (!b) return;
+  renderStatsView(statsMode, b.dataset.statsDiff);
+});
 document.getElementById("shareBtn").addEventListener("click", doShare);
 document.getElementById("winShareBtn").addEventListener("click", doShare);
 document.getElementById("winPracticeBtn").addEventListener("click", startPracticeFromWin);

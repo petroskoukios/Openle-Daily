@@ -145,6 +145,7 @@ body {
 .tree .tag-guess { background: rgba(155,161,170,.16); color: var(--miss); }
 .tree .tag-tip   { background: rgba(91,155,213,.22); color: var(--good); }
 .tree .tag-tgt   { background: rgba(240,199,94,.20); color: var(--gold); font-weight: 700; }
+.tree .tag-reveal { background: rgba(91,155,213,.18); color: var(--good); font-weight: 700; }
 .tree .tag-here  { background: rgba(91,155,213,.16); color: var(--good); }
 
 /* ---- Guess log ---- */
@@ -264,6 +265,9 @@ body {
 .dot.gold { background: var(--gold); }
 
 /* ---- Stats ---- */
+.stats-controls { display: flex; align-items: center; gap: 10px; flex-wrap: wrap; margin-top: 14px; }
+.stats-controls .modes { margin-left: 0; }
+.stats-controls .diff button { padding: 6px 10px; font-size: 13px; }
 .stats-grid { display: grid; grid-template-columns: repeat(4, 1fr); gap: 12px; margin: 16px 0 6px; }
 .stat { text-align: center; }
 .stat .n { font-size: 26px; font-weight: 700; font-variant-numeric: tabular-nums; }

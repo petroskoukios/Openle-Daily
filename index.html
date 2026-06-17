@@ -126,7 +126,19 @@ Guess:   1.e4 e5  2.Nf3 Nc6  3.Bc4      (Italian Game)
 <div class="modal-bg" id="statsModal">
   <div class="modal">
     <button class="iconbtn close" data-close>✕</button>
-    <h2 id="statsTitle">Statistics</h2>
+    <h2 id="statsTitle">Game Statistics</h2>
+    <div class="stats-controls">
+      <div class="modes" id="statsMode">
+        <button data-stats-mode="daily">Daily</button>
+        <button data-stats-mode="practice">Practice</button>
+      </div>
+      <div class="modes diff" id="statsDiff">
+        <button data-stats-diff="easy">Easy</button>
+        <button data-stats-diff="medium">Medium</button>
+        <button data-stats-diff="hard">Hard</button>
+        <button data-stats-diff="expert">Expert</button>
+      </div>
+    </div>
     <div class="stats-grid" id="statsGrid"></div>
     <div class="dist" id="statsDist"></div>
     <div id="shareArea"></div>
