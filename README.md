@@ -15,8 +15,8 @@ before your line splits away from the target's. The goal is to feel like you're
   for everyone playing that tier. Switch tiers freely; each keeps its own progress.
 - **Difficulty-specific guess budgets**: Easy gets 10 guesses, Medium 15, Hard 20,
   and Expert 25. Guesses are selected through an autocomplete search. You don't need
-  to type exact names — search by name (`najdorf`) or ECO code (`B90`). A **Moves**
-  toggle enables move-order search (`1. e4 e5 Nf3`).
+  to type exact names — search by name (`najdorf`) or ECO code (`B90`). A
+  **Search using notation** toggle enables move-order search (`1. e4 e5 Nf3`).
 - **Hints reveal one more target move** on the tree and board, and each hint costs
   **3 guesses** from that tier's budget.
 - For every guess the game finds the **deepest common prefix of moves** with the
