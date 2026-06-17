@@ -12,19 +12,20 @@ before your line splits away from the target's. The goal is to feel like you're
 - **Four daily puzzles every day** — one per difficulty (Easy / Medium / Hard /
   Expert). Each is chosen deterministically from the calendar date, so it's the same
   for everyone playing that tier. Switch tiers freely; each keeps its own progress.
-- **15 guesses total**, selected through an autocomplete search. You don't need to
-  type exact names — search by name (`najdorf`), ECO code (`B90`), or even by
+- **Difficulty-specific guess budgets**: Easy gets 10 guesses, Medium 15, Hard 20,
+  and Expert 25. Guesses are selected through an autocomplete search. You don't need
+  to type exact names — search by name (`najdorf`), ECO code (`B90`), or even by
   **moves** (`1. e4 e5 Nf3`).
 - **Hints reveal one more target move** on the tree and board, and each hint costs
-  **3 guesses** from that 15-guess budget.
+  **3 guesses** from that tier's budget.
 - For every guess the game finds the **deepest common prefix of moves** with the
   target — the point where your line splits away from the target's.
 - The feedback is the **opening tree itself** — that's the whole game. Confirmed-shared
-  moves form a blue trunk; each guess's wrong turn branches off in red; the tip of the
+  moves form a blue trunk; each guess's wrong turn branches off in gray; the tip of the
   trunk shows how deep you've confirmed; the target line is revealed in gold ★ only when
   you win, give up, or run out of guesses, so the tree never spoils the answer.
 - A minimal **guess log** under the tree shows each guess's line with shared moves in
-  blue and the diverging move in red — nothing else to read.
+  blue and the diverging move in gray — nothing else to read.
 - A **chess board** beside the tree shows *how far you've gotten* — the position at the
   end of the deepest line you've confirmed shared with the target (the full target
   position once you win). The position is rebuilt from the moves by a small built-in
@@ -54,7 +55,7 @@ the shareable text is still shown in the Stats panel so you can copy it manually
 | File | Purpose |
 | --- | --- |
 | `index.html` | Markup and modals. |
-| `styles.css` | All styling (chess.com-inspired dark theme, blue board, green accents). |
+| `styles.css` | All styling (chess.com-inspired dark theme, blue board, blue accents). |
 | `game.js` | Game logic: comparison engine, tree builder, board rendering, autocomplete, difficulty/daily selection, stats, sharing. |
 | `chess.js` | Tiny SAN engine — replays a move list to reconstruct the board position. |
 | `openings.js` | The opening database (`window.OPENINGS`), generated. |

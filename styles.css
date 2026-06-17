@@ -13,6 +13,7 @@
   --good-dim: #38567a;
   --gold: #f0c75e;        /* the target (yellow highlight) */
   --bad: #d76b5c;         /* diverged */
+  --miss: #9ba1aa;        /* diverged tree paths */
   --cold: #7da3c8;        /* far away */
   --accent: #5b9bd5;      /* blue accent everywhere */
   --accent-dark: #3f79b2; /* raised-button bottom edge */
@@ -138,9 +139,10 @@ body {
 .tree .conn { color: var(--muted-2); }
 .tree .root { color: var(--text); font-weight: 600; }
 .tree .mv-on  { color: var(--good); font-weight: 600; }
-.tree .mv-off { color: var(--bad); }
+.tree .mv-target { color: var(--gold); font-weight: 700; }
+.tree .mv-off { color: var(--miss); }
 .tree .tag { font-family: var(--sans); font-size: 11.5px; padding: 1px 7px; border-radius: 6px; margin-left: 7px; vertical-align: middle; }
-.tree .tag-guess { background: rgba(215,107,92,.18); color: var(--bad); }
+.tree .tag-guess { background: rgba(155,161,170,.16); color: var(--miss); }
 .tree .tag-tip   { background: rgba(91,155,213,.22); color: var(--good); }
 .tree .tag-tgt   { background: rgba(240,199,94,.20); color: var(--gold); font-weight: 700; }
 .tree .tag-here  { background: rgba(91,155,213,.16); color: var(--good); }
@@ -155,7 +157,7 @@ body {
 .ghist-item .line { font-family: var(--mono); font-size: 13px; margin-top: 4px; }
 .ghist-item .line .num { color: var(--muted-2); }
 .ghist-item .line .sh { color: var(--good); }
-.ghist-item .line .dv { color: var(--bad); font-weight: 600; }
+.ghist-item .line .dv { color: var(--miss); font-weight: 600; }
 .ghist-item .line .rest { color: var(--muted-2); }
 
 /* ---- Two-column layout: tree on the left, board on the right ---- */
@@ -258,7 +260,7 @@ body {
 .legend span { display: inline-flex; align-items: center; gap: 6px; color: var(--muted); }
 .dot { width: 11px; height: 11px; border-radius: 3px; display: inline-block; }
 .dot.good { background: var(--good); }
-.dot.bad { background: var(--bad); }
+.dot.bad { background: var(--miss); }
 .dot.gold { background: var(--gold); }
 
 /* ---- Stats ---- */

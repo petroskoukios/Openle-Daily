@@ -80,7 +80,7 @@ function tierOf(o) {
 
 const DIFFS = ["easy", "medium", "hard", "expert"];
 const DIFF_LABEL = { easy: "Easy", medium: "Medium", hard: "Hard", expert: "Expert" };
-const MAX_GUESSES = 15;
+const GUESS_LIMITS = { easy: 10, medium: 15, hard: 20, expert: 25 };
 const HINT_COST = 3;
 const POOLS = { easy: [], medium: [], hard: [], expert: [] };
 for (const o of OPENINGS) if (o.plies >= 2) POOLS[tierOf(o)].push(o);
@@ -158,8 +158,13 @@ function guessBudgetUsed(state) {
   return state.results.length + hintsUsed(state) * HINT_COST;
 }
 
+function guessLimit(stateOrDiff = state) {
+  const diff = typeof stateOrDiff === "string" ? stateOrDiff : stateOrDiff?.difficulty;
+  return GUESS_LIMITS[diff] || GUESS_LIMITS.medium;
+}
+
 function guessBudgetLeft(state) {
-  return Math.max(0, MAX_GUESSES - guessBudgetUsed(state));
+  return Math.max(0, guessLimit(state) - guessBudgetUsed(state));
 }
 
 function guessWord(n) {
@@ -256,14 +261,15 @@ function renderTree(state) {
   const { root, tip } = buildTree(state);
   const lines = [];
   lines.push(`<span class="root">Root</span>`);
-
   const label = node => {
-    const cls = node.onTarget ? "mv-on" : "mv-off";
+    const cls = node.onTarget
+      ? (state.solved ? "mv-target" : "mv-on")
+      : "mv-off";
     let s = `<span class="${cls}">${esc(node.move)}</span>`;
     if (node.isTargetEnd)
       s += `<span class="tag tag-tgt">★ ${esc(state.target.name)} (${esc(state.target.eco)})</span>`;
     else for (const g of node.guesses) {
-      // a guess sitting on the confirmed green trunk is a correct sub-line ("you've been here").
+      // a guess sitting on the confirmed trunk is a correct sub-line ("you've been here").
       const onPath = node.onTarget;
       s += `<span class="tag ${onPath ? "tag-here" : "tag-guess"}" title="${esc(g.name)} (${esc(g.eco)})">${onPath ? "✓ " : ""}${esc(trunc(g.name, 30))}</span>`;
     }
@@ -278,7 +284,7 @@ function renderTree(state) {
 
   const walk = (node, prefix, depth) => {
     const kids = [...node.children.values()];
-    // trunk (on-target) child first, so the green spine reads straight down.
+    // trunk (on-target) child first, so the confirmed spine reads straight down.
     kids.sort((a, b) => (b.onTarget - a.onTarget) || a.move.localeCompare(b.move));
     kids.forEach((c, i) => {
       c.depth = depth + 1;
@@ -300,7 +306,7 @@ function renderTree(state) {
 
 /* ---------- 6. Guess log ---------- */
 // A simple, most-recent-first list of guesses. Each shows the line with shared
-// moves in green and the first diverging move in red — the tree carries the rest.
+// moves plus the first diverging move — the tree carries the rest.
 function renderHistory(state) {
   const panel = document.getElementById("historyPanel");
   if (!state.results.length) { panel.style.display = "none"; return; }
@@ -788,9 +794,10 @@ function closenessSquare(cmp) {
 function shareText() {
   const n = guessBudgetUsed(state);
   const h = hintsUsed(state);
+  const limit = guessLimit(state);
   const head = state.mode === "daily"
-    ? `Opening Tree #${state.dayNo} · ${DIFF_LABEL[state.difficulty]} — ${state.solved ? `${guessWord(n)}/15` : "X"}${h ? ` · ${hintWord(h)}` : ""}`
-    : `Opening Tree · ${DIFF_LABEL[state.difficulty]} practice — ${guessWord(n)}/15${h ? ` · ${hintWord(h)}` : ""}`;
+    ? `Opening Tree #${state.dayNo} · ${DIFF_LABEL[state.difficulty]} — ${state.solved ? `${guessWord(n)}/${limit}` : "X"}${h ? ` · ${hintWord(h)}` : ""}`
+    : `Opening Tree · ${DIFF_LABEL[state.difficulty]} practice — ${guessWord(n)}/${limit}${h ? ` · ${hintWord(h)}` : ""}`;
   const squares = state.results.map(closenessSquare);
   // group into rows of 5 for a tidy grid
   let grid = "";
@@ -826,9 +833,10 @@ function render() {
   diff.querySelectorAll("button").forEach(x => x.classList.toggle("active", x.dataset.diff === state.difficulty));
   const gc = document.getElementById("gcount");
   const spent = guessBudgetUsed(state), left = guessBudgetLeft(state), hintN = hintsUsed(state);
+  const limit = guessLimit(state);
   gc.innerHTML = spent
-    ? `<b>${spent}</b>/${MAX_GUESSES} guesses` + (hintN ? ` · ${hintWord(hintN)}` : "")
-    : `<b>${MAX_GUESSES}</b> guesses`;
+    ? `<b>${spent}</b>/${limit} guesses` + (hintN ? ` · ${hintWord(hintN)}` : "")
+    : `<b>${limit}</b> guesses`;
 
   // banner
   const banner = document.getElementById("banner");
@@ -954,7 +962,7 @@ boot();
 
 // expose a little debug hook
 window.__OT = {
-  OPENINGS, POOLS, DIFFS, MAX_GUESSES, HINT_COST, tierOf, obscurityScore, dailyTarget, compare, submitGuess, requestHint,
+  OPENINGS, POOLS, DIFFS, GUESS_LIMITS, HINT_COST, guessLimit, tierOf, obscurityScore, dailyTarget, compare, submitGuess, requestHint,
   byName: n => OPENINGS.find(o => o.name === n),
   byMoves: m => OPENINGS.find(o => o.movesStr === m),
   get state() { return state; },

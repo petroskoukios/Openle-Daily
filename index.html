@@ -92,7 +92,7 @@
     <p>Find the hidden <b>target opening</b>. Each guess is another chess opening, and your clue is how many opening moves it shares with the target before the line branches away.</p>
 
     <h3>Your goal</h3>
-    <p>Guess the exact opening within <b>15 guesses</b>. A normal guess costs <b>1</b>. A hint reveals the next target move on the tree and board, and costs <b>3 guesses</b>.</p>
+    <p>Guess the exact opening before your tier's budget runs out: <b>10</b> guesses on Easy, <b>15</b> on Medium, <b>20</b> on Hard, and <b>25</b> on Expert. A normal guess costs <b>1</b>. A hint reveals the next target move on the tree and board, and costs <b>3 guesses</b>.</p>
 
     <h3>How clues work</h3>
     <p>After each guess, the game compares its move sequence with the target and keeps the deepest shared prefix. If your guess makes progress, the board plays the newly confirmed moves in order.</p>
@@ -104,9 +104,9 @@ Guess:   1.e4 e5  2.Nf3 Nc6  3.Bc4      (Italian Game)
     <h3>Reading the tree</h3>
     <ul>
       <li><span style="color:var(--good);font-weight:600">Blue moves</span> are confirmed to be on the target's path.</li>
-      <li><span style="color:var(--bad)">Red moves</span> are where one of your guesses branched away.</li>
+      <li><span style="color:var(--miss)">Gray moves</span> are where one of your guesses branched away.</li>
       <li>The <span style="color:var(--good)">tip</span> of the blue trunk is the deepest point you've confirmed.</li>
-      <li>The full answer appears in <span style="color:var(--gold);font-weight:600">gold ★</span> only when you win, give up, or run out of guesses.</li>
+      <li>The target path turns <span style="color:var(--gold);font-weight:600">gold ★</span> only after you guess the opening's name.</li>
     </ul>
     <div class="legend">
       <span><i class="dot good"></i> on target path</span>
