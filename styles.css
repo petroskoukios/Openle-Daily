@@ -42,11 +42,11 @@ body {
   display: flex; align-items: center; gap: 16px;
   padding: 18px 2px 14px;
   border-bottom: 1px solid var(--border-solid);
-  margin-bottom: 20px;
+  margin-bottom: 17px;
 }
-.brand { display: flex; align-items: center; gap: 10px; font-weight: 800; font-size: 20px; letter-spacing: -.2px; color: #fff; }
-.brand .leaf { font-size: 24px; }
-.brand small { color: var(--muted); font-weight: 600; font-size: 11px; letter-spacing: .05em; text-transform: uppercase; }
+.brand { display: flex; align-items: center; gap: 12px; font-weight: 800; font-size: 24px; letter-spacing: 0; color: #fff; }
+.brand .leaf { font-size: 29px; }
+.brand small { color: var(--muted); font-weight: 600; font-size: 12px; letter-spacing: .05em; text-transform: uppercase; }
 
 .modes { display: flex; gap: 3px; margin-left: 8px; background: var(--surface); border-radius: 8px; padding: 3px; }
 .modes button {
@@ -165,7 +165,7 @@ body {
 .ghist-item.win .line span { color: var(--gold); }
 
 /* ---- Two-column layout: tree on the left, board on the right ---- */
-.layout { display: grid; grid-template-columns: minmax(0, 1fr) minmax(330px, 0.92fr); gap: 18px; align-items: start; }
+.layout { display: grid; grid-template-columns: minmax(0, 1fr) minmax(330px, 1fr); gap: 18px; align-items: start; }
 .col-left { min-width: 0; }
 .col-right { position: sticky; top: 16px; }
 .col-left .panel:last-of-type { margin-bottom: 16px; }
@@ -177,7 +177,7 @@ body {
   display: grid; grid-template-columns: repeat(8, 1fr); grid-template-rows: repeat(8, 1fr);
   aspect-ratio: 1 / 1; width: 100%; container-type: inline-size;
   position: relative;
-  border-radius: 6px; overflow: hidden; box-shadow: 0 6px 20px rgba(0,0,0,.4);
+  border-radius: 0; overflow: hidden; box-shadow: 0 6px 20px rgba(0,0,0,.4);
 }
 .sq { position: relative; display: flex; align-items: center; justify-content: center; min-width: 0; min-height: 0; }
 .sq.l { background: #e8edf1; }            /* chess.com blue board — light */
