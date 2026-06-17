@@ -132,6 +132,21 @@ Guess:   1.e4 e5  2.Nf3 Nc6  3.Bc4      (Italian Game)
   </div>
 </div>
 
+<!-- Win modal -->
+<div class="modal-bg" id="winModal">
+  <div class="modal win-modal">
+    <button class="iconbtn close" data-close>✕</button>
+    <h2>You win!</h2>
+    <div class="win-answer" id="winAnswer"></div>
+    <div class="win-stats" id="winStats"></div>
+    <p id="winPrompt">Share your score or play a practice game.</p>
+    <div class="win-actions">
+      <button class="btn primary" id="winShareBtn">Share result</button>
+      <button class="btn" id="winPracticeBtn">Practice</button>
+    </div>
+  </div>
+</div>
+
 <script src="openings.js"></script>
 <script src="chess.js"></script>
 <script src="game.js"></script>

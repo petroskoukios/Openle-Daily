@@ -641,6 +641,51 @@ function recordPractice(won) {
 function onSolve() {
   if (state.mode === "daily") recordDaily(true);
   else recordPractice(true);
+  clearTimeout(openWinModal._timer);
+  openWinModal._timer = setTimeout(() => {
+    if (state.solved && !state.gaveUp) openWinModal();
+  }, 700);
+}
+
+function winStatsForCurrentState() {
+  if (state.mode === "daily") {
+    const s = LS.get(kStats("daily", state.difficulty), { played: 0, won: 0, streak: 0, maxStreak: 0, dist: {} });
+    return [
+      ["Played", s.played],
+      ["Won", s.won],
+      ["Current", s.streak],
+      ["Max", s.maxStreak],
+    ];
+  }
+  const s = LS.get(kStats("practice", state.difficulty), { played: 0, won: 0, totalGuesses: 0, best: null });
+  const avg = s.won ? (s.totalGuesses / s.won).toFixed(1) : "—";
+  return [
+    ["Played", s.played],
+    ["Solved", s.won],
+    ["Avg", avg],
+    ["Best", s.best ?? "—"],
+  ];
+}
+
+function openWinModal() {
+  document.getElementById("winAnswer").innerHTML =
+    `${esc(state.target.name)} <span class="eco">${esc(state.target.eco)}</span>` +
+    `<span class="moves">${fmtMoves(state.target.moves, "")}</span>`;
+  document.getElementById("winStats").innerHTML = winStatsForCurrentState()
+    .map(([label, value]) => `<div class="win-stat"><div class="n">${value}</div><div class="l">${label}</div></div>`)
+    .join("");
+  document.getElementById("winPrompt").textContent =
+    state.mode === "daily" ? "Share your score or play a practice game." : "Share your score or try another practice puzzle.";
+  modal("winModal", true);
+}
+
+function startPracticeFromWin() {
+  document.querySelectorAll("#modes button").forEach(x => x.classList.toggle("active", x.dataset.mode === "practice"));
+  state = freshPractice();
+  input.value = "";
+  modal("winModal", false);
+  render();
+  input.focus();
 }
 
 /* ---------- 11. Sharing ---------- */
@@ -782,6 +827,8 @@ document.addEventListener("keydown", e => { if (e.key === "Escape") document.que
 document.getElementById("howBtn").addEventListener("click", () => modal("howModal", true));
 document.getElementById("statsBtn").addEventListener("click", openStats);
 document.getElementById("shareBtn").addEventListener("click", doShare);
+document.getElementById("winShareBtn").addEventListener("click", doShare);
+document.getElementById("winPracticeBtn").addEventListener("click", startPracticeFromWin);
 document.getElementById("hintBtn").addEventListener("click", requestHint);
 document.getElementById("giveUpBtn").addEventListener("click", giveUp);
 document.getElementById("newBtn").addEventListener("click", () => {
