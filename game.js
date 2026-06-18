@@ -406,8 +406,12 @@ function renderTreeInto(state, el) {
   const latestNodes = allNodes.filter(node => node.latest);
   const latestFocus = latestNodes[latestNodes.length - 1];
   const focusX = latestFocus ? (latestFocus.cx + targetFocus.cx) / 2 : targetFocus.cx;
+  const focusY = latestFocus
+    ? ((latestFocus.y + latestFocus.height / 2) + (targetFocus.y + targetFocus.height / 2)) / 2
+    : targetFocus.y + targetFocus.height / 2;
   requestAnimationFrame(() => {
     el.scrollLeft = Math.max(0, focusX * view.zoom - el.clientWidth / 2);
+    el.scrollTop = Math.max(0, focusY * view.zoom - el.clientHeight / 2);
   });
 }
 

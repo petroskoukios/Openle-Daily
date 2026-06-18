@@ -35,7 +35,7 @@ body {
   min-height: 100vh;
 }
 
-.wrap { max-width: 1140px; margin: 0 auto; padding: 0 18px 80px; }
+.wrap { max-width: 1220px; margin: 0 auto; padding: 0 18px 80px; }
 
 /* ---- App bar ---- */
 .appbar {
@@ -130,6 +130,7 @@ body {
 .panel > h2 { margin: 0 0 12px; font-size: 12px; letter-spacing: .06em; text-transform: uppercase; color: var(--muted); font-weight: 700; }
 .panel .hint { color: var(--muted-2); font-size: 13px; }
 .tree-panel { padding: 10px 12px 12px; }
+.tree-panel > .tree { height: clamp(300px, 44vh, 470px); min-height: 0; }
 .panel-heading { display: flex; align-items: center; justify-content: space-between; gap: 12px; margin: 0 0 4px; }
 .panel-heading h2 { margin: 0; font-size: 12px; letter-spacing: .06em; text-transform: uppercase; color: var(--muted); font-weight: 700; }
 .tree-controls, .tree-modal-controls { display: flex; align-items: center; gap: 2px; }
@@ -243,7 +244,7 @@ button.tree-node:focus-visible { outline: 2px solid var(--accent-hover); outline
 .ghist-item.win .line span { color: var(--gold); }
 
 /* ---- Two-column layout: tree on the left, board on the right ---- */
-.layout { display: grid; grid-template-columns: minmax(0, 1fr) minmax(330px, 1fr); gap: 18px; align-items: start; }
+.layout { display: grid; grid-template-columns: minmax(0, 1.18fr) minmax(320px, .82fr); gap: 18px; align-items: start; }
 .col-left { min-width: 0; }
 .col-right { position: sticky; top: 16px; }
 .col-left .panel:last-of-type { margin-bottom: 16px; }
@@ -316,6 +317,7 @@ button.tree-node:focus-visible { outline: 2px solid var(--accent-hover); outline
   .layout { grid-template-columns: 1fr; }
   .col-right { position: static; order: -1; }      /* board on top when stacked */
   .col-right .board-wrap { max-width: 420px; margin: 0 auto; }
+  .tree-panel > .tree { height: clamp(280px, 52vh, 440px); }
 }
 
 /* ---- Footer actions (chess.com raised buttons) ---- */
