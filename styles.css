@@ -152,7 +152,8 @@ body {
 }
 .tree::-webkit-scrollbar { display: none; }
 .tree.is-panning, .tree.is-panning * { cursor: grabbing !important; }
-.tree-map { display: block; max-width: none; margin: 0 auto; overflow: visible; }
+.tree-pan { position: relative; }
+.tree-map { display: block; position: absolute; max-width: none; overflow: visible; }
 .tree-edge { fill: none; stroke: var(--muted-2); stroke-width: 1.25; opacity: .78; }
 .tree-edge--target { stroke: var(--good); stroke-width: 3; opacity: .9; }
 .tree-edge--target-soft { stroke: var(--good); stroke-width: 1.7; opacity: .62; }

@@ -240,13 +240,13 @@ function renderTreeInto(state, el) {
     return `<span class="tree-node__number">${p.number}</span><span class="tree-node__san">${esc(p.move)}</span>`;
   };
   const guessLeaf = (g, tone, latest) => create(
-    "guess", tone, 154, 46,
+    "guess", tone, 140, 46,
     `<span class="tree-node__name" title="${esc(g.name)}">${esc(g.name)}</span>` +
       `<span class="tree-node__eco">${esc(g.eco)}</span>`,
     { latest, sortKey: g.name, edgeTone: tone === "here" ? "target-soft" : "off" },
   );
   const answerLeaf = () => create(
-    "answer", targetTone, 178, 54,
+    "answer", targetTone, 162, 54,
     `<span class="tree-node__answer-mark">${state.solved ? "★" : "Revealed"}</span>` +
       `<span class="tree-node__name">${esc(state.target.name)}</span>` +
       `<span class="tree-node__eco">${esc(state.target.eco)}</span>`,
@@ -258,7 +258,7 @@ function renderTreeInto(state, el) {
       ? "Make a guess"
       : lineFound ? "Name the opening" : "Target continues";
     return create(
-      "tip", "tip", 120, 42,
+      "tip", "tip", 116, 34,
       `<span class="tree-node__question">?</span><span class="tree-node__prompt">${prompt}</span>`,
       { main: true, edgeTone: "hidden", sortKey: "target" },
     );
@@ -291,7 +291,7 @@ function renderTreeInto(state, el) {
     const charsPerLine = Math.max(14, Math.floor((width - 12) / 4.8));
     const lines = Math.max(1, Math.ceil(charCount / charsPerLine));
     const node = create(
-      "sequence", "off", width, 18 + lines * 15,
+      "sequence", "off", width, 13 + lines * 14,
       `<span class="tree-node__sequence">${sequence}</span>`,
       {
         latest: latestGuessId != null && run.some(item => item.guessIds.has(latestGuessId)),
@@ -308,7 +308,7 @@ function renderTreeInto(state, el) {
     const p = moveParts(raw.move, raw.depth);
     const width = Math.min(96, Math.max(68, 16 + (p.number.length + p.move.length) * 5.6));
     const node = create(
-      "move", targetTone, width, 30, moveHtml(raw.move, raw.depth),
+      "move", targetTone, width, 24, moveHtml(raw.move, raw.depth),
       {
         main: true,
         latest: latestGuessId != null && raw.guessIds.has(latestGuessId),
@@ -326,14 +326,14 @@ function renderTreeInto(state, el) {
   };
 
   const displayRoot = create(
-    "root", "root", 118, 32, "Starting position",
+    "root", "root", 116, 27, "Starting position",
     { main: true, boardDepth: 0, sortKey: "root" },
   );
   const rootBranches = [...root.children.values()].map(child => child.onTarget ? displayTargetMove(child) : displayOffPath(child));
   if (tip === root && !state.solved && !state.gaveUp) rootBranches.push(tipLeaf());
   displayRoot.children = orderChildren(rootBranches);
 
-  const H_GAP = 12, V_GAP = 20, PAD = 10;
+  const H_GAP = 8, V_GAP = 12, PAD = 10;
   const allNodes = [], levelHeights = [];
   const assignLevels = (node, level) => {
     node.level = level;
@@ -361,6 +361,12 @@ function renderTreeInto(state, el) {
   const svgHeight = Math.ceil(nextTop - V_GAP + PAD);
   view.baseWidth = svgWidth;
   view.baseHeight = svgHeight;
+  // Over-pan slack: empty space around the tree so it can be dragged well past
+  // its own edges in every direction, not just up to the content bounds.
+  const slackX = Math.max(160, Math.round((el.clientWidth || 0) * 0.8));
+  const slackY = Math.max(140, Math.round((el.clientHeight || 0) * 0.8));
+  view.padX = slackX;
+  view.padY = slackY;
   const place = (node, left) => {
     node.cx = left + node.subtreeWidth / 2;
     node.x = node.cx - node.width / 2;
@@ -394,9 +400,12 @@ function renderTreeInto(state, el) {
       `class="tree-node tree-node--${node.type} tree-node--${node.tone}${node.latest ? " is-latest" : ""}"${depthAttr}>` +
       `${node.html}</${tag}></foreignObject>`;
   };
-  el.innerHTML = `<svg class="tree-map" viewBox="0 0 ${svgWidth} ${svgHeight}" ` +
-    `width="${Math.round(svgWidth * view.zoom)}" height="${Math.round(svgHeight * view.zoom)}" role="group" aria-label="Opening tree">` +
-    `<g class="tree-edges">${edges.join("")}</g><g class="tree-nodes">${allNodes.map(nodeMarkup).join("")}</g></svg>`;
+  const renderW = Math.round(svgWidth * view.zoom);
+  const renderH = Math.round(svgHeight * view.zoom);
+  el.innerHTML = `<div class="tree-pan" style="width:${renderW + slackX * 2}px;height:${renderH + slackY * 2}px">` +
+    `<svg class="tree-map" style="left:${slackX}px;top:${slackY}px" viewBox="0 0 ${svgWidth} ${svgHeight}" ` +
+    `width="${renderW}" height="${renderH}" role="group" aria-label="Opening tree">` +
+    `<g class="tree-edges">${edges.join("")}</g><g class="tree-nodes">${allNodes.map(nodeMarkup).join("")}</g></svg></div>`;
 
   el.querySelectorAll("[data-tree-depth]").forEach(node =>
     node.addEventListener("click", () => goBoardDepth(Number(node.dataset.treeDepth))));
@@ -410,8 +419,10 @@ function renderTreeInto(state, el) {
     ? ((latestFocus.y + latestFocus.height / 2) + (targetFocus.y + targetFocus.height / 2)) / 2
     : targetFocus.y + targetFocus.height / 2;
   requestAnimationFrame(() => {
-    el.scrollLeft = Math.max(0, focusX * view.zoom - el.clientWidth / 2);
-    el.scrollTop = Math.max(0, focusY * view.zoom - el.clientHeight / 2);
+    el.scrollLeft = Math.max(0, slackX + focusX * view.zoom - el.clientWidth / 2);
+    // Anchor the top of the tree to the top of the box (clamp the focus offset,
+    // then shift by the slack) so a shallow tree sits at the top, not mid-slack.
+    el.scrollTop = slackY + Math.max(0, focusY * view.zoom - el.clientHeight / 2);
   });
 }
 
@@ -432,16 +443,24 @@ function zoomTree(el, amount, clientX = null, clientY = null) {
   const rect = el.getBoundingClientRect();
   const anchorX = clientX == null ? el.clientWidth / 2 : clientX - rect.left;
   const anchorY = clientY == null ? el.clientHeight / 2 : clientY - rect.top;
-  const contentX = (el.scrollLeft + anchorX) / view.zoom;
-  const contentY = (el.scrollTop + anchorY) / view.zoom;
+  const padX = view.padX || 0, padY = view.padY || 0;
+  const contentX = (el.scrollLeft + anchorX - padX) / view.zoom;
+  const contentY = (el.scrollTop + anchorY - padY) / view.zoom;
   view.zoom = nextZoom;
 
   const map = el.querySelector(".tree-map");
-  map.setAttribute("width", Math.round(view.baseWidth * nextZoom));
-  map.setAttribute("height", Math.round(view.baseHeight * nextZoom));
+  const renderW = Math.round(view.baseWidth * nextZoom);
+  const renderH = Math.round(view.baseHeight * nextZoom);
+  map.setAttribute("width", renderW);
+  map.setAttribute("height", renderH);
+  const pan = el.querySelector(".tree-pan");
+  if (pan) {
+    pan.style.width = (renderW + padX * 2) + "px";
+    pan.style.height = (renderH + padY * 2) + "px";
+  }
   requestAnimationFrame(() => {
-    el.scrollLeft = contentX * nextZoom - anchorX;
-    el.scrollTop = contentY * nextZoom - anchorY;
+    el.scrollLeft = padX + contentX * nextZoom - anchorX;
+    el.scrollTop = padY + contentY * nextZoom - anchorY;
   });
 }
 
