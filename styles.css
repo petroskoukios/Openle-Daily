@@ -65,6 +65,8 @@ body {
   display: inline-flex; align-items: center; justify-content: center; font-family: inherit;
   transition: color .12s, background .12s;
 }
+.iconbtn svg { display: block; width: 17px; height: 17px; }
+#statsBtn { color: #8bb8e1; }
 .iconbtn:hover { color: #fff; background: var(--border-solid); }
 .move-toggle {
   display: inline-flex; align-items: center; gap: 7px;
