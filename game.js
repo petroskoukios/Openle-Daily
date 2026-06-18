@@ -215,10 +215,15 @@ const TREE_FULLSCREEN_ZOOM_MIN = .2;
 const TREE_ZOOM_MAX = 2;
 const TREE_FULLSCREEN_ZOOM_MAX = 4;
 const TREE_ZOOM_STEP = .15;
+const TREE_BUTTON_ZOOM_FACTOR = 1.3;
+const TREE_DEFAULT_ZOOM = 1.1;
 const treeViews = new WeakMap();
 
 function treeView(el) {
-  if (!treeViews.has(el)) treeViews.set(el, { zoom: 1, baseWidth: 0, baseHeight: 0 });
+  if (!treeViews.has(el)) {
+    const zoom = el.id === "tree" ? TREE_DEFAULT_ZOOM : 1;
+    treeViews.set(el, { zoom, zoomTarget: zoom, baseWidth: 0, baseHeight: 0 });
+  }
   return treeViews.get(el);
 }
 
@@ -238,6 +243,7 @@ function renderTreeInto(state, el) {
   if (view.zoomFrame) {
     cancelAnimationFrame(view.zoomFrame);
     view.zoomFrame = null;
+    view.zoomTarget = view.zoom;
   }
   const { root, tip } = buildTree(state);
   const latestGuessId = state.results.length ? state.results[state.results.length - 1].guessId : null;
@@ -551,6 +557,7 @@ function fitFullscreenTree(el) {
   const fitY = (el.clientHeight - marginY * 2) / view.contentHeight;
   const zoom = Math.max(TREE_FULLSCREEN_ZOOM_MIN,
     Math.min(TREE_FULLSCREEN_ZOOM_MAX, fitX, fitY));
+  view.zoomTarget = zoom;
   applyTreeZoom(el, view, zoom, view.contentCenterX, view.contentCenterY,
     el.clientWidth / 2, el.clientHeight / 2);
 }
@@ -562,6 +569,7 @@ function zoomTree(el, amount, clientX = null, clientY = null, smooth = false) {
   const nextZoom = Math.min(maxZoom, Math.max(minZoom,
     Math.round((view.zoom + amount) * 100) / 100));
   if (nextZoom === view.zoom || !view.baseWidth) return;
+  view.zoomTarget = nextZoom;
 
   const rect = el.getBoundingClientRect();
   const anchorX = clientX == null ? el.clientWidth / 2 : clientX - rect.left;
@@ -589,6 +597,12 @@ function zoomTree(el, amount, clientX = null, clientY = null, smooth = false) {
     else view.zoomFrame = null;
   };
   view.zoomFrame = requestAnimationFrame(animate);
+}
+
+function zoomTreeByFactor(el, factor) {
+  const view = treeView(el);
+  const base = view.zoomFrame ? view.zoomTarget : view.zoom;
+  zoomTree(el, base * factor - view.zoom, null, null, true);
 }
 
 function enableTreeViewport(el) {
@@ -1359,10 +1373,10 @@ document.addEventListener("keydown", e => {
 document.getElementById("howBtn").addEventListener("click", () => modal("howModal", true));
 document.getElementById("statsBtn").addEventListener("click", openStats);
 document.getElementById("treeExpandBtn").addEventListener("click", openTreeModal);
-document.getElementById("treeZoomOut").addEventListener("click", () => zoomTree(document.getElementById("tree"), -TREE_ZOOM_STEP, null, null, true));
-document.getElementById("treeZoomIn").addEventListener("click", () => zoomTree(document.getElementById("tree"), TREE_ZOOM_STEP, null, null, true));
-document.getElementById("treeModalZoomOut").addEventListener("click", () => zoomTree(document.getElementById("treeFullscreen"), -TREE_ZOOM_STEP, null, null, true));
-document.getElementById("treeModalZoomIn").addEventListener("click", () => zoomTree(document.getElementById("treeFullscreen"), TREE_ZOOM_STEP, null, null, true));
+document.getElementById("treeZoomOut").addEventListener("click", () => zoomTreeByFactor(document.getElementById("tree"), 1 / TREE_BUTTON_ZOOM_FACTOR));
+document.getElementById("treeZoomIn").addEventListener("click", () => zoomTreeByFactor(document.getElementById("tree"), TREE_BUTTON_ZOOM_FACTOR));
+document.getElementById("treeModalZoomOut").addEventListener("click", () => zoomTreeByFactor(document.getElementById("treeFullscreen"), 1 / TREE_BUTTON_ZOOM_FACTOR));
+document.getElementById("treeModalZoomIn").addEventListener("click", () => zoomTreeByFactor(document.getElementById("treeFullscreen"), TREE_BUTTON_ZOOM_FACTOR));
 enableTreeViewport(document.getElementById("tree"));
 enableTreeViewport(document.getElementById("treeFullscreen"));
 document.getElementById("statsMode").addEventListener("click", e => {
