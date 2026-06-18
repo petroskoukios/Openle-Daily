@@ -270,17 +270,11 @@ function renderTreeInto(state, el) {
       `<span class="tree-node__name">${esc(state.target.name)}</span>`,
     { main: true, latest: state.solved, sortKey: state.target.name },
   );
-  const tipLeaf = () => {
-    const lineFound = confirmedDepth(state) >= state.target.moves.length;
-    const prompt = !state.results.length && confirmedDepth(state) === 0
-      ? "Make a guess"
-      : lineFound ? "Name the opening" : "Target continues";
-    return create(
-      "tip", "tip", 116, 34,
-      `<span class="tree-node__question">?</span><span class="tree-node__prompt">${prompt}</span>`,
-      { main: true, edgeTone: "hidden", sortKey: "target" },
-    );
-  };
+  const tipLeaf = () => create(
+    "tip", "tip", 116, 34,
+    `<span class="tree-node__question">?</span>`,
+    { main: true, edgeTone: "hidden", sortKey: "target" },
+  );
 
   const orderChildren = children => {
     const main = children.find(child => child.main);
