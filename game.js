@@ -690,7 +690,7 @@ let boardPlaybackDepth = null;
 let boardSlideFromDepth = null;
 let boardPlaybackTimers = [];
 let boardStepTimer = null;
-const BOARD_PLAYBACK_STEP_MS = 280;
+const BOARD_PLAYBACK_STEP_MS = 220; // Keep in sync with .move-ghost in styles.css.
 let boardManualDepth = null;
 let boardQueuedDepth = null;
 
@@ -732,24 +732,40 @@ function renderBoard(state) {
 
   const board = OTChess.positionAfter(tgt.moves, depth);
   const slideFrom = sliding ? OTChess.positionAfter(tgt.moves, boardSlideFromDepth) : null;
-  const shownBoard = slideFrom || board;
+  const movingForward = slideFrom && depth > boardSlideFromDepth;
+  // Forward uses the old position so a captured piece remains until impact.
+  // Reverse uses the restored position so that piece is revealed as the mover leaves.
+  const shownBoard = slideFrom ? (movingForward ? slideFrom : board) : board;
   const prev = OTChess.positionAfter(tgt.moves, Math.max(0, depth - 1));
+  const comparisonBoard = slideFrom || prev;
   const changed = new Set();
-  if (depth > 0) for (let r = 0; r < 8; r++) for (let f = 0; f < 8; f++)
-    if (board[r][f] !== prev[r][f]) changed.add(r * 8 + f);
+  if (slideFrom || depth > 0) for (let r = 0; r < 8; r++) for (let f = 0; f < 8; f++)
+    if (board[r][f] !== comparisonBoard[r][f]) changed.add(r * 8 + f);
   const slides = slideFrom ? movingPieces(slideFrom, board) : [];
   const hide = new Set();
   for (const m of slides) {
-    hide.add(m.fromR * 8 + m.fromF);
-    hide.add(m.toR * 8 + m.toF);
+    const hiddenR = movingForward ? m.fromR : m.toR;
+    const hiddenF = movingForward ? m.fromF : m.toF;
+    hide.add(hiddenR * 8 + hiddenF);
+  }
+  const captured = new Set();
+  if (movingForward) {
+    const movingOrigins = new Set(slides.map(m => m.fromR * 8 + m.fromF));
+    for (let r = 0; r < 8; r++) for (let f = 0; f < 8; f++) {
+      const key = r * 8 + f;
+      if (slideFrom[r][f] && slideFrom[r][f] !== board[r][f] && !movingOrigins.has(key)) {
+        captured.add(key);
+      }
+    }
   }
 
   let html = "";
   for (let r = 7; r >= 0; r--) {
     for (let f = 0; f < 8; f++) {
       const p = shownBoard[r][f];
-      const hidden = hide.has(r * 8 + f) ? " hide" : "";
-      const glyph = p ? pieceImg(p, hidden) : "";
+      const key = r * 8 + f;
+      const pieceClass = (hide.has(key) ? " hide" : "") + (captured.has(key) ? " captured-exit" : "");
+      const glyph = p ? pieceImg(p, pieceClass) : "";
       const cls = ((r + f) % 2 === 0 ? "d" : "l") + (changed.has(r * 8 + f) ? " hl" : "");
       const coord = (f === 0 ? `<span class="rk">${r + 1}</span>` : "") +
                     (r === 0 ? `<span class="fl">${OTChess.FILES[f]}</span>` : "");
