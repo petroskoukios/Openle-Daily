@@ -11,7 +11,6 @@
   --muted-2: #7a7e89;
   --good: #6198ca;        /* lightly softened blue — on the target path / shared */
   --good-dim: #3b5778;
-  --gold: #f0c75e;        /* the target (yellow highlight) */
   --miss: #9ba1aa;        /* diverged tree paths */
   --accent: #6198ca;      /* lightly softened blue accent everywhere */
   --accent-dark: #4476a7; /* raised-button bottom edge */
@@ -157,7 +156,6 @@ body {
 .tree-edge { fill: none; stroke: var(--muted-2); stroke-width: 1.25; opacity: .78; }
 .tree-edge--target { stroke: var(--good); stroke-width: 3; opacity: .9; }
 .tree-edge--target-soft { stroke: var(--good); stroke-width: 1.7; opacity: .62; }
-.tree-edge--gold { stroke: var(--gold); stroke-width: 3.25; opacity: .94; }
 .tree-edge--off { stroke: var(--miss); stroke-width: 1.25; opacity: .62; }
 .tree-edge--hidden { stroke: var(--good); stroke-width: 1.6; stroke-dasharray: 4 4; opacity: .55; }
 .tree-edge.is-latest { animation: tree-edge-arrive .42s ease-out both; }
@@ -183,11 +181,9 @@ button.tree-node:focus-visible { outline: 2px solid var(--accent-hover); outline
 .tree-node__sequence i { color: var(--muted-2); font-size: 8px; font-style: normal; margin-right: 1px; }
 /* Confirmed target trunk: a sequence node, but tinted like the target path. */
 .tree-node--sequence.tree-node--target { background: rgba(97,152,202,.14); border-color: var(--good-dim); color: var(--good); }
-.tree-node--sequence.tree-node--gold { background: rgba(240,199,94,.16); border-color: rgba(240,199,94,.56); color: var(--gold); }
 .tree-seq__move { cursor: pointer; border-radius: 3px; }
 .tree-seq__move:hover { background: rgba(97,152,202,.26); box-shadow: 0 0 0 2px rgba(97,152,202,.26); }
 .tree-seq__move:focus-visible { outline: 1px solid var(--accent-hover); outline-offset: 2px; }
-.tree-node--gold .tree-seq__move:hover { background: rgba(240,199,94,.28); box-shadow: 0 0 0 2px rgba(240,199,94,.28); }
 .tree-node--guess,
 .tree-node--answer { flex-direction: column; gap: 1px; padding: 4px 6px; }
 .tree-node--guess.tree-node--off { color: var(--miss); border-color: rgba(155,161,170,.4); }
@@ -204,9 +200,6 @@ button.tree-node:focus-visible { outline: 2px solid var(--accent-hover); outline
 }
 .tree-node__question { font-family: var(--mono); font-size: 14px; font-weight: 700; line-height: 1; }
 .tree-node__prompt { font-size: 8.5px; font-weight: 700; }
-.tree-node--answer.tree-node--gold {
-  background: rgba(240,199,94,.15); border-color: rgba(240,199,94,.58); color: var(--gold);
-}
 .tree-node--answer.tree-node--target {
   background: rgba(97,152,202,.14); border-color: var(--good-dim); color: var(--good);
 }
@@ -228,7 +221,7 @@ button.tree-node:focus-visible { outline: 2px solid var(--accent-hover); outline
 .ghist-item { padding: 10px 12px; border-radius: 6px; border: 1px solid transparent; margin-bottom: 6px; background: var(--surface); }
 .ghist-item:last-child { margin-bottom: 0; }
 .ghist-item.best { background: rgba(97,152,202,.12); border-color: var(--good-dim); }
-.ghist-item.win  { background: rgba(240,199,94,.12); border-color: rgba(240,199,94,.4); }
+.ghist-item.win  { background: rgba(97,152,202,.12); border-color: var(--good-dim); }
 .ghist-item .gn { font-weight: 700; }
 .ghist-item .gn .eco { color: var(--muted); font-family: var(--mono); font-size: 11.5px; margin-left: 6px; }
 .ghist-item .line { font-family: var(--mono); font-size: 13px; margin-top: 4px; }
@@ -238,7 +231,7 @@ button.tree-node:focus-visible { outline: 2px solid var(--accent-hover); outline
 .ghist-item .line .rest { color: var(--muted-2); }
 .ghist-item.win .gn,
 .ghist-item.win .gn .eco,
-.ghist-item.win .line span { color: var(--gold); }
+.ghist-item.win .line span { color: var(--good); }
 
 /* ---- Two-column layout: tree on the left, board on the right ---- */
 .layout { display: grid; grid-template-columns: minmax(0, 1.18fr) minmax(320px, .82fr); gap: 18px; align-items: start; }
@@ -366,7 +359,6 @@ button.tree-node:focus-visible { outline: 2px solid var(--accent-hover); outline
 .dot { width: 11px; height: 11px; border-radius: 3px; display: inline-block; }
 .dot.good { background: var(--good); }
 .dot.bad { background: var(--miss); }
-.dot.gold { background: var(--gold); }
 
 /* ---- Stats ---- */
 .stats-controls { display: flex; align-items: center; gap: 10px; flex-wrap: wrap; margin-top: 14px; }
@@ -389,12 +381,12 @@ button.tree-node:focus-visible { outline: 2px solid var(--accent-hover); outline
   max-width: 460px;
   text-align: center;
   background:
-    radial-gradient(circle at 50% 100%, rgba(240,199,94,.16), transparent 58%),
+    radial-gradient(circle at 50% 100%, rgba(97,152,202,.16), transparent 58%),
     var(--panel);
 }
 .win-modal h2 {
   margin: 2px 42px 10px;
-  color: var(--gold);
+  color: var(--good);
   font-size: 32px;
   font-weight: 800;
 }

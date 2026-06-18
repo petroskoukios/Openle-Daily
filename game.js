@@ -239,7 +239,7 @@ function renderTreeInto(state, el) {
   }
   const { root, tip } = buildTree(state);
   const latestGuessId = state.results.length ? state.results[state.results.length - 1].guessId : null;
-  const targetTone = state.solved ? "gold" : "target";
+  const targetTone = "target";
   let nextId = 0;
 
   const create = (type, tone, width, height, html, extra = {}) => ({
