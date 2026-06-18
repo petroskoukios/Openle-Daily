@@ -54,8 +54,23 @@
         <ul class="suggest" id="suggest"></ul>
       </div>
 
-      <section class="panel">
-        <h2>Opening tree</h2>
+      <section class="panel tree-panel">
+        <div class="panel-heading">
+          <h2>Opening tree</h2>
+          <div class="tree-controls" aria-label="Tree controls">
+            <button class="iconbtn tree-tool" id="treeZoomOut" type="button" title="Zoom out" aria-label="Zoom out">
+              <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.2" stroke-linecap="round" aria-hidden="true"><path d="M5 12h14" /></svg>
+            </button>
+            <button class="iconbtn tree-tool" id="treeZoomIn" type="button" title="Zoom in" aria-label="Zoom in">
+              <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.2" stroke-linecap="round" aria-hidden="true"><path d="M12 5v14M5 12h14" /></svg>
+            </button>
+            <button class="iconbtn tree-tool" id="treeExpandBtn" type="button" title="Open tree fullscreen" aria-label="Open tree fullscreen">
+              <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true">
+                <path d="M14 4h6v6M20 4l-7 7M10 20H4v-6M4 20l7-7" />
+              </svg>
+            </button>
+          </div>
+        </div>
         <div class="tree" id="tree" role="region" aria-label="Opening tree"></div>
       </section>
 
@@ -92,6 +107,22 @@
 </div>
 
 <div class="toast" id="toast"></div>
+
+<!-- Fullscreen opening tree -->
+<div class="modal-bg tree-modal-bg" id="treeModal">
+  <div class="modal tree-modal" role="dialog" aria-modal="true" aria-label="Opening tree">
+    <div class="tree-modal-controls" aria-label="Tree controls">
+      <button class="iconbtn tree-tool" id="treeModalZoomOut" type="button" title="Zoom out" aria-label="Zoom out">
+        <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.2" stroke-linecap="round" aria-hidden="true"><path d="M5 12h14" /></svg>
+      </button>
+      <button class="iconbtn tree-tool" id="treeModalZoomIn" type="button" title="Zoom in" aria-label="Zoom in">
+        <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.2" stroke-linecap="round" aria-hidden="true"><path d="M12 5v14M5 12h14" /></svg>
+      </button>
+      <button class="iconbtn close" type="button" data-close title="Close fullscreen tree" aria-label="Close fullscreen tree">✕</button>
+    </div>
+    <div class="tree tree--fullscreen" id="treeFullscreen" role="region" aria-label="Fullscreen opening tree"></div>
+  </div>
+</div>
 
 <!-- How-to-play modal -->
 <div class="modal-bg" id="howModal">

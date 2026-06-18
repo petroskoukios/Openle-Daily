@@ -210,8 +210,18 @@ function buildTree(state) {
   return { root, tip, best };
 }
 
-function renderTree(state) {
-  const el = document.getElementById("tree");
+const TREE_ZOOM_MIN = .5;
+const TREE_ZOOM_MAX = 2;
+const TREE_ZOOM_STEP = .15;
+const treeViews = new WeakMap();
+
+function treeView(el) {
+  if (!treeViews.has(el)) treeViews.set(el, { zoom: 1, baseWidth: 0, baseHeight: 0 });
+  return treeViews.get(el);
+}
+
+function renderTreeInto(state, el) {
+  const view = treeView(el);
   const { root, tip } = buildTree(state);
   const latestGuessId = state.results.length ? state.results[state.results.length - 1].guessId : null;
   const targetTone = state.solved ? "gold" : "target";
@@ -230,13 +240,13 @@ function renderTree(state) {
     return `<span class="tree-node__number">${p.number}</span><span class="tree-node__san">${esc(p.move)}</span>`;
   };
   const guessLeaf = (g, tone, latest) => create(
-    "guess", tone, 190, 58,
+    "guess", tone, 154, 46,
     `<span class="tree-node__name" title="${esc(g.name)}">${esc(g.name)}</span>` +
       `<span class="tree-node__eco">${esc(g.eco)}</span>`,
     { latest, sortKey: g.name, edgeTone: tone === "here" ? "target-soft" : "off" },
   );
   const answerLeaf = () => create(
-    "answer", targetTone, 230, 68,
+    "answer", targetTone, 178, 54,
     `<span class="tree-node__answer-mark">${state.solved ? "★" : "Revealed"}</span>` +
       `<span class="tree-node__name">${esc(state.target.name)}</span>` +
       `<span class="tree-node__eco">${esc(state.target.eco)}</span>`,
@@ -248,7 +258,7 @@ function renderTree(state) {
       ? "Make a guess"
       : lineFound ? "Name the opening" : "Target continues";
     return create(
-      "tip", "tip", 154, 52,
+      "tip", "tip", 120, 42,
       `<span class="tree-node__question">?</span><span class="tree-node__prompt">${prompt}</span>`,
       { main: true, edgeTone: "hidden", sortKey: "target" },
     );
@@ -277,11 +287,11 @@ function renderTree(state) {
       return `<span><i>${p.number}</i>${esc(p.move)}</span>`;
     }).join(" ");
     const charCount = run.reduce((sum, node) => sum + node.move.length + 5, 0);
-    const width = Math.min(210, Math.max(112, 24 + charCount * 5.5));
-    const charsPerLine = Math.max(14, Math.floor((width - 18) / 5.5));
+    const width = Math.min(164, Math.max(86, 14 + charCount * 4.8));
+    const charsPerLine = Math.max(14, Math.floor((width - 12) / 4.8));
     const lines = Math.max(1, Math.ceil(charCount / charsPerLine));
     const node = create(
-      "sequence", "off", width, 24 + lines * 18,
+      "sequence", "off", width, 18 + lines * 15,
       `<span class="tree-node__sequence">${sequence}</span>`,
       {
         latest: latestGuessId != null && run.some(item => item.guessIds.has(latestGuessId)),
@@ -295,8 +305,10 @@ function renderTree(state) {
   };
 
   const displayTargetMove = raw => {
+    const p = moveParts(raw.move, raw.depth);
+    const width = Math.min(96, Math.max(68, 16 + (p.number.length + p.move.length) * 5.6));
     const node = create(
-      "move", targetTone, 92, 38, moveHtml(raw.move, raw.depth),
+      "move", targetTone, width, 30, moveHtml(raw.move, raw.depth),
       {
         main: true,
         latest: latestGuessId != null && raw.guessIds.has(latestGuessId),
@@ -314,14 +326,14 @@ function renderTree(state) {
   };
 
   const displayRoot = create(
-    "root", "root", 142, 40, "Starting position",
+    "root", "root", 118, 32, "Starting position",
     { main: true, boardDepth: 0, sortKey: "root" },
   );
   const rootBranches = [...root.children.values()].map(child => child.onTarget ? displayTargetMove(child) : displayOffPath(child));
   if (tip === root && !state.solved && !state.gaveUp) rootBranches.push(tipLeaf());
   displayRoot.children = orderChildren(rootBranches);
 
-  const H_GAP = 30, V_GAP = 48, PAD = 24;
+  const H_GAP = 12, V_GAP = 20, PAD = 10;
   const allNodes = [], levelHeights = [];
   const assignLevels = (node, level) => {
     node.level = level;
@@ -347,6 +359,8 @@ function renderTree(state) {
   const minWidth = Math.max(430, el.clientWidth || 0);
   const svgWidth = Math.ceil(Math.max(minWidth, displayRoot.subtreeWidth + PAD * 2));
   const svgHeight = Math.ceil(nextTop - V_GAP + PAD);
+  view.baseWidth = svgWidth;
+  view.baseHeight = svgHeight;
   const place = (node, left) => {
     node.cx = left + node.subtreeWidth / 2;
     node.x = node.cx - node.width / 2;
@@ -363,7 +377,7 @@ function renderTree(state) {
   const collectEdges = node => {
     for (const child of node.children) {
       const sy = node.y + node.height, ey = child.y;
-      const bend = Math.max(24, (ey - sy) * .46);
+      const bend = Math.max(10, (ey - sy) * .46);
       const cls = `tree-edge tree-edge--${child.edgeTone}${child.latest ? " is-latest" : ""}`;
       edges.push(`<path class="${cls}" d="M ${node.cx} ${sy} C ${node.cx} ${sy + bend}, ${child.cx} ${ey - bend}, ${child.cx} ${ey}"/>`);
       collectEdges(child);
@@ -381,7 +395,7 @@ function renderTree(state) {
       `${node.html}</${tag}></foreignObject>`;
   };
   el.innerHTML = `<svg class="tree-map" viewBox="0 0 ${svgWidth} ${svgHeight}" ` +
-    `width="${svgWidth}" height="${svgHeight}" role="group" aria-label="Opening tree">` +
+    `width="${Math.round(svgWidth * view.zoom)}" height="${Math.round(svgHeight * view.zoom)}" role="group" aria-label="Opening tree">` +
     `<g class="tree-edges">${edges.join("")}</g><g class="tree-nodes">${allNodes.map(nodeMarkup).join("")}</g></svg>`;
 
   el.querySelectorAll("[data-tree-depth]").forEach(node =>
@@ -393,8 +407,83 @@ function renderTree(state) {
   const latestFocus = latestNodes[latestNodes.length - 1];
   const focusX = latestFocus ? (latestFocus.cx + targetFocus.cx) / 2 : targetFocus.cx;
   requestAnimationFrame(() => {
-    el.scrollLeft = Math.max(0, focusX - el.clientWidth / 2);
+    el.scrollLeft = Math.max(0, focusX * view.zoom - el.clientWidth / 2);
   });
+}
+
+function renderTree(state) {
+  renderTreeInto(state, document.getElementById("tree"));
+  const fullscreenTree = document.getElementById("treeFullscreen");
+  if (fullscreenTree.closest(".modal-bg").classList.contains("open")) {
+    renderTreeInto(state, fullscreenTree);
+  }
+}
+
+function zoomTree(el, amount, clientX = null, clientY = null) {
+  const view = treeView(el);
+  const nextZoom = Math.min(TREE_ZOOM_MAX, Math.max(TREE_ZOOM_MIN,
+    Math.round((view.zoom + amount) * 100) / 100));
+  if (nextZoom === view.zoom || !view.baseWidth) return;
+
+  const rect = el.getBoundingClientRect();
+  const anchorX = clientX == null ? el.clientWidth / 2 : clientX - rect.left;
+  const anchorY = clientY == null ? el.clientHeight / 2 : clientY - rect.top;
+  const contentX = (el.scrollLeft + anchorX) / view.zoom;
+  const contentY = (el.scrollTop + anchorY) / view.zoom;
+  view.zoom = nextZoom;
+
+  const map = el.querySelector(".tree-map");
+  map.setAttribute("width", Math.round(view.baseWidth * nextZoom));
+  map.setAttribute("height", Math.round(view.baseHeight * nextZoom));
+  requestAnimationFrame(() => {
+    el.scrollLeft = contentX * nextZoom - anchorX;
+    el.scrollTop = contentY * nextZoom - anchorY;
+  });
+}
+
+function enableTreeViewport(el) {
+  let drag = null;
+  let suppressClick = false;
+
+  el.addEventListener("pointerdown", e => {
+    if (e.button !== 0) return;
+    drag = {
+      id: e.pointerId, x: e.clientX, y: e.clientY,
+      left: el.scrollLeft, top: el.scrollTop, moved: false,
+    };
+    suppressClick = false;
+    el.setPointerCapture(e.pointerId);
+  });
+  el.addEventListener("pointermove", e => {
+    if (!drag || drag.id !== e.pointerId) return;
+    const dx = e.clientX - drag.x;
+    const dy = e.clientY - drag.y;
+    if (!drag.moved && Math.hypot(dx, dy) < 4) return;
+    drag.moved = true;
+    el.classList.add("is-panning");
+    el.scrollLeft = drag.left - dx;
+    el.scrollTop = drag.top - dy;
+  });
+  const endDrag = e => {
+    if (!drag || drag.id !== e.pointerId) return;
+    suppressClick = drag.moved;
+    drag = null;
+    el.classList.remove("is-panning");
+  };
+  el.addEventListener("pointerup", endDrag);
+  el.addEventListener("pointercancel", endDrag);
+  el.addEventListener("click", e => {
+    if (!suppressClick) return;
+    e.preventDefault();
+    e.stopPropagation();
+    suppressClick = false;
+  }, true);
+  el.addEventListener("dragstart", e => e.preventDefault());
+  el.addEventListener("wheel", e => {
+    if (!e.ctrlKey && !e.metaKey) return;
+    e.preventDefault();
+    zoomTree(el, e.deltaY < 0 ? TREE_ZOOM_STEP : -TREE_ZOOM_STEP, e.clientX, e.clientY);
+  }, { passive: false });
 }
 
 /* ---------- 6. Guess log ---------- */
@@ -1085,6 +1174,11 @@ function openStats() {
   modal("statsModal", true);
 }
 
+function openTreeModal() {
+  modal("treeModal", true);
+  requestAnimationFrame(() => renderTreeInto(state, document.getElementById("treeFullscreen")));
+}
+
 /* ---------- 14. Modal helpers ---------- */
 function modal(id, open) { document.getElementById(id).classList.toggle("open", open); }
 document.querySelectorAll("[data-close]").forEach(b =>
@@ -1105,6 +1199,13 @@ document.addEventListener("keydown", e => {
 /* ---------- 15. Wiring ---------- */
 document.getElementById("howBtn").addEventListener("click", () => modal("howModal", true));
 document.getElementById("statsBtn").addEventListener("click", openStats);
+document.getElementById("treeExpandBtn").addEventListener("click", openTreeModal);
+document.getElementById("treeZoomOut").addEventListener("click", () => zoomTree(document.getElementById("tree"), -TREE_ZOOM_STEP));
+document.getElementById("treeZoomIn").addEventListener("click", () => zoomTree(document.getElementById("tree"), TREE_ZOOM_STEP));
+document.getElementById("treeModalZoomOut").addEventListener("click", () => zoomTree(document.getElementById("treeFullscreen"), -TREE_ZOOM_STEP));
+document.getElementById("treeModalZoomIn").addEventListener("click", () => zoomTree(document.getElementById("treeFullscreen"), TREE_ZOOM_STEP));
+enableTreeViewport(document.getElementById("tree"));
+enableTreeViewport(document.getElementById("treeFullscreen"));
 document.getElementById("statsMode").addEventListener("click", e => {
   const b = e.target.closest("button[data-stats-mode]"); if (!b) return;
   renderStatsView(b.dataset.statsMode, statsDiff);
