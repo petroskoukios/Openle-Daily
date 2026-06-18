@@ -235,10 +235,6 @@ function renderTreeInto(state, el) {
     number: depth % 2 ? `${Math.ceil(depth / 2)}.` : `${depth / 2}...`,
     move,
   });
-  const moveHtml = (move, depth) => {
-    const p = moveParts(move, depth);
-    return `<span class="tree-node__number">${p.number}</span><span class="tree-node__san">${esc(p.move)}</span>`;
-  };
   const guessLeaf = (g, tone, latest) => create(
     "guess", tone, 140, 46,
     `<span class="tree-node__name" title="${esc(g.name)}">${esc(g.name)}</span>` +
@@ -273,6 +269,32 @@ function renderTreeInto(state, el) {
     return [...sides.slice(0, split), main, ...sides.slice(split)];
   };
 
+  // Standard notation: show the move number on White's moves and on the first
+  // token of a run; a Black move that directly follows its White move drops it
+  // ("1. d4 Nf6", not "1. d4 1... Nf6").
+  const showMoveNumber = (depth, i) => i === 0 || depth % 2 === 1;
+  const seqTokenNum = (node, i) =>
+    showMoveNumber(node.depth, i) ? `<i>${moveParts(node.move, node.depth).number}</i>` : "";
+
+  const seqMetrics = run => {
+    // Estimate each move token's pixel width (small number prefix + SAN + gap),
+    // then first-fit pack them into rows. This makes the line count match how the
+    // tokens actually wrap, so the height never clips a wrapped line.
+    const tokenPx = run.map((node, i) => {
+      const numLen = showMoveNumber(node.depth, i) ? moveParts(node.move, node.depth).number.length : 0;
+      // ~4.7px/char number (8px) + ~6.35px/char SAN (10px) + gap (margin + the
+      // whitespace between inline-block tokens). Rounded up so width never undercounts.
+      return numLen * 4.9 + node.move.length * 6.5 + 8;
+    });
+    const inner = Math.min(152, Math.max(70, tokenPx.reduce((a, b) => a + b, 0)));
+    let lines = 1, used = 0;
+    for (const w of tokenPx) {
+      if (used > 0 && used + w > inner) { lines++; used = w; }
+      else used += w;
+    }
+    return { width: Math.ceil(inner + 12), height: 13 + lines * 14 };
+  };
+
   const displayOffPath = start => {
     const run = [start];
     let end = start;
@@ -282,16 +304,12 @@ function renderTreeInto(state, el) {
       run.push(next);
       end = next;
     }
-    const sequence = run.map(node => {
-      const p = moveParts(node.move, node.depth);
-      return `<span><i>${p.number}</i>${esc(p.move)}</span>`;
-    }).join(" ");
-    const charCount = run.reduce((sum, node) => sum + node.move.length + 5, 0);
-    const width = Math.min(164, Math.max(86, 14 + charCount * 4.8));
-    const charsPerLine = Math.max(14, Math.floor((width - 12) / 4.8));
-    const lines = Math.max(1, Math.ceil(charCount / charsPerLine));
+    const sequence = run.map((node, i) =>
+      `<span>${seqTokenNum(node, i)}${esc(node.move)}</span>`
+    ).join(" ");
+    const { width, height } = seqMetrics(run);
     const node = create(
-      "sequence", "off", width, 13 + lines * 14,
+      "sequence", "off", width, height,
       `<span class="tree-node__sequence">${sequence}</span>`,
       {
         latest: latestGuessId != null && run.some(item => item.guessIds.has(latestGuessId)),
@@ -305,22 +323,36 @@ function renderTreeInto(state, el) {
   };
 
   const displayTargetMove = raw => {
-    const p = moveParts(raw.move, raw.depth);
-    const width = Math.min(96, Math.max(68, 16 + (p.number.length + p.move.length) * 5.6));
+    // Collapse a linear run of confirmed target moves — those with no diverging
+    // guess and a single on-target child — into one node, e.g. "1. d4 Nf6",
+    // rather than one node per ply. Splits only where a real branch occurs.
+    const run = [raw];
+    let end = raw;
+    while (end.guesses.length === 0 && end.children.size === 1 && end !== tip && !end.isTargetEnd) {
+      const next = [...end.children.values()][0];
+      if (!next.onTarget) break;
+      run.push(next);
+      end = next;
+    }
+    const sequence = run.map((node, i) =>
+      `<span class="tree-seq__move" data-tree-depth="${node.depth}" title="Show this position on the board">` +
+        `${seqTokenNum(node, i)}${esc(node.move)}</span>`
+    ).join(" ");
+    const { width, height } = seqMetrics(run);
     const node = create(
-      "move", targetTone, width, 24, moveHtml(raw.move, raw.depth),
+      "sequence", targetTone, width, height,
+      `<span class="tree-node__sequence">${sequence}</span>`,
       {
         main: true,
-        latest: latestGuessId != null && raw.guessIds.has(latestGuessId),
-        boardDepth: raw.depth,
+        latest: latestGuessId != null && run.some(item => item.guessIds.has(latestGuessId)),
         sortKey: raw.move,
       },
     );
-    const branches = [...raw.children.values()].map(child => child.onTarget ? displayTargetMove(child) : displayOffPath(child));
-    const leaves = raw.isTargetEnd
+    const branches = [...end.children.values()].map(child => child.onTarget ? displayTargetMove(child) : displayOffPath(child));
+    const leaves = end.isTargetEnd
       ? [answerLeaf()]
-      : raw.guesses.map(g => guessLeaf(g, "here", g.id === latestGuessId));
-    if (raw === tip && !state.solved && !state.gaveUp) leaves.push(tipLeaf());
+      : end.guesses.map(g => guessLeaf(g, "here", g.id === latestGuessId));
+    if (end === tip && !state.solved && !state.gaveUp) leaves.push(tipLeaf());
     node.children = orderChildren([...branches, ...leaves]);
     return node;
   };
@@ -402,6 +434,7 @@ function renderTreeInto(state, el) {
   };
   const renderW = Math.round(svgWidth * view.zoom);
   const renderH = Math.round(svgHeight * view.zoom);
+  const prevScrollLeft = el.scrollLeft, prevScrollTop = el.scrollTop;
   el.innerHTML = `<div class="tree-pan" style="width:${renderW + slackX * 2}px;height:${renderH + slackY * 2}px">` +
     `<svg class="tree-map" style="left:${slackX}px;top:${slackY}px" viewBox="0 0 ${svgWidth} ${svgHeight}" ` +
     `width="${renderW}" height="${renderH}" role="group" aria-label="Opening tree">` +
@@ -414,15 +447,39 @@ function renderTreeInto(state, el) {
   const targetFocus = mainNodes[mainNodes.length - 1] || displayRoot;
   const latestNodes = allNodes.filter(node => node.latest);
   const latestFocus = latestNodes[latestNodes.length - 1];
-  const focusX = latestFocus ? (latestFocus.cx + targetFocus.cx) / 2 : targetFocus.cx;
-  const focusY = latestFocus
-    ? ((latestFocus.y + latestFocus.height / 2) + (targetFocus.y + targetFocus.height / 2)) / 2
-    : targetFocus.y + targetFocus.height / 2;
+  const focusPts = (latestFocus ? [latestFocus, targetFocus] : [targetFocus])
+    .map(node => ({ x: node.cx, y: node.y + node.height / 2 }));
+  const focusX = focusPts.reduce((s, p) => s + p.x, 0) / focusPts.length;
+  const focusY = focusPts.reduce((s, p) => s + p.y, 0) / focusPts.length;
+  // Centered scroll target. The vertical clamp anchors a shallow tree to the top
+  // (slack) rather than floating it mid-slack.
+  const centeredLeft = Math.max(0, slackX + focusX * view.zoom - el.clientWidth / 2);
+  const centeredTop = slackY + Math.max(0, focusY * view.zoom - el.clientHeight / 2);
+  // A guess or hint shouldn't yank the tree back to center: hold the player's
+  // current view and only re-pan when a focus point drifts out of sight. A new
+  // puzzle (mode/difficulty/target change, or solve/give-up) re-centers afresh.
+  const puzzleKey = `${state.mode}|${state.difficulty}|${state.target.id}|${state.dayNo}|${state.solved}|${state.gaveUp}`;
+  const freshView = view.puzzleKey !== puzzleKey;
+  const rootCx = displayRoot.cx;
   requestAnimationFrame(() => {
-    el.scrollLeft = Math.max(0, slackX + focusX * view.zoom - el.clientWidth / 2);
-    // Anchor the top of the tree to the top of the box (clamp the focus offset,
-    // then shift by the slack) so a shallow tree sits at the top, not mid-slack.
-    el.scrollTop = slackY + Math.max(0, focusY * view.zoom - el.clientHeight / 2);
+    if (freshView) {
+      el.scrollLeft = centeredLeft;
+      el.scrollTop = centeredTop;
+    } else {
+      // Hold position, compensating for the tree re-centering as it grows wider.
+      const dxRoot = view.prevRootCx == null ? 0 : (rootCx - view.prevRootCx) * view.zoom;
+      let left = prevScrollLeft + dxRoot, top = prevScrollTop;
+      const mx = el.clientWidth * 0.1, my = el.clientHeight * 0.1;
+      const outOfView = focusPts.some(p => {
+        const sx = slackX + p.x * view.zoom - left, sy = slackY + p.y * view.zoom - top;
+        return sx < mx || sx > el.clientWidth - mx || sy < my || sy > el.clientHeight - my;
+      });
+      if (outOfView) { left = centeredLeft; top = centeredTop; }
+      el.scrollLeft = Math.max(0, left);
+      el.scrollTop = Math.max(0, top);
+    }
+    view.puzzleKey = puzzleKey;
+    view.prevRootCx = rootCx;
   });
 }
 
