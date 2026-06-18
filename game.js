@@ -211,7 +211,9 @@ function buildTree(state) {
 }
 
 const TREE_ZOOM_MIN = .5;
+const TREE_FULLSCREEN_ZOOM_MIN = .2;
 const TREE_ZOOM_MAX = 2;
+const TREE_FULLSCREEN_ZOOM_MAX = 4;
 const TREE_ZOOM_STEP = .15;
 const treeViews = new WeakMap();
 
@@ -406,6 +408,10 @@ function renderTreeInto(state, el) {
   const svgHeight = Math.ceil(nextTop - V_GAP + PAD);
   view.baseWidth = svgWidth;
   view.baseHeight = svgHeight;
+  view.contentWidth = displayRoot.subtreeWidth + PAD * 2;
+  view.contentHeight = svgHeight;
+  view.contentCenterX = svgWidth / 2;
+  view.contentCenterY = svgHeight / 2;
   // Over-pan slack: empty space around the tree so it can be dragged well past
   // its own edges in every direction, not just up to the content bounds.
   const slackX = Math.max(160, Math.round((el.clientWidth || 0) * 0.8));
@@ -531,9 +537,29 @@ function applyTreeZoom(el, view, zoom, contentX, contentY, anchorX, anchorY) {
   el.scrollTop = padY + contentY * zoom - anchorY;
 }
 
+function fitFullscreenTree(el) {
+  const view = treeView(el);
+  if (!view.baseWidth || !view.baseHeight) return;
+  if (view.zoomFrame) {
+    cancelAnimationFrame(view.zoomFrame);
+    view.zoomFrame = null;
+  }
+
+  const marginX = Math.min(36, el.clientWidth * .03);
+  const marginY = Math.min(32, el.clientHeight * .04);
+  const fitX = (el.clientWidth - marginX * 2) / view.contentWidth;
+  const fitY = (el.clientHeight - marginY * 2) / view.contentHeight;
+  const zoom = Math.max(TREE_FULLSCREEN_ZOOM_MIN,
+    Math.min(TREE_FULLSCREEN_ZOOM_MAX, fitX, fitY));
+  applyTreeZoom(el, view, zoom, view.contentCenterX, view.contentCenterY,
+    el.clientWidth / 2, el.clientHeight / 2);
+}
+
 function zoomTree(el, amount, clientX = null, clientY = null, smooth = false) {
   const view = treeView(el);
-  const nextZoom = Math.min(TREE_ZOOM_MAX, Math.max(TREE_ZOOM_MIN,
+  const minZoom = el.id === "treeFullscreen" ? TREE_FULLSCREEN_ZOOM_MIN : TREE_ZOOM_MIN;
+  const maxZoom = el.id === "treeFullscreen" ? TREE_FULLSCREEN_ZOOM_MAX : TREE_ZOOM_MAX;
+  const nextZoom = Math.min(maxZoom, Math.max(minZoom,
     Math.round((view.zoom + amount) * 100) / 100));
   if (nextZoom === view.zoom || !view.baseWidth) return;
 
@@ -1305,7 +1331,11 @@ function openStats() {
 
 function openTreeModal() {
   modal("treeModal", true);
-  requestAnimationFrame(() => renderTreeInto(state, document.getElementById("treeFullscreen")));
+  requestAnimationFrame(() => {
+    const el = document.getElementById("treeFullscreen");
+    renderTreeInto(state, el);
+    requestAnimationFrame(() => fitFullscreenTree(el));
+  });
 }
 
 /* ---------- 14. Modal helpers ---------- */
