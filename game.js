@@ -169,17 +169,18 @@ function fmtGuessLine(guess, cmp) {
 /* ---------- 5. Tree builder & renderer ---------- */
 function buildTree(state) {
   const target = state.target;
-  const root = { move: null, children: new Map(), onTarget: false, guesses: [] };
-  const get = (node, mv) => {
+  const root = { move: null, depth: 0, children: new Map(), onTarget: false, guesses: [], guessIds: new Set() };
+  const get = (node, mv, depth) => {
     if (!node.children.has(mv))
-      node.children.set(mv, { move: mv, children: new Map(), onTarget: false, guesses: [] });
+      node.children.set(mv, { move: mv, depth, children: new Map(), onTarget: false, guesses: [], guessIds: new Set() });
     return node.children.get(mv);
   };
-  const insert = (moves, upTo, onTargetUpTo) => {
+  const insert = (moves, upTo, onTargetUpTo, guessId = null) => {
     let node = root;
     for (let i = 0; i < upTo; i++) {
-      node = get(node, moves[i]);
+      node = get(node, moves[i], i + 1);
       if (i < onTargetUpTo) node.onTarget = true;
+      if (guessId != null) node.guessIds.add(guessId);
     }
     return node;
   };
@@ -198,11 +199,11 @@ function buildTree(state) {
     tip.isTip = true;
   }
 
-  // Each guess: show up to its first diverging move, labelled with its name.
+  // Full guessed lines are safe to show: the player already chose them. Keeping
+  // them lets wrong guesses form their own shared subtrees after they diverge.
   for (const cmp of state.results) {
     const g = OPENINGS[cmp.guessId];
-    const show = Math.min(g.moves.length, cmp.sharedPlies + 1);
-    const leaf = insert(g.moves, show, cmp.sharedPlies);
+    const leaf = insert(g.moves, g.moves.length, cmp.sharedPlies, g.id);
     leaf.guesses.push(g);
   }
 
@@ -211,57 +212,189 @@ function buildTree(state) {
 
 function renderTree(state) {
   const el = document.getElementById("tree");
-  if (!state.results.length && !state.solved && !state.gaveUp && confirmedDepth(state) === 0) {
-    el.innerHTML = `<span class="root">Root (starting position)</span>\n` +
-      `<span class="conn">└── </span><span class="hint">？ make a guess to grow the tree</span>`;
-    return;
-  }
   const { root, tip } = buildTree(state);
-  const lines = [];
-  lines.push(`<span class="root">Root</span>`);
-  const label = node => {
-    const cls = node.onTarget
-      ? (state.solved ? "mv-target" : "mv-on")
-      : "mv-off";
-    let s = `<span class="${cls}">${esc(node.move)}</span>`;
-    if (node.isTargetEnd) {
-      const tagCls = state.solved ? "tag-tgt" : "tag-reveal";
-      s += `<span class="tag ${tagCls}">★ ${esc(state.target.name)} (${esc(state.target.eco)})</span>`;
-    }
-    else for (const g of node.guesses) {
-      // a guess sitting on the confirmed trunk is a correct sub-line ("you've been here").
-      const onPath = node.onTarget;
-      s += `<span class="tag ${onPath ? "tag-here" : "tag-guess"}" title="${esc(g.name)} (${esc(g.eco)})">${onPath ? "✓ " : ""}${esc(trunc(g.name, 30))}</span>`;
-    }
-    if (node === tip && !state.solved && !state.gaveUp && node !== root) {
-      const more = state.target.moves.length - node.depth;
-      s += more > 0
-        ? `<span class="tag tag-tip">target continues ↓ (+${more})</span>`
-        : `<span class="tag tag-tip">full line found - guess the name</span>`;
-    }
-    return s;
+  const latestGuessId = state.results.length ? state.results[state.results.length - 1].guessId : null;
+  const targetTone = state.solved ? "gold" : "target";
+  let nextId = 0;
+
+  const create = (type, tone, width, height, html, extra = {}) => ({
+    id: ++nextId, type, tone, edgeTone: tone, width, height, html,
+    children: [], latest: false, main: false, sortKey: "", ...extra,
+  });
+  const moveParts = (move, depth) => ({
+    number: depth % 2 ? `${Math.ceil(depth / 2)}.` : `${depth / 2}...`,
+    move,
+  });
+  const moveHtml = (move, depth) => {
+    const p = moveParts(move, depth);
+    return `<span class="tree-node__number">${p.number}</span><span class="tree-node__san">${esc(p.move)}</span>`;
+  };
+  const guessLeaf = (g, tone, latest) => create(
+    "guess", tone, 190, 58,
+    `<span class="tree-node__name" title="${esc(g.name)}">${esc(g.name)}</span>` +
+      `<span class="tree-node__eco">${esc(g.eco)}</span>`,
+    { latest, sortKey: g.name, edgeTone: tone === "here" ? "target-soft" : "off" },
+  );
+  const answerLeaf = () => create(
+    "answer", targetTone, 230, 68,
+    `<span class="tree-node__answer-mark">${state.solved ? "★" : "Revealed"}</span>` +
+      `<span class="tree-node__name">${esc(state.target.name)}</span>` +
+      `<span class="tree-node__eco">${esc(state.target.eco)}</span>`,
+    { main: true, latest: state.solved, sortKey: state.target.name },
+  );
+  const tipLeaf = () => {
+    const lineFound = confirmedDepth(state) >= state.target.moves.length;
+    const prompt = !state.results.length && confirmedDepth(state) === 0
+      ? "Make a guess"
+      : lineFound ? "Name the opening" : "Target continues";
+    return create(
+      "tip", "tip", 154, 52,
+      `<span class="tree-node__question">?</span><span class="tree-node__prompt">${prompt}</span>`,
+      { main: true, edgeTone: "hidden", sortKey: "target" },
+    );
   };
 
-  const walk = (node, prefix, depth) => {
-    const kids = [...node.children.values()];
-    // trunk (on-target) child first, so the confirmed spine reads straight down.
-    kids.sort((a, b) => (b.onTarget - a.onTarget) || a.move.localeCompare(b.move));
-    kids.forEach((c, i) => {
-      c.depth = depth + 1;
-      const last = i === kids.length - 1;
-      lines.push(`<span class="conn">${prefix}${last ? "└── " : "├── "}</span>${label(c)}`);
-      walk(c, prefix + (last ? "    " : "│   "), depth + 1);
-    });
+  const orderChildren = children => {
+    const main = children.find(child => child.main);
+    const sides = children.filter(child => child !== main)
+      .sort((a, b) => a.sortKey.localeCompare(b.sortKey));
+    if (!main) return sides;
+    const split = Math.ceil(sides.length / 2);
+    return [...sides.slice(0, split), main, ...sides.slice(split)];
   };
-  // record depths for the tip hint
-  root.depth = 0;
-  walk(root, "", 0);
 
-  // If the tip is the root (no shared first move yet), add an inline note.
-  if (tip === root && !state.solved && !state.gaveUp) {
-    lines.splice(1, 0, `<span class="conn">└── </span><span class="hint">？ target's first move not found yet</span>`);
+  const displayOffPath = start => {
+    const run = [start];
+    let end = start;
+    while (end.guesses.length === 0 && end.children.size === 1) {
+      const next = [...end.children.values()][0];
+      if (next.onTarget) break;
+      run.push(next);
+      end = next;
+    }
+    const sequence = run.map(node => {
+      const p = moveParts(node.move, node.depth);
+      return `<span><i>${p.number}</i>${esc(p.move)}</span>`;
+    }).join(" ");
+    const charCount = run.reduce((sum, node) => sum + node.move.length + 5, 0);
+    const width = Math.min(210, Math.max(112, 24 + charCount * 5.5));
+    const charsPerLine = Math.max(14, Math.floor((width - 18) / 5.5));
+    const lines = Math.max(1, Math.ceil(charCount / charsPerLine));
+    const node = create(
+      "sequence", "off", width, 24 + lines * 18,
+      `<span class="tree-node__sequence">${sequence}</span>`,
+      {
+        latest: latestGuessId != null && run.some(item => item.guessIds.has(latestGuessId)),
+        sortKey: run.map(item => item.move).join(" "),
+      },
+    );
+    const branches = [...end.children.values()].map(child => child.onTarget ? displayTargetMove(child) : displayOffPath(child));
+    const leaves = end.guesses.map(g => guessLeaf(g, end.onTarget ? "here" : "off", g.id === latestGuessId));
+    node.children = orderChildren([...branches, ...leaves]);
+    return node;
+  };
+
+  const displayTargetMove = raw => {
+    const node = create(
+      "move", targetTone, 92, 38, moveHtml(raw.move, raw.depth),
+      {
+        main: true,
+        latest: latestGuessId != null && raw.guessIds.has(latestGuessId),
+        boardDepth: raw.depth,
+        sortKey: raw.move,
+      },
+    );
+    const branches = [...raw.children.values()].map(child => child.onTarget ? displayTargetMove(child) : displayOffPath(child));
+    const leaves = raw.isTargetEnd
+      ? [answerLeaf()]
+      : raw.guesses.map(g => guessLeaf(g, "here", g.id === latestGuessId));
+    if (raw === tip && !state.solved && !state.gaveUp) leaves.push(tipLeaf());
+    node.children = orderChildren([...branches, ...leaves]);
+    return node;
+  };
+
+  const displayRoot = create(
+    "root", "root", 142, 40, "Starting position",
+    { main: true, boardDepth: 0, sortKey: "root" },
+  );
+  const rootBranches = [...root.children.values()].map(child => child.onTarget ? displayTargetMove(child) : displayOffPath(child));
+  if (tip === root && !state.solved && !state.gaveUp) rootBranches.push(tipLeaf());
+  displayRoot.children = orderChildren(rootBranches);
+
+  const H_GAP = 30, V_GAP = 48, PAD = 24;
+  const allNodes = [], levelHeights = [];
+  const assignLevels = (node, level) => {
+    node.level = level;
+    allNodes.push(node);
+    levelHeights[level] = Math.max(levelHeights[level] || 0, node.height);
+    for (const child of node.children) assignLevels(child, level + 1);
+  };
+  const measure = node => {
+    for (const child of node.children) measure(child);
+    node.childrenSpan = node.children.reduce((sum, child) => sum + child.subtreeWidth, 0) +
+      Math.max(0, node.children.length - 1) * H_GAP;
+    node.subtreeWidth = Math.max(node.width, node.childrenSpan);
+  };
+  assignLevels(displayRoot, 0);
+  measure(displayRoot);
+
+  const levelTops = [];
+  let nextTop = PAD;
+  for (let i = 0; i < levelHeights.length; i++) {
+    levelTops[i] = nextTop;
+    nextTop += levelHeights[i] + V_GAP;
   }
-  el.innerHTML = lines.join("\n");
+  const minWidth = Math.max(430, el.clientWidth || 0);
+  const svgWidth = Math.ceil(Math.max(minWidth, displayRoot.subtreeWidth + PAD * 2));
+  const svgHeight = Math.ceil(nextTop - V_GAP + PAD);
+  const place = (node, left) => {
+    node.cx = left + node.subtreeWidth / 2;
+    node.x = node.cx - node.width / 2;
+    node.y = levelTops[node.level] + (levelHeights[node.level] - node.height) / 2;
+    let childLeft = left + (node.subtreeWidth - node.childrenSpan) / 2;
+    for (const child of node.children) {
+      place(child, childLeft);
+      childLeft += child.subtreeWidth + H_GAP;
+    }
+  };
+  place(displayRoot, (svgWidth - displayRoot.subtreeWidth) / 2);
+
+  const edges = [];
+  const collectEdges = node => {
+    for (const child of node.children) {
+      const sy = node.y + node.height, ey = child.y;
+      const bend = Math.max(24, (ey - sy) * .46);
+      const cls = `tree-edge tree-edge--${child.edgeTone}${child.latest ? " is-latest" : ""}`;
+      edges.push(`<path class="${cls}" d="M ${node.cx} ${sy} C ${node.cx} ${sy + bend}, ${child.cx} ${ey - bend}, ${child.cx} ${ey}"/>`);
+      collectEdges(child);
+    }
+  };
+  collectEdges(displayRoot);
+
+  const nodeMarkup = node => {
+    const clickable = node.boardDepth != null;
+    const tag = clickable ? "button" : "div";
+    const depthAttr = clickable ? ` data-tree-depth="${node.boardDepth}" title="Show this position on the board"` : "";
+    return `<foreignObject x="${node.x}" y="${node.y}" width="${node.width}" height="${node.height}">` +
+      `<${tag} xmlns="http://www.w3.org/1999/xhtml"${clickable ? " type=\"button\"" : ""} ` +
+      `class="tree-node tree-node--${node.type} tree-node--${node.tone}${node.latest ? " is-latest" : ""}"${depthAttr}>` +
+      `${node.html}</${tag}></foreignObject>`;
+  };
+  el.innerHTML = `<svg class="tree-map" viewBox="0 0 ${svgWidth} ${svgHeight}" ` +
+    `width="${svgWidth}" height="${svgHeight}" role="group" aria-label="Opening tree">` +
+    `<g class="tree-edges">${edges.join("")}</g><g class="tree-nodes">${allNodes.map(nodeMarkup).join("")}</g></svg>`;
+
+  el.querySelectorAll("[data-tree-depth]").forEach(node =>
+    node.addEventListener("click", () => goBoardDepth(Number(node.dataset.treeDepth))));
+
+  const mainNodes = allNodes.filter(node => node.main);
+  const targetFocus = mainNodes[mainNodes.length - 1] || displayRoot;
+  const latestNodes = allNodes.filter(node => node.latest);
+  const latestFocus = latestNodes[latestNodes.length - 1];
+  const focusX = latestFocus ? (latestFocus.cx + targetFocus.cx) / 2 : targetFocus.cx;
+  requestAnimationFrame(() => {
+    el.scrollLeft = Math.max(0, focusX - el.clientWidth / 2);
+  });
 }
 
 /* ---------- 6. Guess log ---------- */
@@ -442,6 +575,16 @@ function stepBoard(delta) {
   const next = Math.max(0, Math.min(maxDepth, base + delta));
   if (next === base) return;
   boardQueuedDepth = next;
+  playQueuedBoardStep();
+}
+
+function goBoardDepth(depth) {
+  if (!state) return;
+  clearBoardPlayback();
+  const destination = Math.max(0, Math.min(boardMaxDepth(state), depth));
+  const current = currentBoardDepth();
+  if (destination === current) { renderBoard(state); return; }
+  boardQueuedDepth = destination;
   playQueuedBoardStep();
 }
 
@@ -879,24 +1022,6 @@ function render() {
   gc.innerHTML = spent
     ? `<b>${spent}</b>/${limit} guesses` + (hintN ? ` · ${hintWord(hintN)}` : "")
     : `<b>${limit}</b> guesses`;
-
-  // banner
-  const banner = document.getElementById("banner");
-  if (state.solved || state.gaveUp) {
-    banner.classList.add("show");
-    const win = state.solved;
-    banner.classList.toggle("win", win);
-    document.getElementById("bannerTitle").textContent = win ? "★ Solved!" : "Revealed";
-    document.getElementById("bannerTitle").style.color = "";
-    document.getElementById("bannerName").innerHTML =
-      `${esc(state.target.name)} <span class="eco">${esc(state.target.eco)}</span>`;
-    document.getElementById("bannerSub").innerHTML =
-      `<span style="font-family:var(--mono)">${fmtMoves(state.target.moves, "")}</span>` +
-      (win ? ` &nbsp;·&nbsp; in ${guessWord(guessBudgetUsed(state))}` : "");
-  } else {
-    banner.classList.remove("show");
-    banner.classList.remove("win");
-  }
 
   // input lock
   input.disabled = state.solved || state.gaveUp;

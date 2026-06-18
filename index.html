@@ -46,12 +46,6 @@
     <span class="gcount" id="gcount"></span>
   </div>
 
-  <div class="banner" id="banner">
-    <span class="b-title" id="bannerTitle">Solved!</span>
-    <span class="b-name" id="bannerName"></span>
-    <span class="b-sub" id="bannerSub"></span>
-  </div>
-
   <div class="layout">
     <div class="col-left">
       <div class="search">
@@ -62,7 +56,7 @@
 
       <section class="panel">
         <h2>Opening tree</h2>
-        <pre class="tree" id="tree"></pre>
+        <div class="tree" id="tree" role="region" aria-label="Opening tree"></div>
       </section>
 
       <section class="panel history" id="historyPanel" style="display:none">
@@ -110,7 +104,8 @@
       <li><span style="color:var(--good);font-weight:600">Blue</span> moves are confirmed on the answer path.</li>
       <li><span style="color:var(--miss)">Gray</span> moves are wrong branches from your guesses.</li>
       <li><span style="color:var(--gold);font-weight:600">Gold ★</span> appears after you guess the opening's name.</li>
-      <li>The board shows the position after the deepest confirmed line.</li>
+      <li>Wrong guesses can share their own branches, revealing how those openings relate.</li>
+      <li>The board shows your deepest confirmed position; select a blue move to replay an earlier one.</li>
     </ul>
     <h3>Guesses and hints</h3>
     <ul>
