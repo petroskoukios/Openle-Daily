@@ -220,8 +220,23 @@ function treeView(el) {
   return treeViews.get(el);
 }
 
+function treeMotionAllowed() {
+  return !window.matchMedia?.("(prefers-reduced-motion: reduce)").matches;
+}
+
+function panTreeTo(el, left, top, smooth = false) {
+  left = Math.max(0, left);
+  top = Math.max(0, top);
+  if (smooth && treeMotionAllowed()) el.scrollTo({ left, top, behavior: "smooth" });
+  else { el.scrollLeft = left; el.scrollTop = top; }
+}
+
 function renderTreeInto(state, el) {
   const view = treeView(el);
+  if (view.zoomFrame) {
+    cancelAnimationFrame(view.zoomFrame);
+    view.zoomFrame = null;
+  }
   const { root, tip } = buildTree(state);
   const latestGuessId = state.results.length ? state.results[state.results.length - 1].guessId : null;
   const targetTone = state.solved ? "gold" : "target";
@@ -236,16 +251,14 @@ function renderTreeInto(state, el) {
     move,
   });
   const guessLeaf = (g, tone, latest) => create(
-    "guess", tone, 140, 46,
-    `<span class="tree-node__name" title="${esc(g.name)}">${esc(g.name)}</span>` +
-      `<span class="tree-node__eco">${esc(g.eco)}</span>`,
+    "guess", tone, 140, 38,
+    `<span class="tree-node__name" title="${esc(g.name)}">${esc(g.name)}</span>`,
     { latest, sortKey: g.name, edgeTone: tone === "here" ? "target-soft" : "off" },
   );
   const answerLeaf = () => create(
-    "answer", targetTone, 162, 54,
+    "answer", targetTone, 162, 46,
     `<span class="tree-node__answer-mark">${state.solved ? "★" : "Revealed"}</span>` +
-      `<span class="tree-node__name">${esc(state.target.name)}</span>` +
-      `<span class="tree-node__eco">${esc(state.target.eco)}</span>`,
+      `<span class="tree-node__name">${esc(state.target.name)}</span>`,
     { main: true, latest: state.solved, sortKey: state.target.name },
   );
   const tipLeaf = () => {
@@ -335,7 +348,7 @@ function renderTreeInto(state, el) {
       end = next;
     }
     const sequence = run.map((node, i) =>
-      `<span class="tree-seq__move" data-tree-depth="${node.depth}" title="Show this position on the board">` +
+      `<span class="tree-seq__move" data-tree-depth="${node.depth}" role="button" tabindex="0" title="Show this position on the board">` +
         `${seqTokenNum(node, i)}${esc(node.move)}</span>`
     ).join(" ");
     const { width, height } = seqMetrics(run);
@@ -365,7 +378,7 @@ function renderTreeInto(state, el) {
   if (tip === root && !state.solved && !state.gaveUp) rootBranches.push(tipLeaf());
   displayRoot.children = orderChildren(rootBranches);
 
-  const H_GAP = 8, V_GAP = 12, PAD = 10;
+  const H_GAP = 8, V_GAP = 24, PAD = 10;
   const allNodes = [], levelHeights = [];
   const assignLevels = (node, level) => {
     node.level = level;
@@ -440,8 +453,16 @@ function renderTreeInto(state, el) {
     `width="${renderW}" height="${renderH}" role="group" aria-label="Opening tree">` +
     `<g class="tree-edges">${edges.join("")}</g><g class="tree-nodes">${allNodes.map(nodeMarkup).join("")}</g></svg></div>`;
 
-  el.querySelectorAll("[data-tree-depth]").forEach(node =>
-    node.addEventListener("click", () => goBoardDepth(Number(node.dataset.treeDepth))));
+  el.querySelectorAll("[data-tree-depth]").forEach(node => {
+    const activate = () => goBoardDepth(Number(node.dataset.treeDepth));
+    node.addEventListener("click", activate);
+    if (node.tagName === "BUTTON") return;
+    node.addEventListener("keydown", e => {
+      if (e.key !== "Enter" && e.key !== " ") return;
+      e.preventDefault();
+      activate();
+    });
+  });
 
   const mainNodes = allNodes.filter(node => node.main);
   const targetFocus = mainNodes[mainNodes.length - 1] || displayRoot;
@@ -459,12 +480,13 @@ function renderTreeInto(state, el) {
   // current view and only re-pan when a focus point drifts out of sight. A new
   // puzzle (mode/difficulty/target change, or solve/give-up) re-centers afresh.
   const puzzleKey = `${state.mode}|${state.difficulty}|${state.target.id}|${state.dayNo}|${state.solved}|${state.gaveUp}`;
+  const targetKey = `${state.mode}|${state.difficulty}|${state.target.id}|${state.dayNo}`;
   const freshView = view.puzzleKey !== puzzleKey;
+  const newTarget = view.targetKey !== targetKey;
   const rootCx = displayRoot.cx;
   requestAnimationFrame(() => {
     if (freshView) {
-      el.scrollLeft = centeredLeft;
-      el.scrollTop = centeredTop;
+      panTreeTo(el, centeredLeft, centeredTop, !newTarget && view.puzzleKey != null);
     } else {
       // Hold position, compensating for the tree re-centering as it grows wider.
       const dxRoot = view.prevRootCx == null ? 0 : (rootCx - view.prevRootCx) * view.zoom;
@@ -474,11 +496,11 @@ function renderTreeInto(state, el) {
         const sx = slackX + p.x * view.zoom - left, sy = slackY + p.y * view.zoom - top;
         return sx < mx || sx > el.clientWidth - mx || sy < my || sy > el.clientHeight - my;
       });
-      if (outOfView) { left = centeredLeft; top = centeredTop; }
-      el.scrollLeft = Math.max(0, left);
-      el.scrollTop = Math.max(0, top);
+      if (outOfView) panTreeTo(el, centeredLeft, centeredTop, true);
+      else panTreeTo(el, left, top);
     }
     view.puzzleKey = puzzleKey;
+    view.targetKey = targetKey;
     view.prevRootCx = rootCx;
   });
 }
@@ -491,7 +513,25 @@ function renderTree(state) {
   }
 }
 
-function zoomTree(el, amount, clientX = null, clientY = null) {
+function applyTreeZoom(el, view, zoom, contentX, contentY, anchorX, anchorY) {
+  view.zoom = zoom;
+  const padX = view.padX || 0, padY = view.padY || 0;
+  const renderW = Math.round(view.baseWidth * zoom);
+  const renderH = Math.round(view.baseHeight * zoom);
+  const map = el.querySelector(".tree-map");
+  if (!map) return;
+  map.setAttribute("width", renderW);
+  map.setAttribute("height", renderH);
+  const pan = el.querySelector(".tree-pan");
+  if (pan) {
+    pan.style.width = (renderW + padX * 2) + "px";
+    pan.style.height = (renderH + padY * 2) + "px";
+  }
+  el.scrollLeft = padX + contentX * zoom - anchorX;
+  el.scrollTop = padY + contentY * zoom - anchorY;
+}
+
+function zoomTree(el, amount, clientX = null, clientY = null, smooth = false) {
   const view = treeView(el);
   const nextZoom = Math.min(TREE_ZOOM_MAX, Math.max(TREE_ZOOM_MIN,
     Math.round((view.zoom + amount) * 100) / 100));
@@ -503,22 +543,26 @@ function zoomTree(el, amount, clientX = null, clientY = null) {
   const padX = view.padX || 0, padY = view.padY || 0;
   const contentX = (el.scrollLeft + anchorX - padX) / view.zoom;
   const contentY = (el.scrollTop + anchorY - padY) / view.zoom;
-  view.zoom = nextZoom;
 
-  const map = el.querySelector(".tree-map");
-  const renderW = Math.round(view.baseWidth * nextZoom);
-  const renderH = Math.round(view.baseHeight * nextZoom);
-  map.setAttribute("width", renderW);
-  map.setAttribute("height", renderH);
-  const pan = el.querySelector(".tree-pan");
-  if (pan) {
-    pan.style.width = (renderW + padX * 2) + "px";
-    pan.style.height = (renderH + padY * 2) + "px";
+  if (view.zoomFrame) cancelAnimationFrame(view.zoomFrame);
+  if (!smooth || !treeMotionAllowed()) {
+    view.zoomFrame = null;
+    applyTreeZoom(el, view, nextZoom, contentX, contentY, anchorX, anchorY);
+    return;
   }
-  requestAnimationFrame(() => {
-    el.scrollLeft = padX + contentX * nextZoom - anchorX;
-    el.scrollTop = padY + contentY * nextZoom - anchorY;
-  });
+
+  const startZoom = view.zoom;
+  const startTime = performance.now();
+  const duration = 190;
+  const animate = now => {
+    const t = Math.min(1, (now - startTime) / duration);
+    const eased = 1 - Math.pow(1 - t, 3);
+    applyTreeZoom(el, view, startZoom + (nextZoom - startZoom) * eased,
+      contentX, contentY, anchorX, anchorY);
+    if (t < 1) view.zoomFrame = requestAnimationFrame(animate);
+    else view.zoomFrame = null;
+  };
+  view.zoomFrame = requestAnimationFrame(animate);
 }
 
 function enableTreeViewport(el) {
@@ -532,15 +576,17 @@ function enableTreeViewport(el) {
       left: el.scrollLeft, top: el.scrollTop, moved: false,
     };
     suppressClick = false;
-    el.setPointerCapture(e.pointerId);
   });
   el.addEventListener("pointermove", e => {
     if (!drag || drag.id !== e.pointerId) return;
     const dx = e.clientX - drag.x;
     const dy = e.clientY - drag.y;
     if (!drag.moved && Math.hypot(dx, dy) < 4) return;
-    drag.moved = true;
-    el.classList.add("is-panning");
+    if (!drag.moved) {
+      drag.moved = true;
+      el.setPointerCapture(e.pointerId);
+      el.classList.add("is-panning");
+    }
     el.scrollLeft = drag.left - dx;
     el.scrollTop = drag.top - dy;
   });
@@ -560,7 +606,10 @@ function enableTreeViewport(el) {
   }, true);
   el.addEventListener("dragstart", e => e.preventDefault());
   el.addEventListener("wheel", e => {
-    if (!e.ctrlKey && !e.metaKey) return;
+    if (!e.ctrlKey && !e.metaKey) {
+      if (el.id === "treeFullscreen") e.preventDefault();
+      return;
+    }
     e.preventDefault();
     zoomTree(el, e.deltaY < 0 ? TREE_ZOOM_STEP : -TREE_ZOOM_STEP, e.clientX, e.clientY);
   }, { passive: false });
@@ -1280,10 +1329,10 @@ document.addEventListener("keydown", e => {
 document.getElementById("howBtn").addEventListener("click", () => modal("howModal", true));
 document.getElementById("statsBtn").addEventListener("click", openStats);
 document.getElementById("treeExpandBtn").addEventListener("click", openTreeModal);
-document.getElementById("treeZoomOut").addEventListener("click", () => zoomTree(document.getElementById("tree"), -TREE_ZOOM_STEP));
-document.getElementById("treeZoomIn").addEventListener("click", () => zoomTree(document.getElementById("tree"), TREE_ZOOM_STEP));
-document.getElementById("treeModalZoomOut").addEventListener("click", () => zoomTree(document.getElementById("treeFullscreen"), -TREE_ZOOM_STEP));
-document.getElementById("treeModalZoomIn").addEventListener("click", () => zoomTree(document.getElementById("treeFullscreen"), TREE_ZOOM_STEP));
+document.getElementById("treeZoomOut").addEventListener("click", () => zoomTree(document.getElementById("tree"), -TREE_ZOOM_STEP, null, null, true));
+document.getElementById("treeZoomIn").addEventListener("click", () => zoomTree(document.getElementById("tree"), TREE_ZOOM_STEP, null, null, true));
+document.getElementById("treeModalZoomOut").addEventListener("click", () => zoomTree(document.getElementById("treeFullscreen"), -TREE_ZOOM_STEP, null, null, true));
+document.getElementById("treeModalZoomIn").addEventListener("click", () => zoomTree(document.getElementById("treeFullscreen"), TREE_ZOOM_STEP, null, null, true));
 enableTreeViewport(document.getElementById("tree"));
 enableTreeViewport(document.getElementById("treeFullscreen"));
 document.getElementById("statsMode").addEventListener("click", e => {
