@@ -59,37 +59,32 @@ the shareable text is still shown in the Stats panel so you can copy it manually
 | `styles.css` | All styling (chess.com-inspired dark theme, blue board, blue accents). |
 | `game.js` | Game logic: comparison engine, tree builder, board rendering, autocomplete, difficulty/daily selection, stats, sharing. |
 | `chess.js` | Tiny SAN engine — replays a move list to reconstruct the board position. |
-| `openings.js` | The opening database (`window.OPENINGS`), generated. |
+| `openings.js` | The curated opening database (`window.OPENINGS`) and tier assignments. |
 | `assets/` | Static image assets, including the Openle wordmark. |
 | `pieces-svg/` | Chess piece SVGs drawn on the board (CC BY-SA — see Credits). |
 
 ## The data
 
-The database holds **3,167 uniquely-named openings and variations** with their ECO
-codes and full main-line move sequences, derived from the open
+The source dataset contains 3,167 uniquely-named openings and variations. Openle
+retains a curated set of **569 recognizable openings** with their ECO codes and full
+main-line move sequences, derived from the open
 [lichess-org/chess-openings](https://github.com/lichess-org/chess-openings) dataset
-(CC0). Each opening stores its name, ECO code, SAN move sequence, and an opening
-family derived from the name.
+(CC0). Deep catalog branches, novelty gambits, and structurally obscure sidelines are
+excluded from the shipped database. Each retained opening stores its name, ECO code,
+SAN move sequence, and an opening family derived from the name.
 
 ### Difficulty
 
-The dataset has no popularity/frequency signal, so each opening's "obscurity" is
-estimated from three structural proxies and bucketed into four tiers:
-
-- **family prominence** — iconic (Sicilian, Ruy Lopez, …) vs. famous vs. semi-known
-  vs. obscure, judged partly by how many catalogued variations a family has;
-- **move depth** — how many plies you must reproduce exactly;
-- **name nesting** — how deep the variation name runs.
-
-Openings are ranked from least to most obscure using those proxies, then each tier
-uses a cumulative target pool: **Easy 32 · Medium 64 · Hard 128 · Expert 512**.
+The dataset has no popularity/frequency signal, so the retained openings were reviewed
+manually for recognizability and theoretical difficulty. Each tier uses a cumulative
+target pool: **Easy 32 · Medium 64 · Hard 128 · Expert 256**.
 That means Medium includes all Easy targets, Hard includes all Medium targets, and
 Expert includes all Hard targets. The autocomplete is limited to the current tier's
 cumulative pool, so difficulty controls both targets and allowed guesses.
 
-> Note: with no popularity data, a *single*-variation name of a famous family can't be
-> told apart structurally from a famous one (e.g. "Caro-Kann: Classical" vs. an obscure
-> sideline), so the ranking is still an approximation.
+The `tier` metadata in `openings.js` is the source of truth: Easy has 32 unique
+openings, Medium adds 32, Hard adds 64, and Expert adds 128. The remaining 313
+entries are marked `reserve` and are excluded from targets and autocomplete.
 
 ## Credits
 

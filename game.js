@@ -1,6 +1,6 @@
 /* ===================================================================
    Openle — daily chess opening puzzle
-   Pure client-side. Data: window.OPENINGS = [{n,e,m}, ...]
+   Pure client-side. Data: window.OPENINGS = [{n,e,m,tier}, ...]
    =================================================================== */
 (function () {
 "use strict";
@@ -23,81 +23,26 @@ const OPENINGS = window.OPENINGS.map((o, i) => {
     plies: moves.length,
     nameLower: o.n.toLowerCase(),
     segs,
+    curatedTier: o.tier || "reserve",
   };
 });
 
 /* ---------- 1b. Difficulty tiers ----------
-   The dataset has no popularity signal, so we estimate how obscure an opening
-   is from structural proxies and bucket the result into four tiers:
-     • family prominence  (iconic / famous / semi-known / obscure)
-     • move depth         (how many plies you must reproduce exactly)
-     • name nesting       (how deep the variation name is)                       */
-
-// The most universally-known opening families.
-const ICONIC = new Set([
-  "Italian Game", "Ruy Lopez", "Sicilian Defense", "French Defense",
-  "Caro-Kann Defense", "Queen's Gambit Declined", "Queen's Gambit Accepted",
-  "King's Indian Defense", "Nimzo-Indian Defense", "English Opening",
-  "Scandinavian Defense", "Slav Defense", "Scotch Game", "Vienna Game",
-  "London System", "Pirc Defense", "Grünfeld Defense", "Dutch Defense",
-  "Alekhine Defense",
-]);
-// Broader set of household-name families.
-const FAMOUS = new Set([
-  "Sicilian Defense", "Ruy Lopez", "French Defense", "Italian Game",
-  "Queen's Gambit Declined", "Queen's Gambit Accepted", "English Opening",
-  "King's Indian Defense", "Caro-Kann Defense", "Nimzo-Indian Defense",
-  "Dutch Defense", "Alekhine Defense", "Grünfeld Defense", "Queen's Indian Defense",
-  "Scotch Game", "Semi-Slav Defense", "Benoni Defense", "Petrov's Defense",
-  "Slav Defense", "Scandinavian Defense", "Vienna Game", "Four Knights Game",
-  "Philidor Defense", "Modern Defense", "Pirc Defense", "Tarrasch Defense",
-  "Bishop's Opening", "King's Gambit Accepted", "King's Gambit Declined",
-  "Réti Opening", "London System", "Catalan Opening", "Bogo-Indian Defense",
-  "Trompowsky Attack", "Giuoco Piano", "Two Knights Defense", "Ponziani Opening",
-  "Center Game", "Danish Gambit", "Evans Gambit", "Nimzowitsch Defense",
-  "Old Indian Defense", "Benko Gambit", "Budapest Defense",
-  // recognizable base systems, kept famous so their plain names land in Easy
-  "King's Pawn Game", "Queen's Pawn Game", "Indian Defense", "Zukertort Opening",
-  "Bird Opening", "Nimzo-Larsen Attack", "Hungarian Opening",
-]);
-
-const FAM_COUNT = {};
-for (const o of OPENINGS) FAM_COUNT[o.family] = (FAM_COUNT[o.family] || 0) + 1;
-
-function obscurityScore(o) {
-  const f = ICONIC.has(o.family) ? 0 : FAMOUS.has(o.family) ? 1 : FAM_COUNT[o.family] >= 20 ? 3 : 6;
-  const d = o.plies <= 4 ? 0 : o.plies <= 6 ? 1 : o.plies <= 8 ? 2 : o.plies <= 10 ? 3 : o.plies <= 14 ? 4 : 5;
-  const s = o.segs === 0 ? 0 : o.segs === 1 ? 1 : o.segs === 2 ? 3 : 4;
-  return f + d + s;
-}
-// Easy is reserved for the recognizable *base* openings (no variation clause);
-// everything else skews upward, with the big obscure/deep tail landing in Expert.
-function tierOf(o) {
-  if (o.segs === 0 && FAMOUS.has(o.family)) return "easy";
-  const v = obscurityScore(o);
-  return v <= 3 ? "medium" : v <= 5 ? "hard" : "expert";
-}
-
+   Every playable opening has a manually reviewed tier in openings.js. Pools are
+   cumulative: each difficulty includes all openings from the tiers below it. */
 const DIFFS = ["easy", "medium", "hard", "expert"];
 const DIFF_LABEL = { easy: "Easy", medium: "Medium", hard: "Hard", expert: "Expert" };
-const DIFF_LIMITS = { easy: 32, medium: 64, hard: 128, expert: 512 };
 const GUESS_LIMITS = { easy: 10, medium: 15, hard: 20, expert: 25 };
 const HINT_COST = 3;
 const TIER_ORDER = { easy: 0, medium: 1, hard: 2, expert: 3 };
-function rankOpening(a, b) {
-  return TIER_ORDER[tierOf(a)] - TIER_ORDER[tierOf(b)]
-    || obscurityScore(a) - obscurityScore(b)
-    || a.segs - b.segs
-    || a.plies - b.plies
-    || a.name.localeCompare(b.name);
+function tierOf(o) {
+  return o.curatedTier;
 }
-const RANKED_OPENINGS = OPENINGS.filter(o => o.plies >= 2).sort(rankOpening);
-const POOLS = {
-  easy: RANKED_OPENINGS.slice(0, DIFF_LIMITS.easy),
-  medium: RANKED_OPENINGS.slice(0, DIFF_LIMITS.medium),
-  hard: RANKED_OPENINGS.slice(0, DIFF_LIMITS.hard),
-  expert: RANKED_OPENINGS.slice(0, DIFF_LIMITS.expert),
-};
+const POOLS = Object.fromEntries(DIFFS.map(diff => [
+  diff,
+  OPENINGS.filter(o => DIFFS.includes(tierOf(o)) && TIER_ORDER[tierOf(o)] <= TIER_ORDER[diff]),
+]));
+const DIFF_LIMITS = Object.fromEntries(DIFFS.map(diff => [diff, POOLS[diff].length]));
 
 /* ---------- 2. Deterministic daily selection ---------- */
 function localDayNumber(d = new Date()) {
@@ -675,7 +620,8 @@ const LS = {
   set(k, v) { try { localStorage.setItem(k, JSON.stringify(v)); } catch {} },
 };
 // Daily progress is per (day, difficulty); stats are per (mode, difficulty).
-const kDaily = (dayNo, diff) => `ot.daily.${dayNo}.${diff}`;
+// Version daily saves whenever opening IDs or pool assignments change.
+const kDaily = (dayNo, diff) => `ot.daily.v8.${dayNo}.${diff}`;
 const kStats = (mode, diff) => `ot.stats.${mode}.${diff}`;
 const K_DIFF = "ot.diff";           // last-used difficulty
 
@@ -1088,7 +1034,7 @@ boot();
 
 // expose a little debug hook
 window.__OT = {
-  OPENINGS, POOLS, DIFFS, DIFF_LIMITS, GUESS_LIMITS, HINT_COST, guessLimit, tierOf, obscurityScore, dailyTarget, compare, submitGuess, requestHint,
+  OPENINGS, POOLS, DIFFS, DIFF_LIMITS, GUESS_LIMITS, HINT_COST, guessLimit, tierOf, dailyTarget, compare, submitGuess, requestHint,
   byName: n => OPENINGS.find(o => o.name === n),
   byMoves: m => OPENINGS.find(o => o.movesStr === m),
   get moveSearchEnabled() { return moveSearchEnabled; },
