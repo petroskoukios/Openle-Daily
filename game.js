@@ -259,10 +259,10 @@ function renderTreeInto(state, el) {
     number: depth % 2 ? `${Math.ceil(depth / 2)}.` : `${depth / 2}...`,
     move,
   });
-  const guessLeaf = (g, tone, latest) => create(
-    "guess", tone, 140, 38,
+  const guessLeaf = (g, latest) => create(
+    "guess", "off", 140, 38,
     `<span class="tree-node__name" title="${esc(g.name)}">${esc(g.name)}</span>`,
-    { latest, sortKey: g.name, edgeTone: tone === "here" ? "target-soft" : "off" },
+    { latest, sortKey: g.name, edgeTone: "off" },
   );
   const answerLeaf = () => create(
     "answer", targetTone, 162, 46,
@@ -339,7 +339,7 @@ function renderTreeInto(state, el) {
       },
     );
     const branches = [...end.children.values()].map(child => child.onTarget ? displayTargetMove(child) : displayOffPath(child));
-    const leaves = end.guesses.map(g => guessLeaf(g, end.onTarget ? "here" : "off", g.id === latestGuessId));
+    const leaves = end.guesses.map(g => guessLeaf(g, g.id === latestGuessId));
     node.children = orderChildren([...branches, ...leaves]);
     return node;
   };
@@ -373,7 +373,7 @@ function renderTreeInto(state, el) {
     const branches = [...end.children.values()].map(child => child.onTarget ? displayTargetMove(child) : displayOffPath(child));
     const leaves = end.isTargetEnd
       ? [answerLeaf()]
-      : end.guesses.map(g => guessLeaf(g, "here", g.id === latestGuessId));
+      : end.guesses.map(g => guessLeaf(g, g.id === latestGuessId));
     if (end === tip && !state.solved && !state.gaveUp) leaves.push(tipLeaf());
     node.children = orderChildren([...branches, ...leaves]);
     return node;

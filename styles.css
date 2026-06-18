@@ -155,7 +155,6 @@ body {
 .tree-map { display: block; position: absolute; max-width: none; overflow: visible; }
 .tree-edge { fill: none; stroke: var(--muted-2); stroke-width: 1.25; opacity: .78; }
 .tree-edge--target { stroke: var(--good); stroke-width: 3; opacity: .9; }
-.tree-edge--target-soft { stroke: var(--good); stroke-width: 1.7; opacity: .62; }
 .tree-edge--off { stroke: var(--miss); stroke-width: 1.25; opacity: .62; }
 .tree-edge--hidden { stroke: var(--good); stroke-width: 1.6; stroke-dasharray: 4 4; opacity: .55; }
 .tree-edge.is-latest { animation: tree-edge-arrive .42s ease-out both; }
@@ -187,9 +186,6 @@ button.tree-node:focus-visible { outline: 2px solid var(--accent-hover); outline
 .tree-node--guess,
 .tree-node--answer { flex-direction: column; gap: 1px; padding: 4px 6px; }
 .tree-node--guess.tree-node--off { color: var(--miss); border-color: rgba(155,161,170,.4); }
-.tree-node--guess.tree-node--here {
-  color: var(--good); background: rgba(97,152,202,.11); border-color: var(--good-dim);
-}
 .tree-node__name {
   display: -webkit-box; max-width: 100%; overflow: hidden; -webkit-box-orient: vertical; -webkit-line-clamp: 2;
   font-weight: 700; font-size: 10.5px; line-height: 1.12;
