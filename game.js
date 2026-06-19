@@ -258,6 +258,7 @@ function panTreeTo(el, left, top, smooth = false) {
 
 function renderTreeInto(state, el) {
   const view = treeView(el);
+  const boardNavigationEnabled = el.id !== "treeFullscreen";
   if (view.zoomFrame) {
     cancelAnimationFrame(view.zoomFrame);
     view.zoomFrame = null;
@@ -319,6 +320,9 @@ function renderTreeInto(state, el) {
   const showMoveNumber = (depth, i) => i === 0 || depth % 2 === 1;
   const seqTokenNum = (node, i) =>
     showMoveNumber(node.depth, i) ? `<i>${moveParts(node.move, node.depth).number}</i>` : "";
+  const moveToken = (html, moves, depth) => boardNavigationEnabled
+    ? `<span class="tree-seq__move" data-tree-line="${registerLine(moves, depth)}" role="button" tabindex="0" title="Show this position on the board">${html}</span>`
+    : `<span>${html}</span>`;
 
   const seqMetrics = run => {
     // Estimate each move token's pixel width (small number prefix + SAN + gap),
@@ -349,8 +353,7 @@ function renderTreeInto(state, el) {
       end = next;
     }
     const sequence = run.map((node, i) =>
-      `<span class="tree-seq__move" data-tree-line="${registerLine(node.path, node.depth)}" role="button" tabindex="0" title="Show this position on the board">` +
-        `${seqTokenNum(node, i)}${esc(node.move)}</span>`
+      moveToken(`${seqTokenNum(node, i)}${esc(node.move)}`, node.path, node.depth)
     ).join(" ");
     const { width, height } = seqMetrics(run);
     const branches = [...end.children.values()].map(child => child.onTarget ? displayTargetMove(child) : displayOffPath(child));
@@ -396,8 +399,7 @@ function renderTreeInto(state, el) {
       end = next;
     }
     const sequence = run.map((node, i) =>
-      `<span class="tree-seq__move" data-tree-line="${registerLine(targetBoardLine, node.depth)}" role="button" tabindex="0" title="Show this position on the board">` +
-        `${seqTokenNum(node, i)}${esc(node.move)}</span>`
+      moveToken(`${seqTokenNum(node, i)}${esc(node.move)}`, targetBoardLine, node.depth)
     ).join(" ");
     const { width, height } = seqMetrics(run);
     const node = create(
@@ -624,8 +626,8 @@ function renderTreeInto(state, el) {
     // Root navigates to a board depth; guess/answer boxes play their whole line.
     // The box is the click target; inner move tokens stop propagation so they
     // still navigate to their own ply instead of the full line.
-    const depthClickable = node.boardDepth != null;
-    const lineClickable = node.lineId != null;
+    const depthClickable = boardNavigationEnabled && node.boardDepth != null;
+    const lineClickable = boardNavigationEnabled && node.lineId != null;
     const tag = depthClickable ? "button" : "div";
     let attrs = "";
     if (depthClickable) attrs = ` type="button" data-tree-depth="${node.boardDepth}" title="Show this position on the board"`;
