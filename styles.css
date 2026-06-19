@@ -364,6 +364,32 @@ button.tree-node:focus-visible { outline: 2px solid var(--accent-hover); outline
 .modal ul { padding-left: 18px; margin: 8px 0; }
 .modal li { margin: 5px 0; }
 .modal .ex { font-family: var(--mono); font-size: 13px; background: var(--panel-2); border: 1px solid var(--border-solid); border-radius: 10px; padding: 12px 14px; white-space: pre; overflow-x: auto; line-height: 1.6; }
+.how-modal { max-width: 680px; padding: 0; border-radius: 8px; overflow: hidden; }
+.how-modal .close { top: 14px; right: 14px; z-index: 1; }
+.how-header { padding: 20px 58px 18px 24px; border-bottom: 1px solid var(--border-solid); background: rgba(30,32,37,.5); }
+.how-header h2 { margin: 0 0 6px; font-size: 22px; }
+.how-header p { max-width: 570px; margin: 0; color: var(--muted); line-height: 1.45; }
+.how-grid { display: grid; grid-template-columns: 1.08fr .92fr; gap: 0; padding: 20px 24px; }
+.how-section { min-width: 0; padding-right: 24px; }
+.how-section + .how-section { padding: 0 0 0 24px; border-left: 1px solid var(--border-solid); }
+.how-modal .how-section h3 { margin: 0 0 12px; color: var(--text); font-size: 13px; font-weight: 800; text-transform: uppercase; }
+.how-list { display: grid; gap: 10px; margin: 0; padding: 0; list-style: none; }
+.how-modal .how-list li { display: grid; grid-template-columns: 14px minmax(0, 1fr); gap: 9px; align-items: start; margin: 0; color: var(--muted); font-size: 13px; line-height: 1.4; }
+.how-list b { color: var(--text); }
+.how-list .dot { margin-top: 4px; }
+.how-star, .how-branch, .how-board { color: var(--good); font-size: 14px; font-style: normal; font-weight: 700; line-height: 1.25; text-align: center; }
+.how-branch, .how-board { color: var(--muted); }
+.how-rules { margin: 0; }
+.how-rules > div { padding: 10px 0; border-bottom: 1px solid var(--border-solid); }
+.how-rules > div:first-child { padding-top: 0; }
+.how-rules > div:last-child { padding-bottom: 0; border-bottom: 0; }
+.how-rules dt { color: var(--text); font-size: 13px; font-weight: 800; }
+.how-rules dd { margin: 2px 0 0; color: var(--muted); font-size: 13px; line-height: 1.4; }
+.how-footer { padding: 13px 24px 15px; border-top: 1px solid var(--border-solid); background: rgba(30,32,37,.5); }
+.how-footer p { margin: 0; color: var(--muted); font-size: 12.5px; }
+.how-footer b { color: var(--text); }
+.how-footer .how-credit { margin-top: 5px; color: var(--muted-2); font-size: 11px; }
+.how-footer a { color: var(--accent-hover); }
 .tree-modal-bg { align-items: center; padding: 16px; overflow: hidden; }
 .tree-modal {
   display: flex; flex-direction: column;
@@ -374,8 +400,6 @@ button.tree-node:focus-visible { outline: 2px solid var(--accent-hover); outline
 .tree-modal .close { position: static; flex: 0 0 auto; }
 .tree--fullscreen { flex: 1 1 auto; min-height: 0; padding: 6px; background: transparent; border: 0; overscroll-behavior: contain; }
 .tree--fullscreen .tree-map { margin: 0 auto; }
-.legend { display: flex; gap: 16px; flex-wrap: wrap; margin-top: 6px; font-size: 13px; }
-.legend span { display: inline-flex; align-items: center; gap: 6px; color: var(--muted); }
 .dot { width: 11px; height: 11px; border-radius: 3px; display: inline-block; }
 .dot.good { background: var(--good); }
 .dot.bad { background: var(--miss); }
@@ -393,8 +417,6 @@ button.tree-node:focus-visible { outline: 2px solid var(--accent-hover); outline
 .dist-row .k { width: 22px; color: var(--muted); font-variant-numeric: tabular-nums; text-align: right; }
 .dist-row .bar { background: var(--good-dim); color: var(--text); border-radius: 4px; padding: 1px 8px; min-width: 22px; text-align: right; font-variant-numeric: tabular-nums; font-size: 12px; }
 .dist-row .bar.cur { background: var(--good); color: #14120e; font-weight: 700; }
-
-.shareout { font-family: var(--mono); font-size: 13px; white-space: pre-wrap; background: var(--panel-2); border: 1px solid var(--border-solid); border-radius: 10px; padding: 14px; margin-top: 14px; line-height: 1.5; }
 
 /* ---- Win modal ---- */
 .win-modal {
@@ -428,6 +450,11 @@ button.tree-node:focus-visible { outline: 2px solid var(--accent-hover); outline
 @media (max-width: 620px) {
   .appbar { flex-wrap: wrap; gap: 10px; }
   .brand small { display: none; }
+  .how-grid { grid-template-columns: 1fr; padding: 18px 20px; }
+  .how-section { padding: 0; }
+  .how-section + .how-section { margin-top: 18px; padding: 18px 0 0; border-top: 1px solid var(--border-solid); border-left: 0; }
+  .how-header { padding-left: 20px; }
+  .how-footer { padding-right: 20px; padding-left: 20px; }
   .stats-grid { grid-template-columns: repeat(2, 1fr); }
   .win-stats { grid-template-columns: repeat(2, 1fr); }
 }

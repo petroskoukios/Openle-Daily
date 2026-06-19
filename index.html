@@ -126,31 +126,36 @@
 
 <!-- How-to-play modal -->
 <div class="modal-bg" id="howModal">
-  <div class="modal">
-    <button class="iconbtn close" data-close>✕</button>
-    <h2>♟ How to play</h2>
-    <p>Guess the hidden <b>chess opening</b>. Each guess is another opening, and the tree shows how far its move order matches the answer before it branches away.</p>
-    <h3>How to read it</h3>
-    <ul>
-      <li><span style="color:var(--good);font-weight:600">Blue</span> moves are confirmed on the answer path.</li>
-      <li><span style="color:var(--miss)">Gray</span> moves are wrong branches from your guesses.</li>
-      <li>A blue <span style="color:var(--good);font-weight:600">★</span> marks the answer after you guess the opening's name.</li>
-      <li>Wrong guesses can share their own branches, revealing how those openings relate.</li>
-      <li>The board shows your deepest confirmed position; select a blue move to replay an earlier one.</li>
-    </ul>
-    <h3>Guesses and hints</h3>
-    <ul>
-      <li>Search by opening name. Turn on <b>Search using notation</b> in the top bar to search by move order.</li>
-      <li>Hints reveal one move and cost <b>3</b> guesses.</li>
-      <li>Easy has 10 guesses, Medium 15, Hard 20, Expert 25.</li>
-    </ul>
-    <div class="legend">
-      <span><i class="dot good"></i> on target path</span>
-      <span><i class="dot bad"></i> diverged guess</span>
-      <span><i class="dot good"></i> solved answer</span>
+  <div class="modal how-modal">
+    <button class="iconbtn close" data-close aria-label="Close">✕</button>
+    <header class="how-header">
+      <h2>How to play</h2>
+      <p>Guess the hidden <b>chess opening</b>. Each guess branches where its move order stops matching the answer.</p>
+    </header>
+    <div class="how-grid">
+      <section class="how-section">
+        <h3>Read the tree</h3>
+        <ul class="how-list">
+          <li><i class="dot good"></i><span><b>Blue moves</b> are confirmed on the answer path.</span></li>
+          <li><i class="dot bad"></i><span><b>Gray moves</b> belong to diverged guesses.</span></li>
+          <li><i class="how-star">★</i><span>The star appears after you guess the opening's name.</span></li>
+          <li><i class="how-branch">⑂</i><span>Related wrong guesses can share their own branches.</span></li>
+          <li><i class="how-board">▦</i><span>The board shows your deepest confirmed position. Select any move to replay it.</span></li>
+        </ul>
+      </section>
+      <section class="how-section">
+        <h3>Guesses and hints</h3>
+        <dl class="how-rules">
+          <div><dt>Search</dt><dd>Find an opening by name. Enable notation search for move orders.</dd></div>
+          <div><dt>Hint</dt><dd>Reveal one move at a cost of <b>3 guesses</b>.</dd></div>
+          <div><dt>Limits</dt><dd>Easy 10 · Medium 15 · Hard 20 · Expert 25</dd></div>
+        </dl>
+      </section>
     </div>
-    <p class="hint">Daily puzzles are the same for everyone. Practice mode gives endless random puzzles.</p>
-    <p class="hint">Chess piece graphics by Uray M. János, after the Wikipedia “Cburnett” set — licensed <a href="https://creativecommons.org/licenses/by-sa/3.0/" target="_blank" rel="noopener">CC BY-SA</a>.</p>
+    <footer class="how-footer">
+      <p><b>Daily</b> puzzles are shared by everyone. <b>Practice</b> offers endless random puzzles.</p>
+      <p class="how-credit">Pieces by Uray M. János, after Wikipedia's “Cburnett” set · <a href="https://creativecommons.org/licenses/by-sa/3.0/" target="_blank" rel="noopener">CC BY-SA</a></p>
+    </footer>
   </div>
 </div>
 
@@ -173,7 +178,6 @@
     </div>
     <div class="stats-grid" id="statsGrid"></div>
     <div class="dist" id="statsDist"></div>
-    <div id="shareArea"></div>
   </div>
 </div>
 

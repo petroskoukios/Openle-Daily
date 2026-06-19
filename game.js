@@ -292,7 +292,7 @@ function renderTreeInto(state, el) {
   const answerLeaf = () => create(
     "answer", targetTone, 156, 44,
     `<span class="tree-node__name">${esc(state.target.name)}</span>` +
-      `<span class="tree-node__answer-mark">${state.solved ? "★" : "Revealed"}</span>`,
+      `<span class="tree-node__answer-mark">${state.solved ? "★" : "Failed"}</span>`,
     { main: true, latest: state.solved, sortKey: state.target.name, lineId: registerLine(state.target.moves, state.target.moves.length) },
   );
   const tipLeaf = () => create(
@@ -1015,7 +1015,7 @@ function renderBoard(state) {
     title.textContent = "Opening tree position";
     cap.innerHTML = `<span class="ln">${lineHtml}</span>`;
   } else if (done && boardManualDepth == null) {
-    title.textContent = state.solved ? "Solved — target position" : "Revealed — target position";
+    title.textContent = state.solved ? "Solved — target position" : "Failed — target position";
     cap.innerHTML = `<span class="ln">${fmtMoves(tgt.moves, "")}</span>`;
   } else if (depth === 0) {
     title.textContent = "How far you've gotten";
@@ -1538,11 +1538,8 @@ async function doShare() {
     await navigator.clipboard.writeText(text);
     toast("Result copied to clipboard!");
   } catch {
-    toast("Copy the result from the Stats panel.");
+    prompt("Copy your result:", text);
   }
-  // also surface in stats modal
-  if (statsMode === state.mode && statsDiff === state.difficulty)
-    document.getElementById("shareArea").innerHTML = `<div class="shareout">${esc(text)}</div>`;
 }
 
 /* ---------- 12. Master render ---------- */
@@ -1619,9 +1616,6 @@ function renderStatsView(mode = statsMode, diff = statsDiff) {
     ].map(([l, n]) => `<div class="stat"><div class="n">${n}</div><div class="l">${l}</div></div>`).join("");
     dist.innerHTML = "";
   }
-  // share area
-  const sa = document.getElementById("shareArea");
-  sa.innerHTML = (state.solved && isDaily && state.mode === mode && state.difficulty === diff) ? `<div class="shareout">${esc(shareText())}</div>` : "";
 }
 
 function openStats() {
