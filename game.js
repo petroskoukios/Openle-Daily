@@ -285,18 +285,18 @@ function renderTreeInto(state, el) {
     move,
   });
   const guessLeaf = (g, latest) => create(
-    "guess", "off", 140, 38,
+    "guess", "off", 130, 34,
     `<span class="tree-node__name" title="${esc(g.name)}">${esc(g.name)}</span>`,
     { latest, sortKey: g.name, edgeTone: "off", lineId: registerLine(g.moves, g.moves.length) },
   );
   const answerLeaf = () => create(
-    "answer", targetTone, 162, 46,
-    `<span class="tree-node__answer-mark">${state.solved ? "★" : "Revealed"}</span>` +
-      `<span class="tree-node__name">${esc(state.target.name)}</span>`,
+    "answer", targetTone, 150, 42,
+    `<span class="tree-node__name">${esc(state.target.name)}</span>` +
+      `<span class="tree-node__answer-mark">${state.solved ? "★" : "Revealed"}</span>`,
     { main: true, latest: state.solved, sortKey: state.target.name, lineId: registerLine(state.target.moves, state.target.moves.length) },
   );
   const tipLeaf = () => create(
-    "tip", "tip", 116, 34,
+    "tip", "tip", 104, 30,
     `<span class="tree-node__question">?</span>`,
     { main: true, edgeTone: "hidden", sortKey: "target" },
   );
@@ -330,13 +330,13 @@ function renderTreeInto(state, el) {
       // whitespace between inline-block tokens). Rounded up so width never undercounts.
       return numLen * 4.9 + node.move.length * 6.5 + 8;
     });
-    const inner = Math.min(152, Math.max(70, tokenPx.reduce((a, b) => a + b, 0)));
+    const inner = Math.min(142, Math.max(64, tokenPx.reduce((a, b) => a + b, 0)));
     let lines = 1, used = 0;
     for (const w of tokenPx) {
       if (used > 0 && used + w > inner) { lines++; used = w; }
       else used += w;
     }
-    return { width: Math.ceil(inner + 12), height: 13 + lines * 14 };
+    return { width: Math.ceil(inner + 10), height: 11 + lines * 14 };
   };
 
   const displayOffPath = start => {
@@ -362,7 +362,7 @@ function renderTreeInto(state, el) {
     if (branches.length === 0 && end.guesses.length === 1) {
       const g = end.guesses[0];
       return create(
-        "guess", "off", Math.max(width, 142), height + 26,
+        "guess", "off", Math.max(width, 132), height + 22,
         `<span class="tree-node__name" title="${esc(g.name)}">${esc(g.name)}</span>` +
           `<span class="tree-node__sequence">${sequence}</span>`,
         { latest: g.id === latestGuessId, sortKey: g.name, edgeTone: "off", lineId: registerLine(g.moves, g.moves.length) },
@@ -420,14 +420,14 @@ function renderTreeInto(state, el) {
   };
 
   const displayRoot = create(
-    "root", "root", 116, 27, "Starting position",
+    "root", state.solved ? targetTone : "root", 126, 31, "Starting position",
     { main: true, boardDepth: 0, sortKey: "root" },
   );
   const rootBranches = [...root.children.values()].map(child => child.onTarget ? displayTargetMove(child) : displayOffPath(child));
   if (tip === root && !state.solved && !state.gaveUp) rootBranches.push(tipLeaf());
   displayRoot.children = orderChildren(rootBranches);
 
-  const H_GAP = 8, V_GAP = 36, PAD = 10;
+  const H_GAP = 16, V_GAP = 36, PAD = 10;
   const allNodes = [], levelHeights = [];
   const assignLevels = (node, level) => {
     node.level = level;
@@ -435,11 +435,10 @@ function renderTreeInto(state, el) {
     levelHeights[level] = Math.max(levelHeights[level] || 0, node.height);
     for (const child of node.children) assignLevels(child, level + 1);
   };
-  // Leaf-fringe staggering: a run of sibling leaves (terminal, non-spine nodes)
-  // packs into two alternating vertical lanes so neighbours can overlap
-  // horizontally. This spends the tree's spare vertical room to buy a much
-  // narrower, less flat shape — the way Metazooa hangs its species leaves.
-  const LANE_PAD = 10, PITCH_FACTOR = 0.54;
+  // Sibling fans alternate between two vertical lanes. Terminal leaf runs can
+  // then overlap horizontally, spending spare vertical room to keep the tree
+  // narrower and less flat, like Metazooa's branching layout.
+  const LANE_OFFSET = 38, PITCH_FACTOR = 0.94;
   const isLeaf = n => n.children.length === 0 && !n.main;
   const measure = node => {
     for (const child of node.children) measure(child);
@@ -456,12 +455,19 @@ function renderTreeInto(state, el) {
       kids = [...rest.slice(0, mid), main, ...rest.slice(mid)];
     }
 
+    // Stagger the entire sibling fan, including the continuing target branch.
+    // This produces two clean interleaved rows while keeping the blue branch in
+    // one of the two central slots selected by the alternating rule above.
+    kids.forEach((child, index) => {
+      child.lane = kids.length > 1 ? index % 2 : 0;
+    });
+
     // Stay compact for small fans, but as a level gathers many leaves widen the
     // packing so it spreads into an airy arc instead of a cramped band of
     // overlapping boxes. Based on the node's total leaf count, since the spine
     // node splits them into separate runs.
     const leafCount = kids.filter(isLeaf).length;
-    const pitchFactor = leafCount <= 4 ? PITCH_FACTOR : Math.min(0.9, PITCH_FACTOR + (leafCount - 4) * 0.1);
+    const pitchFactor = leafCount <= 4 ? PITCH_FACTOR : Math.min(1, PITCH_FACTOR + (leafCount - 4) * .015);
 
     const layout = [];
     let cursor = 0;
@@ -474,7 +480,6 @@ function renderTreeInto(state, el) {
         const pitch = (w + H_GAP) * pitchFactor;
         const runId = {}; // tags this run so compaction keeps it together
         run.forEach((child, r) => {
-          child.lane = r % 2;
           child.runId = runId;
           layout.push({ child, cx: cursor + w / 2 + r * pitch });
         });
@@ -482,7 +487,6 @@ function renderTreeInto(state, el) {
         i = j;
       } else {
         const child = kids[i++];
-        child.lane = 0;
         layout.push({ child, cx: cursor + child.subtreeWidth / 2 });
         cursor += child.subtreeWidth + H_GAP;
       }
@@ -494,10 +498,11 @@ function renderTreeInto(state, el) {
   assignLevels(displayRoot, 0);
   measure(displayRoot);
 
-  // How far the dropped lane sits below its row, per level (0 where unused).
+  // Keep the second lane close and consistent. Deriving this from the tallest
+  // box made rows with wrapped opening names drop much farther than others.
   const levelDrop = [];
   for (const n of allNodes)
-    if (n.lane === 1) levelDrop[n.level] = Math.max(levelDrop[n.level] || 0, n.height + LANE_PAD);
+    if (n.lane === 1) levelDrop[n.level] = LANE_OFFSET;
 
   const levelTops = [];
   let nextTop = PAD;
@@ -517,7 +522,7 @@ function renderTreeInto(state, el) {
     node.x = node.cx - node.width / 2;
     node.y = node.lane
       ? levelTops[node.level] + (levelDrop[node.level] || 0)
-      : levelTops[node.level] + (levelHeights[node.level] - node.height) / 2;
+      : levelTops[node.level];
     const spanLeft = left + (node.subtreeWidth - node.childrenSpan) / 2;
     for (const item of node.childLayout)
       place(item.child, spanLeft + item.cx - item.child.subtreeWidth / 2);
@@ -538,9 +543,18 @@ function renderTreeInto(state, el) {
     for (const child of node.children) compact(child);
     if (node.children.length > 1) {
       const profile = new Map(); // vertical bin -> furthest-right edge so far
-      const stamp = nodes => { for (const n of nodes)
-        for (let b = Math.floor(n.y / BIN); b < Math.ceil((n.y + n.height) / BIN); b++)
-          profile.set(b, Math.max(profile.get(b) ?? -Infinity, n.x + n.width)); };
+      // Treat both staggered lanes as one collision band. Using only each box's
+      // visible height lets compaction slide a lower-lane sibling directly under
+      // an earlier upper-lane sibling, destroying the intended fan ordering.
+      const levelBins = n => ({
+        first: Math.floor(levelTops[n.level] / BIN),
+        last: Math.ceil((levelTops[n.level] + levelHeights[n.level] + (levelDrop[n.level] || 0)) / BIN),
+      });
+      const stamp = nodes => { for (const n of nodes) {
+        const { first, last } = levelBins(n);
+        for (let b = first; b < last; b++)
+          profile.set(b, Math.max(profile.get(b) ?? -Infinity, n.x + n.width));
+      } };
       // Group children into units; a staggered run stays rigid so its diagonal
       // overlap survives compaction instead of being pulled apart.
       const kids = [...node.children].sort((a, b) => a.cx - b.cx);
@@ -556,7 +570,8 @@ function renderTreeInto(state, el) {
         let shift = Infinity;
         for (const n of nodes) {
           let wall = -Infinity;
-          for (let b = Math.floor(n.y / BIN); b < Math.ceil((n.y + n.height) / BIN); b++)
+          const { first, last } = levelBins(n);
+          for (let b = first; b < last; b++)
             if (profile.has(b)) wall = Math.max(wall, profile.get(b));
           if (wall > -Infinity) shift = Math.min(shift, n.x - wall - H_GAP);
         }
