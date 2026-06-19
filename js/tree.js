@@ -59,7 +59,7 @@ const TREE_ZOOM_MAX = 2;
 const TREE_FULLSCREEN_ZOOM_MAX = 4;
 const TREE_FULLSCREEN_AUTO_ZOOM_MAX = 1.5;
 const TREE_ZOOM_STEP = .15;
-const TREE_DEFAULT_ZOOM = 1.1;
+const TREE_DEFAULT_ZOOM = 1.2;
 const treeViews = new WeakMap();
 
 function treeView(el) {
