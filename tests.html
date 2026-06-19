@@ -275,6 +275,43 @@
     check("no line ever exceeds 32 pieces", tooMany.length === 0, offenders(tooMany));
   }
 
+  /* ---------------- Board view model ---------------- */
+  function suiteBoardView(OT) {
+    group("Board view model — resolveBoardView / navCeiling");
+    const T = "e4 e5 Nf3 Nc6 Bb5 a6 Ba4 Nf6".split(" "); // 8-ply target
+    const line = "e4 e5 Nf3 Nc6 Bc4".split(" ");
+
+    let v = OT.createBoardView();
+    check("fresh view pins nothing", v.playbackDepth == null && v.manualDepth == null && v.queuedDepth == null);
+
+    let r = OT.resolveBoardView(v, 3, T);
+    check("live: not playing", r.playing === false);
+    eq("live: depth follows liveMax", r.depth, 3);
+    eq("live: replays the target", r.lineMoves, T);
+
+    v = OT.createBoardView();
+    v.manualMoves = line; v.manualDepth = 5;
+    r = OT.resolveBoardView(v, 8, T);
+    eq("manual: honours pinned depth", r.depth, 5);
+    eq("manual: replays the pinned line", r.lineMoves, line);
+    v.manualDepth = 99;
+    eq("manual: clamps depth to line length", OT.resolveBoardView(v, 8, T).depth, line.length);
+
+    v = OT.createBoardView();
+    v.manualMoves = line; v.manualDepth = 2; v.playbackDepth = 4;
+    r = OT.resolveBoardView(v, 8, T);
+    check("playback: overrides manual (playing)", r.playing === true);
+    eq("playback: depth = playbackDepth", r.depth, 4);
+    eq("playback: replays the target", r.lineMoves, T);
+
+    v = OT.createBoardView();
+    eq("navCeiling: live falls back to liveMax", OT.navCeiling(v, 6), 6);
+    v.manualMoves = line;
+    eq("navCeiling: manual uses its line length", OT.navCeiling(v, 6), line.length);
+    v.queuedMoves = T;
+    eq("navCeiling: queued takes precedence", OT.navCeiling(v, 6), T.length);
+  }
+
   /* ---------------- Runner ---------------- */
   function render() {
     out.innerHTML = logEntries.map(e => {
@@ -298,6 +335,7 @@
     suiteLimits(OT);
     suiteBudget(OT);
     suiteParsing(OT);
+    suiteBoardView(OT);
     suiteData(C, OT);
     render();
   }

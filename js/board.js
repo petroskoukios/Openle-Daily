@@ -1,9 +1,11 @@
 /* Board: "how far you've gotten". Renders the position at the deepest confirmed
-   line, with move-by-move slide animation and prev/next navigation. The playback
-   state below is private to this module. */
+   line, with move-by-move slide animation and prev/next navigation. All view
+   state lives in one BoardView object (board-view.js); the DOM rendering and
+   the timer scheduling live here. */
 import { state } from "./state.js";
 import { confirmedDepth } from "./domain.js";
 import { commonMoveDepth, fmtMoves, fmtBoardMoves } from "./format.js";
+import { createBoardView, resolveBoardView, navCeiling } from "./board-view.js";
 
 const OTChess = window.OTChess; // classic chess.js sets this before modules run
 
@@ -15,16 +17,8 @@ function pieceImg(p, cls = "") {
   return `<img class="pc ${color}${cls}" src="pieces-svg/${PIECE_NAME[p.toLowerCase()]}-${color}.svg" alt="" draggable="false">`;
 }
 
-let boardPlaybackDepth = null;
-let boardSlideFromDepth = null;
-let boardSlideFromMoves = null;
-let boardPlaybackTimers = [];
-let boardStepTimer = null;
 export const BOARD_PLAYBACK_STEP_MS = 220; // Keep in sync with .move-ghost in styles.css.
-let boardManualDepth = null;
-let boardManualMoves = null;
-let boardQueuedDepth = null;
-let boardQueuedMoves = null;
+const view = createBoardView();
 
 export function boardMaxDepth(state) {
   return (state.solved || state.gaveUp) ? state.target.moves.length : confirmedDepth(state);
@@ -53,20 +47,16 @@ function movingPieces(fromBoard, toBoard) {
 export function renderBoard(state) {
   const tgt = state.target;
   const done = state.solved || state.gaveUp;
-  const playing = boardPlaybackDepth != null;
-  const sliding = boardSlideFromDepth != null;
+  const liveMax = boardMaxDepth(state);
   // depth shown = deepest confirmed-shared line, or the whole target once finished.
-  let depth = 0;
-  if (playing) depth = boardPlaybackDepth;
-  else if (boardManualDepth != null) depth = Math.min(boardManualDepth, boardManualMoves?.length ?? boardMaxDepth(state));
-  else depth = boardMaxDepth(state);
-  if (boardManualDepth != null && boardManualDepth !== depth) boardManualDepth = depth;
+  const { playing, depth, lineMoves } = resolveBoardView(view, liveMax, tgt.moves);
+  if (view.manualDepth != null && view.manualDepth !== depth) view.manualDepth = depth;
 
-  const lineMoves = playing ? tgt.moves : (boardManualMoves || tgt.moves);
-  const slideMoves = boardSlideFromMoves || lineMoves;
+  const sliding = view.slideFromDepth != null;
+  const slideMoves = view.slideFromMoves || lineMoves;
   const board = OTChess.positionAfter(lineMoves, depth);
-  const slideFrom = sliding ? OTChess.positionAfter(slideMoves, boardSlideFromDepth) : null;
-  const movingForward = slideFrom && depth > boardSlideFromDepth;
+  const slideFrom = sliding ? OTChess.positionAfter(slideMoves, view.slideFromDepth) : null;
+  const movingForward = slideFrom && depth > view.slideFromDepth;
   // Forward uses the old position so a captured piece remains until impact.
   // Reverse uses the restored position so that piece is revealed as the mover leaves.
   const shownBoard = slideFrom ? (movingForward ? slideFrom : board) : board;
@@ -116,11 +106,11 @@ export function renderBoard(state) {
   const cap = document.getElementById("boardCap");
   const prevBtn = document.getElementById("boardPrev");
   const nextBtn = document.getElementById("boardNext");
-  const maxDepth = boardQueuedMoves?.length ?? (boardManualMoves?.length ?? boardMaxDepth(state));
+  const navMax = navCeiling(view, liveMax);
   if (prevBtn && nextBtn) {
-    const queued = boardQueuedDepth ?? depth;
+    const queued = view.queuedDepth ?? depth;
     prevBtn.disabled = playing || queued <= 0;
-    nextBtn.disabled = playing || queued >= maxDepth;
+    nextBtn.disabled = playing || queued >= navMax;
   }
   const sharedDepth = commonMoveDepth(lineMoves, depth, tgt.moves, tgt.moves.length);
   const exploringBranch = sharedDepth < depth;
@@ -134,7 +124,7 @@ export function renderBoard(state) {
   } else if (exploringBranch) {
     title.textContent = "Opening tree position";
     cap.innerHTML = `<span class="ln">${lineHtml}</span>`;
-  } else if (done && boardManualDepth == null) {
+  } else if (done && view.manualDepth == null) {
     title.textContent = state.solved ? "Solved — target position" : "Failed — target position";
     cap.innerHTML = `<span class="ln">${fmtMoves(tgt.moves, "")}</span>`;
   } else if (depth === 0) {
@@ -148,50 +138,50 @@ export function renderBoard(state) {
 }
 
 export function clearBoardPlayback() {
-  for (const t of boardPlaybackTimers) clearTimeout(t);
-  clearTimeout(boardStepTimer);
-  boardPlaybackTimers = [];
-  boardStepTimer = null;
-  boardPlaybackDepth = null;
-  boardSlideFromDepth = null;
-  boardSlideFromMoves = null;
-  boardQueuedDepth = null;
-  boardQueuedMoves = null;
+  for (const t of view.timers) clearTimeout(t);
+  clearTimeout(view.stepTimer);
+  view.timers = [];
+  view.stepTimer = null;
+  view.playbackDepth = null;
+  view.slideFromDepth = null;
+  view.slideFromMoves = null;
+  view.queuedDepth = null;
+  view.queuedMoves = null;
 }
 
 export function resetBoardNav() {
-  boardManualDepth = null;
-  boardManualMoves = null;
-  boardQueuedDepth = null;
-  boardQueuedMoves = null;
+  view.manualDepth = null;
+  view.manualMoves = null;
+  view.queuedDepth = null;
+  view.queuedMoves = null;
 }
 
 // Freeze the board at a depth before re-rendering, so the first frame shows the
 // start of an upcoming progress animation rather than jumping to the end.
 export function primeBoardAnimation(fromDepth) {
-  boardPlaybackDepth = fromDepth;
+  view.playbackDepth = fromDepth;
 }
 
 function currentBoardDepth() {
-  return boardManualDepth == null ? boardMaxDepth(state) : boardManualDepth;
+  return view.manualDepth == null ? boardMaxDepth(state) : view.manualDepth;
 }
 
 function currentBoardMoves() {
-  return boardManualMoves || state.target.moves.slice(0, boardMaxDepth(state));
+  return view.manualMoves || state.target.moves.slice(0, boardMaxDepth(state));
 }
 
 function playQueuedBoardStep() {
-  if (!state || boardPlaybackDepth != null || boardSlideFromDepth != null || boardQueuedDepth == null || !boardQueuedMoves) return;
+  if (!state || view.playbackDepth != null || view.slideFromDepth != null || view.queuedDepth == null || !view.queuedMoves) return;
   const currentMoves = currentBoardMoves();
   const current = currentBoardDepth();
-  const destinationMoves = boardQueuedMoves;
-  const destination = Math.max(0, Math.min(destinationMoves.length, boardQueuedDepth));
+  const destinationMoves = view.queuedMoves;
+  const destination = Math.max(0, Math.min(destinationMoves.length, view.queuedDepth));
   const common = commonMoveDepth(currentMoves, current, destinationMoves, destination);
   if (current === destination && common === destination) {
-    boardManualMoves = destinationMoves;
-    boardManualDepth = destination;
-    boardQueuedDepth = null;
-    boardQueuedMoves = null;
+    view.manualMoves = destinationMoves;
+    view.manualDepth = destination;
+    view.queuedDepth = null;
+    view.queuedMoves = null;
     renderBoard(state);
     return;
   }
@@ -199,28 +189,27 @@ function playQueuedBoardStep() {
   const movingBack = current > common;
   const nextMoves = movingBack ? currentMoves : destinationMoves;
   const next = movingBack ? current - 1 : current + 1;
-  boardSlideFromDepth = current;
-  boardSlideFromMoves = currentMoves;
-  boardManualMoves = nextMoves;
-  boardManualDepth = next;
+  view.slideFromDepth = current;
+  view.slideFromMoves = currentMoves;
+  view.manualMoves = nextMoves;
+  view.manualDepth = next;
   renderBoard(state);
-  boardStepTimer = setTimeout(() => {
-    boardSlideFromDepth = null;
-    boardSlideFromMoves = null;
-    boardStepTimer = null;
+  view.stepTimer = setTimeout(() => {
+    view.slideFromDepth = null;
+    view.slideFromMoves = null;
+    view.stepTimer = null;
     playQueuedBoardStep();
   }, BOARD_PLAYBACK_STEP_MS);
 }
 
 export function stepBoard(delta) {
-  if (!state || boardPlaybackDepth != null) return;
-  const line = boardQueuedMoves || currentBoardMoves();
-  const maxDepth = boardQueuedMoves ? line.length : (boardManualMoves ? line.length : boardMaxDepth(state));
-  const base = boardQueuedDepth ?? currentBoardDepth();
-  const next = Math.max(0, Math.min(maxDepth, base + delta));
+  if (!state || view.playbackDepth != null) return;
+  const max = navCeiling(view, boardMaxDepth(state));
+  const base = view.queuedDepth ?? currentBoardDepth();
+  const next = Math.max(0, Math.min(max, base + delta));
   if (next === base) return;
-  boardQueuedMoves = line;
-  boardQueuedDepth = next;
+  view.queuedMoves = view.queuedMoves || currentBoardMoves();
+  view.queuedDepth = next;
   playQueuedBoardStep();
 }
 
@@ -238,13 +227,13 @@ export function goBoardLine(moves, depth) {
   const current = currentBoardDepth();
   const common = commonMoveDepth(currentMoves, current, destinationMoves, destination);
   if (destination === current && common === destination) {
-    boardManualMoves = destinationMoves;
-    boardManualDepth = destination;
+    view.manualMoves = destinationMoves;
+    view.manualDepth = destination;
     renderBoard(state);
     return;
   }
-  boardQueuedMoves = destinationMoves;
-  boardQueuedDepth = destination;
+  view.queuedMoves = destinationMoves;
+  view.queuedDepth = destination;
   playQueuedBoardStep();
 }
 
@@ -252,18 +241,18 @@ export function animateBoardProgress(fromDepth, toDepth) {
   clearBoardPlayback();
   resetBoardNav();
   if (toDepth <= fromDepth) return;
-  boardPlaybackDepth = fromDepth;
+  view.playbackDepth = fromDepth;
   for (let d = fromDepth + 1; d <= toDepth; d++) {
-    boardPlaybackTimers.push(setTimeout(() => {
-      boardPlaybackDepth = d;
-      boardSlideFromDepth = d - 1;
-      boardSlideFromMoves = state.target.moves;
+    view.timers.push(setTimeout(() => {
+      view.playbackDepth = d;
+      view.slideFromDepth = d - 1;
+      view.slideFromMoves = state.target.moves;
       renderBoard(state);
       if (d === toDepth) {
-        boardPlaybackTimers.push(setTimeout(() => {
-          boardPlaybackDepth = null;
-          boardSlideFromDepth = null;
-          boardSlideFromMoves = null;
+        view.timers.push(setTimeout(() => {
+          view.playbackDepth = null;
+          view.slideFromDepth = null;
+          view.slideFromMoves = null;
           renderBoard(state);
         }, BOARD_PLAYBACK_STEP_MS));
       }

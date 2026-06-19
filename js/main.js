@@ -9,6 +9,7 @@ import { state, setState, setDifficulty, freshDaily, freshPractice, LS } from ".
 import { render } from "./render.js";
 import { renderTreeInto, fitFullscreenTree, zoomTreeByFactor, enableTreeViewport } from "./tree.js";
 import { stepBoard, clearBoardPlayback, resetBoardNav } from "./board.js";
+import { createBoardView, resolveBoardView, navCeiling } from "./board-view.js";
 import { submitGuess, requestHint, giveUp } from "./actions.js";
 import { looksLikeMoves, moveTokens, isMoveSearchEnabled } from "./search.js";
 import { openStats, renderStatsView, startPracticeFromWin, recordPractice } from "./stats.js";
@@ -109,6 +110,7 @@ window.__OT = {
   OPENINGS, POOLS, DIFFS, DIFF_LIMITS, GUESS_LIMITS, HINT_COST, guessLimit, tierOf, dailyTarget, compare, submitGuess, requestHint,
   // Pure helpers exposed for the test harness (tests.html):
   commonMoveDepth, confirmedDepth, hintsUsed, guessBudgetUsed, guessBudgetLeft, looksLikeMoves, moveTokens,
+  createBoardView, resolveBoardView, navCeiling,
   byName: n => OPENINGS.find(o => o.name === n),
   byMoves: m => OPENINGS.find(o => o.movesStr === m),
   get moveSearchEnabled() { return isMoveSearchEnabled(); },
