@@ -171,7 +171,7 @@ body {
 button.tree-node { cursor: pointer; }
 button.tree-node:hover { filter: brightness(1.13); }
 button.tree-node:focus-visible { outline: 2px solid var(--accent-hover); outline-offset: 2px; }
-.tree-node--root { color: var(--text); font-weight: 700; }
+.tree-node--root { color: var(--text); font-weight: 700; border-radius: 4px; }
 .tree-node--root.tree-node--target {
   background: linear-gradient(rgba(97,152,202,.14), rgba(97,152,202,.14)), var(--surface);
   border-color: var(--good-dim); color: var(--good);
