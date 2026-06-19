@@ -1088,7 +1088,7 @@ function animateBoardProgress(fromDepth, toDepth) {
     boardPlaybackTimers.push(setTimeout(() => {
       boardPlaybackDepth = d;
       boardSlideFromDepth = d - 1;
-      boardSlideFromMoves = tgt.moves;
+      boardSlideFromMoves = state.target.moves;
       renderBoard(state);
       if (d === toDepth) {
         boardPlaybackTimers.push(setTimeout(() => {
