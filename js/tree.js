@@ -1,6 +1,9 @@
 /* Opening tree: builds the display tree from game state, lays it out
    (Metazooa-style staggered branching), renders it as SVG, and provides the
-   pan/zoom viewport for both the inline and fullscreen trees. */
+   pan/zoom viewport for both the inline and fullscreen trees.
+
+   renderTreeInto is a pipeline of named phases:
+     buildDisplayTree → layoutTree → paintTree → wireTreeNav → focusTree */
 import { state } from "./state.js";
 import { OPENINGS } from "./data.js";
 import { confirmedDepth } from "./domain.js";
@@ -86,6 +89,18 @@ export function renderTreeInto(state, el) {
     view.zoomFrame = null;
     view.zoomTarget = view.zoom;
   }
+
+  const { displayRoot, treeLines } = buildDisplayTree(state, boardNavigationEnabled);
+  const { allNodes, svgWidth, svgHeight } = layoutTree(displayRoot, el, view);
+  const prevScroll = { left: el.scrollLeft, top: el.scrollTop };
+  paintTree(el, displayRoot, allNodes, svgWidth, svgHeight, view, boardNavigationEnabled);
+  wireTreeNav(el, treeLines);
+  focusTree(el, state, view, allNodes, displayRoot, prevScroll);
+}
+
+// Phase 1 — turn game state into a tree of display nodes (boxes), collapsing
+// linear runs, merging single-guess leaves, and ordering siblings.
+function buildDisplayTree(state, boardNavigationEnabled) {
   const { root, tip } = buildTree(state);
   const latestGuessId = state.results.length ? state.results[state.results.length - 1].guessId : null;
   const targetTone = "target";
@@ -251,6 +266,12 @@ export function renderTreeInto(state, el) {
   if (tip === root && !state.solved && !state.gaveUp) rootBranches.push(tipLeaf());
   displayRoot.children = orderChildren(rootBranches);
 
+  return { displayRoot, treeLines };
+}
+
+// Phase 2 — assign each box an (x, y): level rows, staggered lanes, tidy
+// leftward compaction, then horizontal normalisation. Also stamps view metrics.
+function layoutTree(displayRoot, el, view) {
   const H_GAP = 16, V_GAP = 36, PAD = 10;
   const allNodes = [], levelHeights = [];
   const assignLevels = (node, level) => {
@@ -427,6 +448,12 @@ export function renderTreeInto(state, el) {
   view.contentCenterX = svgWidth / 2;
   view.contentCenterY = svgHeight / 2;
 
+  return { allNodes, svgWidth, svgHeight };
+}
+
+// Phase 3 — serialise edges + node boxes to SVG and write it into the element.
+function paintTree(el, displayRoot, allNodes, svgWidth, svgHeight, view, boardNavigationEnabled) {
+  const slackX = view.padX, slackY = view.padY;
   const edges = [];
   const collectEdges = node => {
     for (const child of node.children) {
@@ -462,12 +489,14 @@ export function renderTreeInto(state, el) {
   };
   const renderW = Math.round(svgWidth * view.zoom);
   const renderH = Math.round(svgHeight * view.zoom);
-  const prevScrollLeft = el.scrollLeft, prevScrollTop = el.scrollTop;
   el.innerHTML = `<div class="tree-pan" style="width:${renderW + slackX * 2}px;height:${renderH + slackY * 2}px">` +
     `<svg class="tree-map" style="left:${slackX}px;top:${slackY}px" viewBox="0 0 ${svgWidth} ${svgHeight}" ` +
     `width="${renderW}" height="${renderH}" role="group" aria-label="Opening tree">` +
     `<g class="tree-edges">${edges.join("")}</g><g class="tree-nodes">${allNodes.map(nodeMarkup).join("")}</g></svg></div>`;
+}
 
+// Phase 4 — wire click/keyboard navigation on the freshly painted boxes.
+function wireTreeNav(el, treeLines) {
   el.querySelectorAll("[data-tree-depth]").forEach(node => {
     const activate = () => goBoardDepth(Number(node.dataset.treeDepth));
     node.addEventListener("click", activate);
@@ -491,7 +520,12 @@ export function renderTreeInto(state, el) {
       activate(e);
     });
   });
+}
 
+// Phase 5 — centre the newly confirmed move on first render of a puzzle, but
+// otherwise hold the player's current view (only re-panning if focus drifts off).
+function focusTree(el, state, view, allNodes, displayRoot, prevScroll) {
+  const slackX = view.padX, slackY = view.padY;
   const mainNodes = allNodes.filter(node => node.main);
   const targetFocus = mainNodes[mainNodes.length - 1] || displayRoot;
   const latestNodes = allNodes.filter(node => node.latest);
@@ -518,7 +552,7 @@ export function renderTreeInto(state, el) {
     } else {
       // Hold position, compensating for the tree re-centering as it grows wider.
       const dxRoot = view.prevRootCx == null ? 0 : (rootCx - view.prevRootCx) * view.zoom;
-      let left = prevScrollLeft + dxRoot, top = prevScrollTop;
+      let left = prevScroll.left + dxRoot, top = prevScroll.top;
       const mx = el.clientWidth * 0.1, my = el.clientHeight * 0.1;
       const outOfView = focusPts.some(p => {
         const sx = slackX + p.x * view.zoom - left, sy = slackY + p.y * view.zoom - top;
