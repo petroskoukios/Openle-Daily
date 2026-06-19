@@ -285,12 +285,12 @@ function renderTreeInto(state, el) {
     move,
   });
   const guessLeaf = (g, latest) => create(
-    "guess", "off", 130, 34,
+    "guess", "off", 136, 36,
     `<span class="tree-node__name" title="${esc(g.name)}">${esc(g.name)}</span>`,
     { latest, sortKey: g.name, edgeTone: "off", lineId: registerLine(g.moves, g.moves.length) },
   );
   const answerLeaf = () => create(
-    "answer", targetTone, 150, 42,
+    "answer", targetTone, 156, 44,
     `<span class="tree-node__name">${esc(state.target.name)}</span>` +
       `<span class="tree-node__answer-mark">${state.solved ? "★" : "Revealed"}</span>`,
     { main: true, latest: state.solved, sortKey: state.target.name, lineId: registerLine(state.target.moves, state.target.moves.length) },
@@ -362,7 +362,7 @@ function renderTreeInto(state, el) {
     if (branches.length === 0 && end.guesses.length === 1) {
       const g = end.guesses[0];
       return create(
-        "guess", "off", Math.max(width, 132), height + 22,
+        "guess", "off", Math.max(width, 138), height + 24,
         `<span class="tree-node__name" title="${esc(g.name)}">${esc(g.name)}</span>` +
           `<span class="tree-node__sequence">${sequence}</span>`,
         { latest: g.id === latestGuessId, sortKey: g.name, edgeTone: "off", lineId: registerLine(g.moves, g.moves.length) },
@@ -676,10 +676,10 @@ function renderTreeInto(state, el) {
     .map(node => ({ x: node.cx, y: node.y + node.height / 2 }));
   const focusX = focusPts.reduce((s, p) => s + p.x, 0) / focusPts.length;
   const focusY = focusPts.reduce((s, p) => s + p.y, 0) / focusPts.length;
-  // Centered scroll target. The vertical clamp anchors a shallow tree to the top
-  // (slack) rather than floating it mid-slack.
+  // Keep horizontal focus centered, but place progress near the bottom so more
+  // of the path leading into the newly confirmed move remains visible above it.
   const centeredLeft = Math.max(0, slackX + focusX * view.zoom - el.clientWidth / 2);
-  const centeredTop = slackY + Math.max(0, focusY * view.zoom - el.clientHeight / 2);
+  const focusedTop = slackY + Math.max(0, focusY * view.zoom - el.clientHeight * .78);
   // A guess or hint shouldn't yank the tree back to center: hold the player's
   // current view and only re-pan when a focus point drifts out of sight. A new
   // puzzle (mode/difficulty/target change, or solve/give-up) re-centers afresh.
@@ -690,7 +690,7 @@ function renderTreeInto(state, el) {
   const rootCx = displayRoot.cx;
   requestAnimationFrame(() => {
     if (freshView) {
-      panTreeTo(el, centeredLeft, centeredTop, !newTarget && view.puzzleKey != null);
+      panTreeTo(el, centeredLeft, focusedTop, !newTarget && view.puzzleKey != null);
     } else {
       // Hold position, compensating for the tree re-centering as it grows wider.
       const dxRoot = view.prevRootCx == null ? 0 : (rootCx - view.prevRootCx) * view.zoom;
@@ -700,7 +700,7 @@ function renderTreeInto(state, el) {
         const sx = slackX + p.x * view.zoom - left, sy = slackY + p.y * view.zoom - top;
         return sx < mx || sx > el.clientWidth - mx || sy < my || sy > el.clientHeight - my;
       });
-      if (outOfView) panTreeTo(el, centeredLeft, centeredTop, true);
+      if (outOfView) panTreeTo(el, centeredLeft, focusedTop, true);
       else panTreeTo(el, left, top);
     }
     view.puzzleKey = puzzleKey;
