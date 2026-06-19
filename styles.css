@@ -316,8 +316,9 @@ button.tree-node:focus-visible { outline: 2px solid var(--accent-hover); outline
 .sq .fl { bottom: 0px; right: 3px; }
 .sq.l .rk, .sq.l .fl { color: rgba(39,49,61,.72); }
 .sq.d .rk, .sq.d .fl { color: rgba(243,243,246,.82); }
-.board-footer { display: flex; align-items: center; gap: 12px; margin-top: 12px; }
-.board-cap { flex: 1; min-width: 0; font-family: var(--mono); font-size: 13px; line-height: 1.6; }
+.board-line-label { margin: -4px 0 10px; color: var(--muted); font-size: 14px; font-weight: 700; line-height: 1.2; letter-spacing: .05em; }
+.board-footer { display: flex; align-items: center; gap: 12px; margin-top: 10px; }
+.board-cap { flex: 1; min-width: 0; font-family: var(--mono); font-size: 14px; line-height: 1.6; }
 .board-cap .ln { color: var(--good); }
 .board-cap .num { color: var(--muted-2); }
 .board-cap .sh { color: var(--good); }

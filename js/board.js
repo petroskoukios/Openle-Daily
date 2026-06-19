@@ -4,7 +4,7 @@
    the timer scheduling live here. */
 import { state } from "./state.js";
 import { confirmedDepth } from "./domain.js";
-import { commonMoveDepth, fmtMoves, fmtBoardMoves } from "./format.js";
+import { commonMoveDepth, fmtBoardMoves } from "./format.js";
 import { createBoardView, resolveBoardView, navCeiling } from "./board-view.js";
 
 const OTChess = window.OTChess; // classic chess.js sets this before modules run
@@ -51,7 +51,6 @@ function movingPieces(fromBoard, toBoard) {
 
 export function renderBoard(state) {
   const tgt = state.target;
-  const done = state.solved || state.gaveUp;
   const liveMax = boardMaxDepth(state);
   // depth shown = deepest confirmed-shared line, or the whole target once finished.
   const { playing, depth, lineMoves } = resolveBoardView(view, liveMax, tgt.moves);
@@ -107,7 +106,6 @@ export function renderBoard(state) {
   }
   document.getElementById("board").innerHTML = html;
 
-  const title = document.getElementById("boardTitle");
   const cap = document.getElementById("boardCap");
   const prevBtn = document.getElementById("boardPrev");
   const nextBtn = document.getElementById("boardNext");
@@ -117,29 +115,10 @@ export function renderBoard(state) {
     prevBtn.disabled = playing || queued <= 0;
     nextBtn.disabled = playing || queued >= navMax;
   }
-  const sharedDepth = commonMoveDepth(lineMoves, depth, tgt.moves, tgt.moves.length);
-  const exploringBranch = sharedDepth < depth;
   const lineHtml = fmtBoardMoves(lineMoves, depth, tgt.moves);
-  if (playing) {
-    title.textContent = "How far you've gotten";
-    cap.innerHTML = depth === 0
-      ? `<span class="muted">starting position</span>`
-      : `<span class="ln">${fmtMoves(tgt.moves.slice(0, depth), "")}</span>` +
-        `<span class="muted"> · ${depth} opening ${depth === 1 ? "move" : "moves"} matched</span>`;
-  } else if (exploringBranch) {
-    title.textContent = "Opening tree position";
-    cap.innerHTML = `<span class="ln">${lineHtml}</span>`;
-  } else if (done && view.manualDepth == null) {
-    title.textContent = state.solved ? "Solved — target position" : "Failed — target position";
-    cap.innerHTML = `<span class="ln">${fmtMoves(tgt.moves, "")}</span>`;
-  } else if (depth === 0) {
-    title.textContent = "How far you've gotten";
-    cap.innerHTML = `<span class="muted">Starting position — no shared moves yet</span>`;
-  } else {
-    title.textContent = "How far you've gotten";
-    cap.innerHTML = `<span class="ln">${lineHtml}</span>` +
-      `<span class="muted"> · ${depth} opening ${depth === 1 ? "move" : "moves"} matched</span>`;
-  }
+  cap.innerHTML = depth === 0
+    ? `<span class="muted">Starting position</span>`
+    : `<span class="ln">${lineHtml}</span>`;
 
   const navigating = playing || view.queuedDepth != null || view.slideFromDepth != null;
   if (!navigating) announceBoardDestination(lineMoves, depth);
