@@ -1164,9 +1164,11 @@ function looksLikeMoves(raw) {
 function moveTokens(raw) {
   return raw.replace(/\d+\.+/g, " ").trim().split(/\s+/).filter(Boolean);
 }
-// Search is limited to the current difficulty's pool — on Easy you only see
-// (and can only guess) Easy openings, and so on for each tier.
-function activePool() { return POOLS[state.difficulty]; }
+// Search is limited to the current difficulty and excludes submitted openings,
+// so previous guesses no longer remain in either autocomplete mode.
+function activePool() {
+  return POOLS[state.difficulty].filter(o => !state.guessedIds.has(o.id));
+}
 
 function moveSearch(raw) {
   const q = moveTokens(raw).map(t => t.toLowerCase());
