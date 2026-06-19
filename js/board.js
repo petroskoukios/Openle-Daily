@@ -135,6 +135,10 @@ export function renderBoard(state) {
     cap.innerHTML = `<span class="ln">${lineHtml}</span>` +
       `<span class="muted"> · ${depth} opening ${depth === 1 ? "move" : "moves"} matched</span>`;
   }
+
+  document.dispatchEvent(new CustomEvent("ot:board-position", {
+    detail: { moves: lineMoves.slice(), depth },
+  }));
 }
 
 export function clearBoardPlayback() {

@@ -61,6 +61,8 @@ const TREE_FULLSCREEN_AUTO_ZOOM_MAX = 1.5;
 const TREE_ZOOM_STEP = .15;
 const TREE_DEFAULT_ZOOM = 1.2;
 const treeViews = new WeakMap();
+const treeLineMaps = new WeakMap();
+let boardPosition = null;
 
 function treeView(el) {
   if (!treeViews.has(el)) {
@@ -497,6 +499,7 @@ function paintTree(el, displayRoot, allNodes, svgWidth, svgHeight, view, boardNa
 
 // Phase 4 — wire click/keyboard navigation on the freshly painted boxes.
 function wireTreeNav(el, treeLines) {
+  treeLineMaps.set(el, treeLines);
   el.querySelectorAll("[data-tree-depth]").forEach(node => {
     const activate = () => goBoardDepth(Number(node.dataset.treeDepth));
     node.addEventListener("click", activate);
@@ -520,7 +523,36 @@ function wireTreeNav(el, treeLines) {
       activate(e);
     });
   });
+  if (boardPosition) syncTreeBoardPosition(el, treeLines, boardPosition.moves, boardPosition.depth);
 }
+
+function sameBoardPosition(line, moves, depth) {
+  if (!line || line.depth !== depth || moves.length < depth || line.moves.length < depth) return false;
+  for (let i = 0; i < depth; i++) if (line.moves[i] !== moves[i]) return false;
+  return true;
+}
+
+function syncTreeBoardPosition(el, treeLines, moves, depth) {
+  let selected = depth === 0 ? el.querySelector('[data-tree-depth="0"]') : null;
+  if (!selected) {
+    for (const target of el.querySelectorAll("[data-tree-line]")) {
+      if (!sameBoardPosition(treeLines.get(target.dataset.treeLine), moves, depth)) continue;
+      selected = target.closest(".tree-node");
+      break;
+    }
+  }
+  el.querySelectorAll(".tree-node.is-board-position").forEach(node => node.classList.remove("is-board-position"));
+  selected?.classList.add("is-board-position");
+}
+
+document.addEventListener("ot:board-position", e => {
+  boardPosition = e.detail;
+  for (const id of ["tree", "treeFullscreen"]) {
+    const el = document.getElementById(id);
+    const treeLines = el && treeLineMaps.get(el);
+    if (treeLines) syncTreeBoardPosition(el, treeLines, boardPosition.moves, boardPosition.depth);
+  }
+});
 
 // Phase 5 — centre the newly confirmed move on first render of a puzzle, but
 // otherwise hold the player's current view (only re-panning if focus drifts off).
