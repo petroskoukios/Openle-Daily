@@ -11,6 +11,11 @@ const OTChess = window.OTChess; // classic chess.js sets this before modules run
 
 const PIECE_NAME = { p: "pawn", n: "knight", b: "bishop", r: "rook", q: "queen", k: "king" };
 const pieceColor = p => (p === p.toUpperCase() ? "w" : "b");
+function announceBoardDestination(moves, depth) {
+  document.dispatchEvent(new CustomEvent("ot:board-position", {
+    detail: { moves: moves.slice(), depth },
+  }));
+}
 // Board pieces are CC BY-SA SVGs by Uray M. János in pieces-svg/ (see README credits).
 function pieceImg(p, cls = "") {
   const color = pieceColor(p);
@@ -136,9 +141,8 @@ export function renderBoard(state) {
       `<span class="muted"> · ${depth} opening ${depth === 1 ? "move" : "moves"} matched</span>`;
   }
 
-  document.dispatchEvent(new CustomEvent("ot:board-position", {
-    detail: { moves: lineMoves.slice(), depth },
-  }));
+  const navigating = playing || view.queuedDepth != null || view.slideFromDepth != null;
+  if (!navigating) announceBoardDestination(lineMoves, depth);
 }
 
 export function clearBoardPlayback() {
@@ -214,6 +218,7 @@ export function stepBoard(delta) {
   if (next === base) return;
   view.queuedMoves = view.queuedMoves || currentBoardMoves();
   view.queuedDepth = next;
+  announceBoardDestination(view.queuedMoves, next);
   playQueuedBoardStep();
 }
 
@@ -227,6 +232,7 @@ export function goBoardLine(moves, depth) {
   clearBoardPlayback();
   const destinationMoves = moves.slice();
   const destination = Math.max(0, Math.min(destinationMoves.length, depth));
+  announceBoardDestination(destinationMoves, destination);
   const currentMoves = currentBoardMoves();
   const current = currentBoardDepth();
   const common = commonMoveDepth(currentMoves, current, destinationMoves, destination);
@@ -245,6 +251,7 @@ export function animateBoardProgress(fromDepth, toDepth) {
   clearBoardPlayback();
   resetBoardNav();
   if (toDepth <= fromDepth) return;
+  announceBoardDestination(state.target.moves, toDepth);
   view.playbackDepth = fromDepth;
   for (let d = fromDepth + 1; d <= toDepth; d++) {
     view.timers.push(setTimeout(() => {
