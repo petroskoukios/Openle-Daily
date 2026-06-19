@@ -245,14 +245,15 @@ button.tree-node:focus-visible { outline: 2px solid var(--accent-hover); outline
 .ghist-item .line { font-family: var(--mono); font-size: 13px; margin-top: 4px; }
 .ghist-item .line .num { color: var(--muted-2); }
 .ghist-item .line .sh { color: var(--good); }
-.ghist-item .line .dv { color: var(--miss); font-weight: 600; }
+.ghist-item .line .dv { color: var(--muted-2); font-weight: 600; }
 .ghist-item .line .rest { color: var(--muted-2); }
 .ghist-item .ghist-move { cursor: pointer; border-radius: 3px; }
 .ghist-item .ghist-move:hover { background: rgba(97,152,202,.26); box-shadow: 0 0 0 2px rgba(97,152,202,.26); }
 .ghist-item .ghist-move:focus-visible { outline: 1px solid var(--accent-hover); outline-offset: 2px; }
 .ghist-item.win .gn,
 .ghist-item.win .gn .eco,
-.ghist-item.win .line span { color: var(--good); }
+.ghist-item.win .line .num,
+.ghist-item.win .line .sh { color: var(--good); }
 
 /* ---- Two-column layout: tree on the left, board on the right ---- */
 .layout { display: grid; grid-template-columns: minmax(0, 1.18fr) minmax(320px, .82fr); gap: 18px; align-items: start; }
