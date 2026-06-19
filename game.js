@@ -1716,6 +1716,8 @@ boot();
 // expose a little debug hook
 window.__OT = {
   OPENINGS, POOLS, DIFFS, DIFF_LIMITS, GUESS_LIMITS, HINT_COST, guessLimit, tierOf, dailyTarget, compare, submitGuess, requestHint,
+  // Pure helpers exposed for the test harness (tests.html):
+  commonMoveDepth, confirmedDepth, hintsUsed, guessBudgetUsed, guessBudgetLeft, looksLikeMoves, moveTokens,
   byName: n => OPENINGS.find(o => o.name === n),
   byMoves: m => OPENINGS.find(o => o.movesStr === m),
   get moveSearchEnabled() { return moveSearchEnabled; },

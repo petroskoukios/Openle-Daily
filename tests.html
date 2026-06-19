@@ -1,0 +1,329 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="utf-8" />
+<meta name="viewport" content="width=device-width, initial-scale=1" />
+<title>Openle — Test Suite</title>
+<!--
+  Dependency-free test runner. It loads the REAL app (index.html) in a hidden
+  iframe and asserts against its window.OTChess (SAN engine) and window.__OT
+  (game core), so the tests always exercise the shipping code — no mocks, no
+  build step, nothing to keep in sync.
+
+  Run it the same way as the game:  python -m http.server 8765
+  then open  http://127.0.0.1:8765/tests.html
+  (Reading the app frame requires http; file:// blocks cross-frame access.)
+-->
+<style>
+  :root { color-scheme: dark; }
+  body {
+    margin: 0; padding: 24px 20px 60px;
+    font: 14px/1.5 system-ui, -apple-system, "Segoe UI", Roboto, sans-serif;
+    background: #1e2025; color: #f3f3f6;
+  }
+  h1 { font-size: 20px; margin: 0 0 4px; }
+  h2 { font-size: 13px; text-transform: uppercase; letter-spacing: .06em;
+       color: #aaaeb9; margin: 26px 0 8px; border-bottom: 1px solid #40434d; padding-bottom: 6px; }
+  .lead { color: #aaaeb9; margin: 0 0 16px; }
+  .bar { display: flex; align-items: center; gap: 14px; flex-wrap: wrap;
+         position: sticky; top: 0; background: #1e2025; padding: 10px 0; z-index: 2; }
+  #summary { font-weight: 700; font-size: 15px; padding: 6px 12px; border-radius: 8px; }
+  #summary.good { background: #1f3d2a; color: #7ee0a1; }
+  #summary.bad  { background: #45222a; color: #ff9a9a; }
+  #summary.pending { background: #2b2d33; color: #aaaeb9; }
+  button { font: inherit; cursor: pointer; background: #383c46; color: #f3f3f6;
+           border: 1px solid #4a4e5a; border-radius: 8px; padding: 6px 14px; }
+  button:hover { background: #444956; }
+  .row { display: flex; gap: 8px; padding: 2px 0; align-items: baseline; }
+  .row .i { width: 14px; flex: none; font-weight: 700; }
+  .row.pass .i { color: #6fcf97; }
+  .row.fail { color: #ffb3b3; }
+  .row.fail .i { color: #ff6b6b; }
+  .detail { color: #ff9a9a; font-family: ui-monospace, Consolas, monospace;
+            font-size: 12px; margin-left: 22px; opacity: .9; }
+  code { background: #2b2d33; padding: 1px 5px; border-radius: 4px; }
+  #app { position: fixed; left: -9999px; top: 0; width: 1024px; height: 768px; border: 0; }
+</style>
+</head>
+<body>
+  <h1>Openle — Test Suite</h1>
+  <p class="lead">Asserts against the live app's <code>OTChess</code> (SAN engine) and
+     <code>__OT</code> (game core). Serve over http, not <code>file://</code>.</p>
+  <div class="bar">
+    <span id="summary" class="pending">Loading app…</span>
+    <button id="rerun">Rerun</button>
+  </div>
+  <div id="out"></div>
+
+  <iframe id="app" src="index.html" title="app under test"></iframe>
+
+<script>
+(function () {
+  "use strict";
+  const out = document.getElementById("out");
+  const summaryEl = document.getElementById("summary");
+  const frame = document.getElementById("app");
+
+  let passed, failed, logEntries;
+  function reset() { passed = 0; failed = 0; logEntries = []; }
+  function group(name) { logEntries.push({ t: "g", name }); }
+  function pass(name) { passed++; logEntries.push({ t: "p", name }); }
+  function fail(name, detail) { failed++; logEntries.push({ t: "f", name, detail }); }
+  function check(name, cond, detail) { cond ? pass(name) : fail(name, detail || ""); }
+  function J(v) { return JSON.stringify(v); }
+  function eq(name, actual, expected) {
+    const ok = J(actual) === J(expected);
+    check(name, ok, ok ? "" : `expected ${J(expected)}, got ${J(actual)}`);
+  }
+  function esc(s) { return String(s).replace(/[&<>]/g, c => ({ "&": "&amp;", "<": "&lt;", ">": "&gt;" }[c])); }
+  const offenders = arr => arr.length
+    ? `${arr.length} failing: ${arr.slice(0, 5).join("; ")}${arr.length > 5 ? " …" : ""}` : "";
+
+  // board[rank][file]; rank 0 = rank 1, file 0 = a. at(board, "e4") -> piece char.
+  function at(board, sq) { return board[+sq[1] - 1][sq.charCodeAt(0) - 97]; }
+
+  /* ---------------- SAN engine (chess.js) ---------------- */
+  function suiteSan(C) {
+    group("SAN engine — chess.js");
+    const init = C.positionAfter([], 0);
+    eq("initial: a1 = white rook", at(init, "a1"), "R");
+    eq("initial: e1 = white king", at(init, "e1"), "K");
+    eq("initial: d8 = black queen", at(init, "d8"), "q");
+    eq("initial: e7 = black pawn", at(init, "e7"), "p");
+    eq("initial: e4 = empty", at(init, "e4"), "");
+
+    const e4 = C.positionAfter(["e4"], 1);
+    eq("1.e4: e2 emptied", at(e4, "e2"), "");
+    eq("1.e4: e4 has white pawn", at(e4, "e4"), "P");
+
+    const ruy = C.positionAfter(["e4", "e5", "Nf3", "Nc6", "Bb5"], 5);
+    eq("Ruy: Bb5 bishop placed", at(ruy, "b5"), "B");
+    eq("Ruy: f1 emptied", at(ruy, "f1"), "");
+    eq("Ruy: Nc6 knight placed", at(ruy, "c6"), "n");
+
+    const oo = C.positionAfter(["e4", "e5", "Nf3", "Nc6", "Bc4", "Bc5", "O-O"], 7);
+    eq("O-O: king to g1", at(oo, "g1"), "K");
+    eq("O-O: rook to f1", at(oo, "f1"), "R");
+    eq("O-O: e1 & h1 emptied", at(oo, "e1") + at(oo, "h1"), "");
+
+    const ooo = C.positionAfter(["d4", "d5", "Nc3", "Nc6", "Bf4", "Bf5", "Qd3", "Qd6", "O-O-O"], 9);
+    eq("O-O-O: king to c1", at(ooo, "c1"), "K");
+    eq("O-O-O: rook to d1", at(ooo, "d1"), "R");
+    eq("O-O-O: a1 & e1 emptied", at(ooo, "a1") + at(ooo, "e1"), "");
+
+    // En passant: 1.e4 a6 2.e5 d5 3.exd6 e.p. removes the d5 pawn.
+    const ep = C.positionAfter(["e4", "a6", "e5", "d5", "exd6"], 5);
+    eq("en passant: capturing pawn on d6", at(ep, "d6"), "P");
+    eq("en passant: passed pawn removed from d5", at(ep, "d5"), "");
+    eq("en passant: e5 vacated", at(ep, "e5"), "");
+
+    // File disambiguation: both Nb8 and Nf6 reach d7; "Nbd7" picks the b-file knight.
+    const dis = C.positionAfter(["d4", "Nf6", "c4", "d6", "Nc3", "Nbd7"], 6);
+    eq("disambiguation: knight on d7", at(dis, "d7"), "n");
+    eq("disambiguation: b8 vacated", at(dis, "b8"), "");
+    eq("disambiguation: f6 knight untouched", at(dis, "f6"), "n");
+
+    // Capture-promotion: white pawn marches d4->c5->c6->b7->a8=Q.
+    const promo = C.positionAfter(["d4", "c5", "dxc5", "Nf6", "c6", "Ng8", "cxb7", "Nf6", "bxa8=Q"], 9);
+    eq("promotion: new white queen on a8", at(promo, "a8"), "Q");
+    eq("promotion: b7 vacated", at(promo, "b7"), "");
+
+    // Forgiveness / bounds.
+    eq("n=0 returns the initial position", at(C.positionAfter(["e4", "e5"], 0), "e2"), "P");
+    eq("n past end clamps to final position", at(C.positionAfter(["e4"], 99), "e4"), "P");
+  }
+
+  /* ---------------- Comparison engine ---------------- */
+  function suiteCompare(OT) {
+    group("Comparison engine — compare()");
+    const mk = s => ({ id: 0, moves: s.split(" "), movesStr: s });
+    let c = OT.compare(mk("e4 e5 Nf3"), mk("e4 e5 Nf3"));
+    eq("identical lines: full shared depth", c.sharedPlies, 3);
+    check("identical lines: isWin true", c.isWin === true);
+
+    c = OT.compare(mk("e4 e5 Nf3 Bb5"), mk("e4 e5 Nf3 Nc6"));
+    eq("diverge at ply 4: shared depth 3", c.sharedPlies, 3);
+    check("diverge: isWin false", c.isWin === false);
+
+    eq("first-move mismatch: shared 0", OT.compare(mk("d4"), mk("e4")).sharedPlies, 0);
+    eq("second-move split: shared 1", OT.compare(mk("e4 c5"), mk("e4 e5")).sharedPlies, 1);
+
+    c = OT.compare(mk("e4 e5 Nf3 Nc6 Bb5 a6"), mk("e4 e5 Nf3"));
+    eq("guess longer than target: shared capped at target length", c.sharedPlies, 3);
+    check("longer guess, same prefix: isWin false", c.isWin === false);
+  }
+
+  /* ---------------- Daily selection ---------------- */
+  function suiteDaily(OT) {
+    group("Daily selection — dailyTarget()");
+    for (const diff of OT.DIFFS) {
+      const pool = OT.POOLS[diff], len = pool.length;
+      check(`${diff}: deterministic (same day → same target)`,
+        OT.dailyTarget(100, diff) === OT.dailyTarget(100, diff));
+      check(`${diff}: target is drawn from the pool`,
+        pool.includes(OT.dailyTarget(100, diff)));
+      check(`${diff}: cycle period equals pool size`,
+        OT.dailyTarget(7, diff) === OT.dailyTarget(7 + len, diff));
+      check(`${diff}: negative day numbers handled`,
+        pool.includes(OT.dailyTarget(-1, diff)));
+      const seen = new Set();
+      for (let d = 0; d < len; d++) seen.add(OT.dailyTarget(d, diff).id);
+      check(`${diff}: one full cycle visits every opening once`, seen.size === len,
+        `covered ${seen.size}/${len}`);
+    }
+  }
+
+  /* ---------------- Difficulty pools ---------------- */
+  function suitePools(OT) {
+    group("Difficulty pools — cumulative invariants");
+    eq("pool sizes are 32 / 64 / 128 / 256",
+      OT.DIFFS.map(d => OT.POOLS[d].length), [32, 64, 128, 256]);
+    eq("DIFF_LIMITS matches pool sizes",
+      OT.DIFF_LIMITS, { easy: 32, medium: 64, hard: 128, expert: 256 });
+
+    const ids = d => new Set(OT.POOLS[d].map(o => o.id));
+    const subset = (a, b) => [...a].every(x => b.has(x));
+    const [e, m, h, x] = OT.DIFFS.map(ids);
+    check("easy ⊆ medium", subset(e, m));
+    check("medium ⊆ hard", subset(m, h));
+    check("hard ⊆ expert", subset(h, x));
+
+    const order = { easy: 0, medium: 1, hard: 2, expert: 3 };
+    const leak = [];
+    for (const d of OT.DIFFS)
+      for (const o of OT.POOLS[d])
+        if (order[OT.tierOf(o)] > order[d]) leak.push(`${o.name}@${d}`);
+    check("no pool contains an above-tier opening", leak.length === 0, offenders(leak));
+  }
+
+  /* ---------------- Limits / constants ---------------- */
+  function suiteLimits(OT) {
+    group("Guess limits & constants");
+    eq("GUESS_LIMITS", OT.GUESS_LIMITS, { easy: 10, medium: 15, hard: 20, expert: 25 });
+    eq("guessLimit('hard') = 20", OT.guessLimit("hard"), 20);
+    eq("guessLimit(unknown) falls back to medium (15)", OT.guessLimit("nope"), 15);
+    eq("HINT_COST = 3", OT.HINT_COST, 3);
+  }
+
+  /* ---------------- Budget & depth scoring ---------------- */
+  function suiteBudget(OT) {
+    group("Budget & depth — confirmedDepth / guessBudget");
+    const target = { moves: "e4 e5 Nf3 Nc6 Bb5 a6 Ba4 Nf6".split(" ") }; // 8 plies
+    const st = over => Object.assign(
+      { difficulty: "easy", results: [], hintPlies: 0, hintCount: 0, target }, over);
+
+    eq("confirmedDepth: deepest guess wins",
+      OT.confirmedDepth(st({ results: [{ sharedPlies: 3 }, { sharedPlies: 5 }] })), 5);
+    eq("confirmedDepth: a hint can exceed every guess",
+      OT.confirmedDepth(st({ results: [{ sharedPlies: 1 }], hintPlies: 4 })), 4);
+    eq("confirmedDepth: capped at target length",
+      OT.confirmedDepth(st({ hintPlies: 99 })), 8);
+
+    eq("hintsUsed reads hintCount", OT.hintsUsed(st({ hintCount: 2 })), 2);
+    eq("guessBudgetUsed = guesses + hints×3",
+      OT.guessBudgetUsed(st({ results: [{}, {}, {}], hintCount: 1 })), 6);
+    eq("guessBudgetLeft = limit − used (easy=10)",
+      OT.guessBudgetLeft(st({ results: [{}, {}, {}], hintCount: 1 })), 4);
+    eq("guessBudgetLeft never goes negative",
+      OT.guessBudgetLeft(st({ results: Array.from({ length: 20 }, () => ({})) })), 0);
+  }
+
+  /* ---------------- Move-notation search ---------------- */
+  function suiteParsing(OT) {
+    group("Move-search parsing — looksLikeMoves / moveTokens");
+    check("'e4 e5' looks like moves", OT.looksLikeMoves("e4 e5"));
+    check("'1. e4 e5 2. Nf3' looks like moves", OT.looksLikeMoves("1. e4 e5 2. Nf3"));
+    check("'O-O' looks like moves", OT.looksLikeMoves("O-O"));
+    check("'Sicilian' is not moves", !OT.looksLikeMoves("Sicilian"));
+    check("'Ruy Lopez' is not moves", !OT.looksLikeMoves("Ruy Lopez"));
+    check("empty string is not moves", !OT.looksLikeMoves(""));
+
+    eq("moveTokens strips move numbers", OT.moveTokens("1. e4 e5 2. Nf3"), ["e4", "e5", "Nf3"]);
+    eq("moveTokens single move", OT.moveTokens("e4"), ["e4"]);
+
+    eq("commonMoveDepth: split at ply 3",
+      OT.commonMoveDepth(["e4", "e5", "Nf3"], 3, ["e4", "e5", "Bc4"], 3), 2);
+    eq("commonMoveDepth: respects the shorter depth",
+      OT.commonMoveDepth(["e4", "e5"], 2, ["e4", "e5", "Nf3"], 3), 2);
+    eq("commonMoveDepth: no overlap",
+      OT.commonMoveDepth(["d4"], 1, ["e4"], 1), 0);
+  }
+
+  /* ---------------- Dataset × engine integrity ---------------- */
+  function suiteData(C, OT) {
+    group("Dataset integrity (every opening × SAN engine)");
+    const ops = OT.OPENINGS;
+    check("OPENINGS has 569 entries", ops.length === 569, `got ${ops.length}`);
+
+    const SAN = /^([NBRQK]([a-h]|[1-8]|[a-h][1-8])?x?[a-h][1-8]|[a-h](x[a-h])?[1-8](=[NBRQK])?|O-O(-O)?)[+#]?$/;
+    const badJoin = [], badSan = [], badKings = [], tooMany = [];
+    for (const o of ops) {
+      if (o.moves.join(" ") !== o.movesStr) badJoin.push(o.name);
+      for (const mv of o.moves) if (!SAN.test(mv)) { badSan.push(`${o.name}: ${mv}`); break; }
+      const b = C.positionAfter(o.moves, o.moves.length);
+      let K = 0, k = 0, total = 0;
+      for (let r = 0; r < 8; r++) for (let f = 0; f < 8; f++) {
+        const p = b[r][f];
+        if (p) { total++; if (p === "K") K++; else if (p === "k") k++; }
+      }
+      if (K !== 1 || k !== 1) badKings.push(`${o.name} (K=${K},k=${k})`);
+      if (total > 32) tooMany.push(`${o.name} (${total})`);
+    }
+    check("moves[] round-trips to movesStr", badJoin.length === 0, offenders(badJoin));
+    check("every move is valid SAN", badSan.length === 0, offenders(badSan));
+    check("both kings survive every opening line", badKings.length === 0, offenders(badKings));
+    check("no line ever exceeds 32 pieces", tooMany.length === 0, offenders(tooMany));
+  }
+
+  /* ---------------- Runner ---------------- */
+  function render() {
+    out.innerHTML = logEntries.map(e => {
+      if (e.t === "g") return `<h2>${esc(e.name)}</h2>`;
+      if (e.t === "p") return `<div class="row pass"><span class="i">✓</span><span>${esc(e.name)}</span></div>`;
+      return `<div class="row fail"><span class="i">✗</span><span>${esc(e.name)}` +
+        `${e.detail ? `<div class="detail">${esc(e.detail)}</div>` : ""}</span></div>`;
+    }).join("");
+    summaryEl.textContent = `${passed} passed · ${failed} failed`;
+    summaryEl.className = failed ? "bad" : "good";
+    logEntries.filter(e => e.t === "f").forEach(e => console.error("FAIL:", e.name, e.detail));
+    console.log(`Openle tests: ${passed} passed, ${failed} failed`);
+  }
+
+  function runAll(C, OT) {
+    reset();
+    suiteSan(C);
+    suiteCompare(OT);
+    suiteDaily(OT);
+    suitePools(OT);
+    suiteLimits(OT);
+    suiteBudget(OT);
+    suiteParsing(OT);
+    suiteData(C, OT);
+    render();
+  }
+
+  frame.addEventListener("load", () => {
+    let C, OT;
+    try {
+      const w = frame.contentWindow;
+      C = w.OTChess; OT = w.__OT;
+      if (!C) throw new Error("window.OTChess is missing");
+      if (!OT) throw new Error("window.__OT is missing");
+    } catch (e) {
+      summaryEl.className = "bad";
+      summaryEl.textContent = "Can't read the app frame: " + e.message +
+        " — serve over http (python -m http.server 8765), not file://.";
+      return;
+    }
+    runAll(C, OT);
+  });
+
+  document.getElementById("rerun").addEventListener("click", () => {
+    summaryEl.className = "pending";
+    summaryEl.textContent = "Reloading app…";
+    try { frame.contentWindow.location.reload(); } catch { location.reload(); }
+  });
+})();
+</script>
+</body>
+</html>
