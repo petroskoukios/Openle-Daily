@@ -51,6 +51,9 @@ document.getElementById("treeZoomOut").addEventListener("click", () => zoomTreeB
 document.getElementById("treeZoomIn").addEventListener("click", () => zoomTreeByFactor(document.getElementById("tree"), TREE_BUTTON_ZOOM_FACTOR));
 document.getElementById("treeModalZoomOut").addEventListener("click", () => zoomTreeByFactor(document.getElementById("treeFullscreen"), 1 / TREE_BUTTON_ZOOM_FACTOR));
 document.getElementById("treeModalZoomIn").addEventListener("click", () => zoomTreeByFactor(document.getElementById("treeFullscreen"), TREE_BUTTON_ZOOM_FACTOR));
+document.getElementById("treeFullscreen").addEventListener("treezoomchange", e => {
+  document.getElementById("treeModalZoomValue").value = `${Math.round(e.detail.zoom * 100)}%`;
+});
 enableTreeViewport(document.getElementById("tree"));
 enableTreeViewport(document.getElementById("treeFullscreen"));
 document.getElementById("statsMode").addEventListener("click", e => {

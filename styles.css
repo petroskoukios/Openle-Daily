@@ -99,7 +99,6 @@ body {
 .search input::placeholder { color: var(--muted-2); }
 .search input:focus { border-color: var(--accent); box-shadow: 0 0 0 3px rgba(97,152,202,.22); }
 .search input:disabled { opacity: .55; cursor: not-allowed; }
-
 .suggest {
   position: absolute; top: calc(100% + 6px); left: 0; right: 0; z-index: 40;
   background: var(--panel); border: 1px solid var(--border-solid); border-radius: 8px;
@@ -396,8 +395,23 @@ button.tree-node:focus-visible { outline: 2px solid var(--accent-hover); outline
   width: 92vw; height: 88vh; height: 88dvh; max-width: none;
   padding: 0; border-radius: 8px; overflow: hidden;
 }
-.tree-modal-controls { position: absolute; top: 10px; right: 10px; z-index: 2; padding: 2px; border-radius: 6px; background: rgba(38,41,49,.88); }
-.tree-modal .close { position: static; flex: 0 0 auto; }
+.tree-modal-controls {
+  position: absolute; right: 18px; bottom: 18px; z-index: 2;
+  gap: 2px; padding: 4px; border: 1px solid var(--border-solid);
+  border-radius: 8px; background: var(--surface); box-shadow: var(--shadow);
+}
+.tree-modal-controls .tree-tool {
+  width: 34px; height: 34px; border-radius: 6px;
+  color: var(--muted); background: var(--panel-2);
+}
+.tree-modal-controls .tree-tool:hover { color: #fff; background: var(--border-solid); }
+.tree-modal-controls .tree-tool svg { width: 16px; height: 16px; }
+.tree-zoom-value {
+  width: 56px; color: var(--text); font-size: 13px; font-weight: 700;
+  font-variant-numeric: tabular-nums; text-align: center;
+}
+.tree-control-divider { width: 1px; height: 24px; margin: 0 3px; background: var(--border-solid); }
+.tree-modal-controls .tree-modal-exit { background: transparent; }
 .tree--fullscreen { flex: 1 1 auto; min-height: 0; padding: 6px; background: transparent; border: 0; overscroll-behavior: contain; }
 .tree--fullscreen .tree-map { margin: 0 auto; }
 .dot { width: 11px; height: 11px; border-radius: 3px; display: inline-block; }

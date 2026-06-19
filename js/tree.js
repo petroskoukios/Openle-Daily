@@ -577,6 +577,7 @@ export function renderTree(state) {
 
 function applyTreeZoom(el, view, zoom, contentX, contentY, anchorX, anchorY) {
   view.zoom = zoom;
+  el.dispatchEvent(new CustomEvent("treezoomchange", { detail: { zoom } }));
   const padX = view.padX || 0, padY = view.padY || 0;
   const renderW = Math.round(view.baseWidth * zoom);
   const renderH = Math.round(view.baseHeight * zoom);
