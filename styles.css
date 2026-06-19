@@ -226,6 +226,9 @@ button.tree-node:focus-visible { outline: 2px solid var(--accent-hover); outline
 
 /* ---- Guess log ---- */
 .ghist-item { padding: 10px 12px; border-radius: 6px; border: 1px solid transparent; margin-bottom: 6px; background: var(--surface); }
+.ghist-item[data-history-guess] { cursor: pointer; }
+.ghist-item[data-history-guess]:hover { filter: brightness(1.1); }
+.ghist-item[data-history-guess]:focus-visible { outline: 2px solid var(--accent-hover); outline-offset: 2px; }
 .ghist-item:last-child { margin-bottom: 0; }
 .ghist-item.best { background: rgba(97,152,202,.12); border-color: var(--good-dim); }
 .ghist-item.win  { background: rgba(97,152,202,.12); border-color: var(--good-dim); }
@@ -236,6 +239,9 @@ button.tree-node:focus-visible { outline: 2px solid var(--accent-hover); outline
 .ghist-item .line .sh { color: var(--good); }
 .ghist-item .line .dv { color: var(--miss); font-weight: 600; }
 .ghist-item .line .rest { color: var(--muted-2); }
+.ghist-item .ghist-move { cursor: pointer; border-radius: 3px; }
+.ghist-item .ghist-move:hover { background: rgba(97,152,202,.26); box-shadow: 0 0 0 2px rgba(97,152,202,.26); }
+.ghist-item .ghist-move:focus-visible { outline: 1px solid var(--accent-hover); outline-offset: 2px; }
 .ghist-item.win .gn,
 .ghist-item.win .gn .eco,
 .ghist-item.win .line span { color: var(--good); }
