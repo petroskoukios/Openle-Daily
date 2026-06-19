@@ -1396,10 +1396,14 @@ function giveUp() {
   if (!confirm("Reveal the target opening and end this puzzle?")) return;
   clearBoardPlayback();
   resetBoardNav();
+  const beforeDepth = confirmedDepth(state);
   state.gaveUp = true;
   if (state.mode === "daily") { saveDaily(); recordDaily(false); }
   else recordPractice(false);
+  const afterDepth = state.target.moves.length;
+  if (afterDepth > beforeDepth) boardPlaybackDepth = beforeDepth;
   render();
+  if (afterDepth > beforeDepth) animateBoardProgress(beforeDepth, afterDepth);
 }
 
 function requestHint() {
@@ -1415,8 +1419,11 @@ function requestHint() {
   state.hintPlies = depth + 1;
   state.hintCount = hintsUsed(state) + 1;
   if (guessBudgetLeft(state) === 0) finishOutOfGuesses();
+  const afterDepth = state.gaveUp ? state.target.moves.length : confirmedDepth(state);
+  if (afterDepth > depth) boardPlaybackDepth = depth;
   if (state.mode === "daily") saveDaily();
   render();
+  if (afterDepth > depth) animateBoardProgress(depth, afterDepth);
 }
 
 /* ---------- 10. Stats (kept per difficulty) ---------- */
