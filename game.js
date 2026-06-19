@@ -287,13 +287,13 @@ function renderTreeInto(state, el) {
   const guessLeaf = (g, latest) => create(
     "guess", "off", 140, 38,
     `<span class="tree-node__name" title="${esc(g.name)}">${esc(g.name)}</span>`,
-    { latest, sortKey: g.name, edgeTone: "off" },
+    { latest, sortKey: g.name, edgeTone: "off", lineId: registerLine(g.moves, g.moves.length) },
   );
   const answerLeaf = () => create(
     "answer", targetTone, 162, 46,
     `<span class="tree-node__answer-mark">${state.solved ? "★" : "Revealed"}</span>` +
       `<span class="tree-node__name">${esc(state.target.name)}</span>`,
-    { main: true, latest: state.solved, sortKey: state.target.name },
+    { main: true, latest: state.solved, sortKey: state.target.name, lineId: registerLine(state.target.moves, state.target.moves.length) },
   );
   const tipLeaf = () => create(
     "tip", "tip", 116, 34,
@@ -365,7 +365,7 @@ function renderTreeInto(state, el) {
         "guess", "off", Math.max(width, 142), height + 26,
         `<span class="tree-node__name" title="${esc(g.name)}">${esc(g.name)}</span>` +
           `<span class="tree-node__sequence">${sequence}</span>`,
-        { latest: g.id === latestGuessId, sortKey: g.name, edgeTone: "off" },
+        { latest: g.id === latestGuessId, sortKey: g.name, edgeTone: "off", lineId: registerLine(g.moves, g.moves.length) },
       );
     }
 
@@ -375,6 +375,7 @@ function renderTreeInto(state, el) {
       {
         latest: latestGuessId != null && run.some(item => item.guessIds.has(latestGuessId)),
         sortKey: run.map(item => item.move).join(" "),
+        lineId: registerLine(end.path, end.depth), // clicking the box → its last move
       },
     );
     const leaves = end.guesses.map(g => guessLeaf(g, g.id === latestGuessId));
@@ -406,6 +407,7 @@ function renderTreeInto(state, el) {
         main: true,
         latest: latestGuessId != null && run.some(item => item.guessIds.has(latestGuessId)),
         sortKey: raw.move,
+        lineId: registerLine(targetBoardLine, end.depth), // clicking the box → its last move
       },
     );
     const branches = [...end.children.values()].map(child => child.onTarget ? displayTargetMove(child) : displayOffPath(child));
@@ -604,12 +606,19 @@ function renderTreeInto(state, el) {
   collectEdges(displayRoot);
 
   const nodeMarkup = node => {
-    const clickable = node.boardDepth != null;
-    const tag = clickable ? "button" : "div";
-    const depthAttr = clickable ? ` data-tree-depth="${node.boardDepth}" title="Show this position on the board"` : "";
+    // Root navigates to a board depth; guess/answer boxes play their whole line.
+    // The box is the click target; inner move tokens stop propagation so they
+    // still navigate to their own ply instead of the full line.
+    const depthClickable = node.boardDepth != null;
+    const lineClickable = node.lineId != null;
+    const tag = depthClickable ? "button" : "div";
+    let attrs = "";
+    if (depthClickable) attrs = ` type="button" data-tree-depth="${node.boardDepth}" title="Show this position on the board"`;
+    else if (lineClickable) attrs = ` role="button" tabindex="0" data-tree-line="${node.lineId}" title="Play this opening on the board"`;
+    const interactive = (depthClickable || lineClickable) ? " tree-node--clickable" : "";
     return `<foreignObject x="${node.x}" y="${node.y}" width="${node.width}" height="${node.height}">` +
-      `<${tag} xmlns="http://www.w3.org/1999/xhtml"${clickable ? " type=\"button\"" : ""} ` +
-      `class="tree-node tree-node--${node.type} tree-node--${node.tone}${node.latest ? " is-latest" : ""}"${depthAttr}>` +
+      `<${tag} xmlns="http://www.w3.org/1999/xhtml" ` +
+      `class="tree-node tree-node--${node.type} tree-node--${node.tone}${node.latest ? " is-latest" : ""}${interactive}"${attrs}>` +
       `${node.html}</${tag}></foreignObject>`;
   };
   const renderW = Math.round(svgWidth * view.zoom);
@@ -631,7 +640,8 @@ function renderTreeInto(state, el) {
     });
   });
   el.querySelectorAll("[data-tree-line]").forEach(node => {
-    const activate = () => {
+    const activate = e => {
+      e.stopPropagation(); // a move token shouldn't also trigger its box's full line
       const line = treeLines.get(node.dataset.treeLine);
       if (line) goBoardLine(line.moves, line.depth);
     };
@@ -639,7 +649,7 @@ function renderTreeInto(state, el) {
     node.addEventListener("keydown", e => {
       if (e.key !== "Enter" && e.key !== " ") return;
       e.preventDefault();
-      activate();
+      activate(e);
     });
   });
 

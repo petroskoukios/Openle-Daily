@@ -194,6 +194,11 @@ button.tree-node:focus-visible { outline: 2px solid var(--accent-hover); outline
   display: -webkit-box; max-width: 100%; overflow: hidden; -webkit-box-orient: vertical; -webkit-line-clamp: 2;
   font-weight: 700; font-size: 10.5px; line-height: 1.12;
 }
+/* A guess/answer box plays that opening's whole line on the board when clicked
+   (the inner move tokens keep their own per-ply navigation). */
+.tree-node--clickable { cursor: pointer; }
+.tree-node--clickable:hover { filter: brightness(1.15); }
+.tree-node--clickable:focus-visible { outline: 2px solid var(--accent-hover); outline-offset: 2px; }
 .tree-node--tip {
   flex-direction: column; gap: 0; background: linear-gradient(rgba(97,152,202,.08), rgba(97,152,202,.08)), var(--surface);
   border-color: var(--good-dim); border-style: dashed; color: var(--good);
