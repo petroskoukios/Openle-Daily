@@ -412,7 +412,7 @@ button.tree-node:focus-visible { outline: 2px solid var(--accent-hover); outline
   padding: 0; border-radius: 8px; overflow: hidden;
 }
 .tree-modal-controls {
-  position: absolute; right: 18px; bottom: 18px; z-index: 2;
+  position: absolute; top: 18px; right: 18px; z-index: 2;
   gap: 2px; padding: 4px; border: 1px solid var(--border-solid);
   border-radius: 8px; background: var(--surface); box-shadow: var(--shadow);
 }
@@ -422,10 +422,22 @@ button.tree-node:focus-visible { outline: 2px solid var(--accent-hover); outline
 }
 .tree-modal-controls .tree-tool:hover { color: #fff; background: var(--border-solid); }
 .tree-modal-controls .tree-tool svg { width: 16px; height: 16px; }
-.tree-zoom-value {
-  width: 56px; color: var(--text); font-size: 13px; font-weight: 700;
-  font-variant-numeric: tabular-nums; text-align: center;
+.tree-zoom-slider {
+  --zoom-progress: 21.05%;
+  width: 112px; height: 4px; margin: 0 8px;
+  appearance: none; border: 0; border-radius: 999px; outline: 0;
+  background: linear-gradient(to right, var(--accent) 0 var(--zoom-progress), var(--border-solid) var(--zoom-progress) 100%);
+  cursor: pointer;
 }
+.tree-zoom-slider::-webkit-slider-thumb {
+  appearance: none; width: 14px; height: 14px; border: 2px solid var(--surface);
+  border-radius: 50%; background: var(--accent); box-shadow: 0 0 0 1px var(--accent-dark);
+}
+.tree-zoom-slider::-moz-range-thumb {
+  width: 11px; height: 11px; border: 2px solid var(--surface);
+  border-radius: 50%; background: var(--accent); box-shadow: 0 0 0 1px var(--accent-dark);
+}
+.tree-zoom-slider:focus-visible { box-shadow: 0 0 0 2px rgba(97,152,202,.3); }
 .tree-control-divider { width: 1px; height: 24px; margin: 0 3px; background: var(--border-solid); }
 .tree-modal-controls .tree-modal-exit { background: transparent; }
 .tree--fullscreen { flex: 1 1 auto; min-height: 0; padding: 6px; background: transparent; border: 0; overscroll-behavior: contain; }

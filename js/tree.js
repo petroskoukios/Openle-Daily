@@ -688,6 +688,11 @@ export function zoomTreeByFactor(el, factor) {
   zoomTree(el, base * factor - view.zoom, null, null, true);
 }
 
+export function setTreeZoom(el, zoom) {
+  const view = treeView(el);
+  zoomTree(el, zoom - view.zoom);
+}
+
 export function enableTreeViewport(el) {
   let drag = null;
   let suppressClick = false;

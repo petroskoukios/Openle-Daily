@@ -7,7 +7,7 @@ import { compare, guessLimit, confirmedDepth, hintsUsed, guessBudgetUsed, guessB
 import { commonMoveDepth } from "./format.js";
 import { state, setState, setDifficulty, freshDaily, freshPractice, LS } from "./state.js";
 import { render } from "./render.js";
-import { renderTreeInto, fitFullscreenTree, zoomTreeByFactor, enableTreeViewport } from "./tree.js";
+import { renderTreeInto, fitFullscreenTree, zoomTreeByFactor, setTreeZoom, enableTreeViewport } from "./tree.js";
 import { stepBoard, clearBoardPlayback, resetBoardNav } from "./board.js";
 import { createBoardView, resolveBoardView, navCeiling } from "./board-view.js";
 import { submitGuess, requestHint, giveUp } from "./actions.js";
@@ -17,6 +17,16 @@ import { doShare } from "./share.js";
 import { modal, input, suggestEl } from "./dom.js";
 
 const TREE_BUTTON_ZOOM_FACTOR = 1.3;
+const fullscreenZoomSlider = document.getElementById("treeModalZoomSlider");
+
+function syncFullscreenZoomSlider(zoom) {
+  const value = Math.round(zoom * 100);
+  const min = Number(fullscreenZoomSlider.min), max = Number(fullscreenZoomSlider.max);
+  fullscreenZoomSlider.value = value;
+  fullscreenZoomSlider.style.setProperty("--zoom-progress", `${(value - min) / (max - min) * 100}%`);
+  fullscreenZoomSlider.setAttribute("aria-valuetext", `${value}%`);
+  fullscreenZoomSlider.title = `${value}%`;
+}
 
 function openTreeModal() {
   modal("treeModal", true);
@@ -51,9 +61,13 @@ document.getElementById("treeZoomOut").addEventListener("click", () => zoomTreeB
 document.getElementById("treeZoomIn").addEventListener("click", () => zoomTreeByFactor(document.getElementById("tree"), TREE_BUTTON_ZOOM_FACTOR));
 document.getElementById("treeModalZoomOut").addEventListener("click", () => zoomTreeByFactor(document.getElementById("treeFullscreen"), 1 / TREE_BUTTON_ZOOM_FACTOR));
 document.getElementById("treeModalZoomIn").addEventListener("click", () => zoomTreeByFactor(document.getElementById("treeFullscreen"), TREE_BUTTON_ZOOM_FACTOR));
-document.getElementById("treeFullscreen").addEventListener("treezoomchange", e => {
-  document.getElementById("treeModalZoomValue").value = `${Math.round(e.detail.zoom * 100)}%`;
+fullscreenZoomSlider.addEventListener("input", () => {
+  setTreeZoom(document.getElementById("treeFullscreen"), Number(fullscreenZoomSlider.value) / 100);
 });
+document.getElementById("treeFullscreen").addEventListener("treezoomchange", e => {
+  syncFullscreenZoomSlider(e.detail.zoom);
+});
+syncFullscreenZoomSlider(1);
 enableTreeViewport(document.getElementById("tree"));
 enableTreeViewport(document.getElementById("treeFullscreen"));
 document.getElementById("statsMode").addEventListener("click", e => {

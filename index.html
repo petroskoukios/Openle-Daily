@@ -8,7 +8,7 @@
 <link rel="preconnect" href="https://fonts.googleapis.com" />
 <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin />
 <link href="https://fonts.googleapis.com/css2?family=Montserrat:wght@500;600;700;800&display=swap" rel="stylesheet" />
-<link rel="stylesheet" href="styles.css?v=14" />
+<link rel="stylesheet" href="styles.css?v=16" />
 <link rel="icon" type="image/png" sizes="256x256" href="assets/openle-icon.png?v=4" />
 <link rel="apple-touch-icon" href="assets/openle-icon.png?v=4" />
 </head>
@@ -115,7 +115,8 @@
       <button class="iconbtn tree-tool" id="treeModalZoomOut" type="button" title="Zoom out" aria-label="Zoom out">
         <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.2" stroke-linecap="round" aria-hidden="true"><path d="M5 12h14" /></svg>
       </button>
-      <output class="tree-zoom-value" id="treeModalZoomValue" aria-live="polite">100%</output>
+      <input class="tree-zoom-slider" id="treeModalZoomSlider" type="range"
+             min="20" max="400" step="1" value="100" aria-label="Tree zoom" />
       <button class="iconbtn tree-tool" id="treeModalZoomIn" type="button" title="Zoom in" aria-label="Zoom in">
         <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.2" stroke-linecap="round" aria-hidden="true"><path d="M12 5v14M5 12h14" /></svg>
       </button>
@@ -204,6 +205,6 @@
 
 <script src="openings.js"></script>
 <script src="chess.js"></script>
-<script type="module" src="js/main.js?v=27"></script>
+<script type="module" src="js/main.js?v=28"></script>
 </body>
 </html>
