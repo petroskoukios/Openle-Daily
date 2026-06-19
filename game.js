@@ -303,8 +303,11 @@ function renderTreeInto(state, el) {
 
   const orderChildren = children => {
     const main = children.find(child => child.main);
+    // Branches fan out first, then leaves — keeping sibling leaves contiguous so
+    // they can pack into staggered lanes instead of being split up by a branch.
+    const rank = c => (c.children.length ? 0 : 1);
     const sides = children.filter(child => child !== main)
-      .sort((a, b) => a.sortKey.localeCompare(b.sortKey));
+      .sort((a, b) => rank(a) - rank(b) || a.sortKey.localeCompare(b.sortKey));
     if (!main) return sides;
     const split = Math.ceil(sides.length / 2);
     return [...sides.slice(0, split), main, ...sides.slice(split)];
@@ -350,6 +353,22 @@ function renderTreeInto(state, el) {
         `${seqTokenNum(node, i)}${esc(node.move)}</span>`
     ).join(" ");
     const { width, height } = seqMetrics(run);
+    const branches = [...end.children.values()].map(child => child.onTarget ? displayTargetMove(child) : displayOffPath(child));
+
+    // A guess whose line simply ends here (one opening, no further branching)
+    // becomes a single labelled leaf — moves and name in one box — instead of a
+    // moves node with the name dangling below it. Fewer nodes, and it lets
+    // sibling guesses pack into staggered lanes.
+    if (branches.length === 0 && end.guesses.length === 1) {
+      const g = end.guesses[0];
+      return create(
+        "guess", "off", Math.max(width, 142), height + 26,
+        `<span class="tree-node__name" title="${esc(g.name)}">${esc(g.name)}</span>` +
+          `<span class="tree-node__sequence">${sequence}</span>`,
+        { latest: g.id === latestGuessId, sortKey: g.name, edgeTone: "off" },
+      );
+    }
+
     const node = create(
       "sequence", "off", width, height,
       `<span class="tree-node__sequence">${sequence}</span>`,
@@ -358,7 +377,6 @@ function renderTreeInto(state, el) {
         sortKey: run.map(item => item.move).join(" "),
       },
     );
-    const branches = [...end.children.values()].map(child => child.onTarget ? displayTargetMove(child) : displayOffPath(child));
     const leaves = end.guesses.map(g => guessLeaf(g, g.id === latestGuessId));
     node.children = orderChildren([...branches, ...leaves]);
     return node;
@@ -407,7 +425,7 @@ function renderTreeInto(state, el) {
   if (tip === root && !state.solved && !state.gaveUp) rootBranches.push(tipLeaf());
   displayRoot.children = orderChildren(rootBranches);
 
-  const H_GAP = 8, V_GAP = 24, PAD = 10;
+  const H_GAP = 8, V_GAP = 36, PAD = 10;
   const allNodes = [], levelHeights = [];
   const assignLevels = (node, level) => {
     node.level = level;
@@ -415,30 +433,77 @@ function renderTreeInto(state, el) {
     levelHeights[level] = Math.max(levelHeights[level] || 0, node.height);
     for (const child of node.children) assignLevels(child, level + 1);
   };
+  // Leaf-fringe staggering: a run of sibling leaves (terminal, non-spine nodes)
+  // packs into two alternating vertical lanes so neighbours can overlap
+  // horizontally. This spends the tree's spare vertical room to buy a much
+  // narrower, less flat shape — the way Metazooa hangs its species leaves.
+  const LANE_PAD = 10, PITCH_FACTOR = 0.54;
+  const isLeaf = n => n.children.length === 0 && !n.main;
   const measure = node => {
     for (const child of node.children) measure(child);
-    node.childrenSpan = node.children.reduce((sum, child) => sum + child.subtreeWidth, 0) +
-      Math.max(0, node.children.length - 1) * H_GAP;
+    // Keep the correct (on-target) branch central, like Metazooa's lineage: with
+    // an odd number of children it sits dead middle (3 branches → the middle
+    // one); with an even number it alternates between the two middle slots by
+    // row, so the blue spine snakes gently rather than swinging to the edges.
+    let kids = node.children;
+    const mainIdx = kids.findIndex(c => c.main);
+    if (mainIdx >= 0 && kids.length > 1) {
+      const main = kids[mainIdx];
+      const rest = kids.filter((_, i) => i !== mainIdx);
+      const mid = node.level % 2 === 0 ? Math.floor(rest.length / 2) : Math.ceil(rest.length / 2);
+      kids = [...rest.slice(0, mid), main, ...rest.slice(mid)];
+    }
+
+    // Stay compact for small fans, but as a level gathers many leaves widen the
+    // packing so it spreads into an airy arc instead of a cramped band of
+    // overlapping boxes. Based on the node's total leaf count, since the spine
+    // node splits them into separate runs.
+    const leafCount = kids.filter(isLeaf).length;
+    const pitchFactor = leafCount <= 4 ? PITCH_FACTOR : Math.min(0.9, PITCH_FACTOR + (leafCount - 4) * 0.1);
+
+    const layout = [];
+    let cursor = 0;
+    for (let i = 0; i < kids.length; ) {
+      let j = i;
+      while (j < kids.length && isLeaf(kids[j])) j++;
+      if (j - i >= 2) {
+        const run = kids.slice(i, j);
+        const w = Math.max(...run.map(c => c.width));
+        const pitch = (w + H_GAP) * pitchFactor;
+        const runId = {}; // tags this run so compaction keeps it together
+        run.forEach((child, r) => {
+          child.lane = r % 2;
+          child.runId = runId;
+          layout.push({ child, cx: cursor + w / 2 + r * pitch });
+        });
+        cursor += (run.length - 1) * pitch + w + H_GAP;
+        i = j;
+      } else {
+        const child = kids[i++];
+        child.lane = 0;
+        layout.push({ child, cx: cursor + child.subtreeWidth / 2 });
+        cursor += child.subtreeWidth + H_GAP;
+      }
+    }
+    node.childLayout = layout;
+    node.childrenSpan = Math.max(0, cursor - H_GAP);
     node.subtreeWidth = Math.max(node.width, node.childrenSpan);
   };
   assignLevels(displayRoot, 0);
   measure(displayRoot);
 
+  // How far the dropped lane sits below its row, per level (0 where unused).
+  const levelDrop = [];
+  for (const n of allNodes)
+    if (n.lane === 1) levelDrop[n.level] = Math.max(levelDrop[n.level] || 0, n.height + LANE_PAD);
+
   const levelTops = [];
   let nextTop = PAD;
   for (let i = 0; i < levelHeights.length; i++) {
     levelTops[i] = nextTop;
-    nextTop += levelHeights[i] + V_GAP;
+    nextTop += levelHeights[i] + (levelDrop[i] || 0) + V_GAP;
   }
-  const minWidth = Math.max(430, el.clientWidth || 0);
-  const svgWidth = Math.ceil(Math.max(minWidth, displayRoot.subtreeWidth + PAD * 2));
   const svgHeight = Math.ceil(nextTop - V_GAP + PAD);
-  view.baseWidth = svgWidth;
-  view.baseHeight = svgHeight;
-  view.contentWidth = displayRoot.subtreeWidth + PAD * 2;
-  view.contentHeight = svgHeight;
-  view.contentCenterX = svgWidth / 2;
-  view.contentCenterY = svgHeight / 2;
   // Over-pan slack: empty space around the tree so it can be dragged well past
   // its own edges in every direction, not just up to the content bounds.
   const slackX = Math.max(160, Math.round((el.clientWidth || 0) * 0.8));
@@ -448,22 +513,91 @@ function renderTreeInto(state, el) {
   const place = (node, left) => {
     node.cx = left + node.subtreeWidth / 2;
     node.x = node.cx - node.width / 2;
-    node.y = levelTops[node.level] + (levelHeights[node.level] - node.height) / 2;
-    let childLeft = left + (node.subtreeWidth - node.childrenSpan) / 2;
-    for (const child of node.children) {
-      place(child, childLeft);
-      childLeft += child.subtreeWidth + H_GAP;
+    node.y = node.lane
+      ? levelTops[node.level] + (levelDrop[node.level] || 0)
+      : levelTops[node.level] + (levelHeights[node.level] - node.height) / 2;
+    const spanLeft = left + (node.subtreeWidth - node.childrenSpan) / 2;
+    for (const item of node.childLayout)
+      place(item.child, spanLeft + item.cx - item.child.subtreeWidth / 2);
+  };
+  place(displayRoot, PAD);
+
+  // Tidy compaction: width-based placement reserves each subtree a full column,
+  // leaving big gaps where a narrow junction node's children sit a level below
+  // (empty space above them). Bottom-up, pull each sibling subtree left into any
+  // vertical gap its neighbours leave, then recentre the parent over its kids.
+  const BIN = 4;
+  const subtreeNodes = node => {
+    const out = [];
+    (function rec(n) { out.push(n); n.children.forEach(rec); })(node);
+    return out;
+  };
+  const compact = node => {
+    for (const child of node.children) compact(child);
+    if (node.children.length > 1) {
+      const profile = new Map(); // vertical bin -> furthest-right edge so far
+      const stamp = nodes => { for (const n of nodes)
+        for (let b = Math.floor(n.y / BIN); b < Math.ceil((n.y + n.height) / BIN); b++)
+          profile.set(b, Math.max(profile.get(b) ?? -Infinity, n.x + n.width)); };
+      // Group children into units; a staggered run stays rigid so its diagonal
+      // overlap survives compaction instead of being pulled apart.
+      const kids = [...node.children].sort((a, b) => a.cx - b.cx);
+      const units = [];
+      for (const k of kids) {
+        const last = units[units.length - 1];
+        if (k.runId && last && last.runId === k.runId) last.nodes.push(...subtreeNodes(k));
+        else units.push({ runId: k.runId, nodes: subtreeNodes(k) });
+      }
+      stamp(units[0].nodes);
+      for (let i = 1; i < units.length; i++) {
+        const nodes = units[i].nodes;
+        let shift = Infinity;
+        for (const n of nodes) {
+          let wall = -Infinity;
+          for (let b = Math.floor(n.y / BIN); b < Math.ceil((n.y + n.height) / BIN); b++)
+            if (profile.has(b)) wall = Math.max(wall, profile.get(b));
+          if (wall > -Infinity) shift = Math.min(shift, n.x - wall - H_GAP);
+        }
+        if (shift > 0 && shift < Infinity) for (const n of nodes) { n.x -= shift; n.cx -= shift; }
+        stamp(nodes);
+      }
+    }
+    if (node.children.length) {
+      const cxs = node.children.map(c => c.cx);
+      node.cx = (Math.min(...cxs) + Math.max(...cxs)) / 2;
+      node.x = node.cx - node.width / 2;
     }
   };
-  place(displayRoot, (svgWidth - displayRoot.subtreeWidth) / 2);
+  compact(displayRoot);
+
+  // Normalise horizontally: drop the empty left margin, size the canvas to the
+  // compacted content, and centre it if it's narrower than the panel.
+  const minX = Math.min(...allNodes.map(n => n.x));
+  const maxRight = Math.max(...allNodes.map(n => n.x + n.width));
+  const contentW = (maxRight - minX) + PAD * 2;
+  const minWidth = Math.max(430, el.clientWidth || 0);
+  const svgWidth = Math.ceil(Math.max(minWidth, contentW));
+  const offsetX = (PAD - minX) + Math.max(0, (svgWidth - contentW) / 2);
+  for (const n of allNodes) { n.x += offsetX; n.cx += offsetX; }
+  view.baseWidth = svgWidth;
+  view.baseHeight = svgHeight;
+  view.contentWidth = contentW;
+  view.contentHeight = svgHeight;
+  view.contentCenterX = svgWidth / 2;
+  view.contentCenterY = svgHeight / 2;
 
   const edges = [];
   const collectEdges = node => {
     for (const child of node.children) {
-      const sy = node.y + node.height, ey = child.y;
-      const bend = Math.max(10, (ey - sy) * .46);
+      // Anchor edges at the vertical centre of each box. The boxes are drawn
+      // after the edges, so the stubs running inside them are covered, leaving
+      // clean connectors between box edges even when children are offset or
+      // staggered — and every child line clearly radiates from the node centre.
+      const sx = node.cx, sy = node.y + node.height / 2;
+      const ex = child.cx, ey = child.y + child.height / 2;
+      const bend = Math.max(10, (ey - sy) * .4);
       const cls = `tree-edge tree-edge--${child.edgeTone}${child.latest ? " is-latest" : ""}`;
-      edges.push(`<path class="${cls}" d="M ${node.cx} ${sy} C ${node.cx} ${sy + bend}, ${child.cx} ${ey - bend}, ${child.cx} ${ey}"/>`);
+      edges.push(`<path class="${cls}" d="M ${sx} ${sy} C ${sx} ${sy + bend}, ${ex} ${ey - bend}, ${ex} ${ey}"/>`);
       collectEdges(child);
     }
   };
