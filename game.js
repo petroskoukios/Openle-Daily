@@ -1140,8 +1140,8 @@ moveSearchToggle.checked = moveSearchEnabled;
 let activeIdx = -1, currentList = [];
 
 function scoreMatch(o, tokens, raw) {
-  // require every token to appear somewhere
-  for (const tk of tokens) if (o.nameLower.indexOf(tk) === -1 && o.eco.toLowerCase().indexOf(tk) === -1) return -1;
+  // Require every token to appear in the opening name.
+  for (const tk of tokens) if (o.nameLower.indexOf(tk) === -1) return -1;
   let s = 0;
   if (o.nameLower === raw) s += 1000;
   if (o.nameLower.startsWith(raw)) s += 200;
@@ -1237,7 +1237,6 @@ function renderSuggest(q) {
       : esc(o.moves.slice(0, 6).join(" ") + (o.moves.length > 6 ? "…" : ""));
     return `<li data-i="${i}" class="${i === activeIdx ? "active" : ""}">
       <span class="nm">${nm}</span>
-      <span class="eco">${esc(o.eco)}</span>
       <span class="mv">${mv}</span></li>`;
   }).join("");
   suggestEl.classList.add("open");

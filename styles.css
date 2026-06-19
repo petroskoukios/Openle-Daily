@@ -111,7 +111,6 @@ body {
 .suggest li.active, .suggest li:hover { background: var(--panel-2); }
 .suggest .nm { font-weight: 600; flex: 1; min-width: 0; }
 .suggest .nm em { color: var(--accent); font-style: normal; }
-.suggest .eco { color: var(--muted); font-size: 12px; font-family: var(--mono); flex-shrink: 0; }
 .suggest .mv { color: var(--muted-2); font-size: 12px; font-family: var(--mono); flex-shrink: 0; max-width: 230px; overflow: hidden; text-overflow: ellipsis; white-space: nowrap; }
 .suggest .mv em { color: var(--good); font-style: normal; font-weight: 600; }
 .suggest .empty { padding: 14px; color: var(--muted); text-align: center; }
