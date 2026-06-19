@@ -14,9 +14,10 @@ before your line splits away from the target's. The goal is to feel like you're
   Expert). Each is chosen deterministically from the calendar date, so it's the same
   for everyone playing that tier. Switch tiers freely; each keeps its own progress.
 - **Difficulty-specific guess budgets**: Easy gets 10 guesses, Medium 15, Hard 20,
-  and Expert 25. Guesses are selected through an autocomplete search. You don't need
-  to type exact names — search by name (`najdorf`) or ECO code (`B90`). A
-  **Search using notation** toggle enables move-order search (`1. e4 e5 Nf3`).
+  and Expert 25. Guesses are selected through an autocomplete search, so you don't
+  need to type exact names (`najdorf` is enough). A persistent **Search using
+  notation** toggle enables move-order search (`1. e4 e5 Nf3`). Already submitted
+  openings are removed from both kinds of search.
 - **Hints reveal one more target move** on the tree and board, and each hint costs
   **3 guesses** from that tier's budget.
 - For every guess the game finds the **deepest common prefix of moves** with the
@@ -25,12 +26,15 @@ before your line splits away from the target's. The goal is to feel like you're
   moves form a blue trunk; each guess's wrong turn branches off in gray; the tip of the
   trunk shows how deep you've confirmed. The target path turns gold ★ only when you
   solve it; revealed-but-unsolved answers stay blue in the tree.
+- The tree can be panned, zoomed, and opened in a fullscreen view. Selecting a move
+  in the tree replays that position on the board.
 - A minimal **guess log** under the tree shows each guess's line with shared moves in
   blue and the diverging move in gray — nothing else to read.
 - A **chess board** beside the tree shows *how far you've gotten* — the position at the
   end of the deepest line you've confirmed shared with the target (the full target
-  position once you win). The position is rebuilt from the moves by a small built-in
-  SAN engine.
+  position once the puzzle ends). The position is rebuilt from the moves by a small
+  built-in SAN engine and can be replayed with the on-screen controls or left/right
+  arrow keys.
 - **Shareable results** — a no-spoiler grid of closeness squares, Wordle-style, tagged
   with the puzzle number and difficulty.
 - **Practice mode** — endless random openings at any difficulty, with its own
@@ -38,30 +42,52 @@ before your line splits away from the target's. The goal is to feel like you're
 
 ## Running it
 
-It's a fully static site — no build step, no dependencies.
+It's a fully static site — no build step and no package install.
 
-**Option A — local server (recommended):**
+Serve the repository with any static HTTP server. For example:
 
 ```bash
 python -m http.server 8765
 # then open http://127.0.0.1:8765
 ```
 
-**Option B — open directly:** double-click `index.html`. Everything works from
-`file://` except that the *copy-to-clipboard* on share may be blocked by the browser;
-the shareable text is still shown in the Stats panel so you can copy it manually.
+The local server is required because the game uses native JavaScript modules. Opening
+`index.html` directly from `file://` is blocked by module security rules in most
+browsers. Clipboard access can also vary by browser; when it is unavailable, the game
+falls back to a copy prompt.
 
 ## Project layout
 
-| File | Purpose |
+| Path | Purpose |
 | --- | --- |
-| `index.html` | Markup and modals. |
-| `styles.css` | All styling (chess.com-inspired dark theme, blue board, blue accents). |
-| `game.js` | Game logic: comparison engine, tree builder, board rendering, autocomplete, difficulty/daily selection, stats, sharing. |
-| `chess.js` | Tiny SAN engine — replays a move list to reconstruct the board position. |
-| `openings.js` | The curated opening database (`window.OPENINGS`) and tier assignments. |
-| `assets/` | Static image assets, including the Openle wordmark. |
-| `pieces-svg/` | Chess piece SVGs drawn on the board (CC BY-SA — see Credits). |
+| `index.html` | Application markup, controls, and modals; loads the data, SAN engine, and module entry point. |
+| `styles.css` | All application, board, tree, responsive, and modal styling. |
+| `openings.js` | Curated opening database (`window.OPENINGS`) and tier assignments. |
+| `chess.js` | Small SAN engine that replays moves to reconstruct board positions. |
+| `js/main.js` | Module entry point, event wiring, boot, and the `window.__OT` test hook. |
+| `js/data.js` | Normalizes opening records and builds the cumulative difficulty pools. |
+| `js/state.js` | Current game state plus daily-progress and preference persistence. |
+| `js/domain.js` | Guess comparison, confirmed-depth logic, and guess/hint budget math. |
+| `js/daily.js` | Deterministic per-difficulty daily rotation. |
+| `js/actions.js` | Guess submission, hints, give-up, and end-of-game handling. |
+| `js/search.js` | Name and optional move-order autocomplete. |
+| `js/tree.js` | Opening-tree layout, rendering, selection, pan/zoom, and fullscreen behavior. |
+| `js/board.js`, `js/board-view.js` | Board rendering, playback, navigation, and view-state resolution. |
+| `js/render.js`, `js/history.js` | Main UI render pass and guess-history rendering. |
+| `js/stats.js`, `js/share.js` | Per-mode/per-tier statistics, win flow, and share text. |
+| `js/format.js`, `js/dom.js` | Shared formatting and DOM helpers. |
+| `tests.html` | Dependency-free browser test harness for the SAN engine and game core. |
+| `assets/`, `pieces-svg/` | Logos and CC BY-SA chess-piece artwork. |
+
+## Testing
+
+With the local server running, open
+[`http://127.0.0.1:8765/tests.html`](http://127.0.0.1:8765/tests.html). The harness
+loads the real app in an iframe and tests the SAN engine, opening data, daily
+selection, comparison and budget rules, search helpers, and board-view logic. Results
+are displayed in the page and written to the browser console.
+
+There is no separate build, test runner, or package-manager command.
 
 ## The data
 
