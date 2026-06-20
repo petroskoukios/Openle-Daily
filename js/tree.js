@@ -57,6 +57,7 @@ const TREE_ZOOM_MIN = .5;
 const TREE_FULLSCREEN_ZOOM_MIN = .2;
 const TREE_ZOOM_MAX = 2;
 const TREE_FULLSCREEN_ZOOM_MAX = 4;
+const TREE_FULLSCREEN_AUTO_ZOOM_MIN = 1;
 const TREE_FULLSCREEN_AUTO_ZOOM_MAX = 1.5;
 const TREE_ZOOM_STEP = .15;
 const TREE_DEFAULT_ZOOM = 1.2;
@@ -650,7 +651,7 @@ export function fitFullscreenTree(el) {
   const marginY = Math.min(32, el.clientHeight * .04);
   const fitX = (el.clientWidth - marginX * 2) / view.contentWidth;
   const fitY = (el.clientHeight - marginY * 2) / view.contentHeight;
-  const zoom = Math.max(TREE_FULLSCREEN_ZOOM_MIN,
+  const zoom = Math.max(TREE_FULLSCREEN_AUTO_ZOOM_MIN,
     Math.min(TREE_FULLSCREEN_AUTO_ZOOM_MAX, fitX, fitY));
   view.zoomTarget = zoom;
   applyTreeZoom(el, view, zoom, view.contentCenterX, view.contentCenterY,

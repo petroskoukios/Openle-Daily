@@ -134,6 +134,7 @@ function refitDuringTransition() {
 export function openTreeInspector({ openingId, moves, depth }) {
   const opening = OPENINGS[openingId];
   if (!opening) return;
+  const wasOpen = modal.classList.contains("inspector-open");
   selected = { openingId, moves: moves.slice(), depth };
 
   document.getElementById("treeInspectorName").textContent = opening.name;
@@ -145,16 +146,17 @@ export function openTreeInspector({ openingId, moves, depth }) {
   modal.classList.add("inspector-open");
   panel.setAttribute("aria-hidden", "false");
   scheduleMirrorSync();
-  refitDuringTransition();
+  if (!wasOpen) refitDuringTransition();
 }
 
 export function closeTreeInspector({ refit = true } = {}) {
+  const wasOpen = modal.classList.contains("inspector-open");
   selected = null;
   modal.classList.remove("inspector-open");
   panel.setAttribute("aria-hidden", "true");
   document.querySelectorAll("#treeFullscreen .tree-node.is-inspected")
     .forEach(node => node.classList.remove("is-inspected"));
-  if (refit) refitDuringTransition();
+  if (refit && wasOpen) refitDuringTransition();
 }
 
 export function refreshTreeInspector() {
