@@ -460,9 +460,9 @@ button.tree-node:focus-visible { outline: 2px solid var(--accent-hover); outline
 }
 .tree-stage-intro {
   position: absolute; top: 24px; left: 28px; z-index: 3;
-  display: flex; align-items: center; gap: 9px; color: var(--muted); font-size: 12px;
+  display: flex; align-items: center; gap: 9px; color: var(--muted); font-size: 15px;
 }
-.tree-stage-intro svg { width: 21px; height: 21px; color: var(--text); }
+.tree-stage-intro svg { width: 24px; height: 24px; color: var(--text); }
 .tree-modal-controls {
   position: absolute; top: 18px; right: 20px; z-index: 4;
   display: flex; align-items: center; gap: 2px; padding: 4px;
@@ -504,10 +504,10 @@ button.tree-node:focus-visible { outline: 2px solid var(--accent-hover); outline
   position: absolute; left: 24px; bottom: 18px; z-index: 3;
   display: flex; align-items: center; gap: 22px; padding: 9px 12px;
   border: 1px solid var(--border-solid); border-radius: 7px;
-  background: rgba(30,32,37,.88); color: var(--muted); font-size: 11px;
+  background: rgba(30,32,37,.88); color: var(--muted); font-size: 14px;
 }
 .tree-stage-legend span { display: inline-flex; align-items: center; gap: 7px; }
-.legend-line { display: inline-block; width: 24px; height: 2px; background: var(--miss); }
+.legend-line { display: inline-block; width: 28px; height: 2px; background: var(--miss); }
 .legend-line--target { height: 3px; background: var(--good); }
 .tree-inspector {
   position: relative; min-width: 0; overflow: hidden;
