@@ -7,6 +7,8 @@ const modal = document.querySelector(".tree-modal");
 const panel = document.getElementById("treeInspector");
 const inspectorBoard = document.getElementById("treeInspectorBoard");
 const inspectorMoves = document.getElementById("treeInspectorMoves");
+const inspectorCardMoves = document.getElementById("treeInspectorCardMoves");
+const copyButton = document.getElementById("treeInspectorCopy");
 const sourceBoard = document.getElementById("board");
 const sourceMoves = document.getElementById("boardCap");
 let selected = null;
@@ -18,6 +20,29 @@ function syncBoardMirror() {
   if (!modal.classList.contains("inspector-open")) return;
   inspectorBoard.innerHTML = sourceBoard.innerHTML;
   if (sourceMoves.textContent.trim()) inspectorMoves.innerHTML = sourceMoves.innerHTML;
+}
+
+function movesToPgn(moves) {
+  let pgn = "";
+  for (let i = 0; i < moves.length; i++) {
+    if (i % 2 === 0) pgn += `${Math.floor(i / 2) + 1}.`;
+    pgn += `${moves[i]} `;
+  }
+  return pgn.trim();
+}
+
+async function copyCurrentLine() {
+  if (!selected) return;
+  const pgn = movesToPgn(selected.moves.slice(0, selected.depth));
+  try {
+    await navigator.clipboard.writeText(pgn);
+  } catch {
+    prompt("Copy the current line:", pgn);
+    return;
+  }
+  const label = copyButton.querySelector("span");
+  label.textContent = "Copied";
+  setTimeout(() => { label.textContent = "Copy PGN"; }, 1200);
 }
 
 function scheduleMirrorSync() {
@@ -49,12 +74,9 @@ export function openTreeInspector({ openingId, moves, depth }) {
 
   document.getElementById("treeInspectorName").textContent = opening.name;
   document.getElementById("treeInspectorEco").textContent = opening.eco;
-  document.getElementById("treeInspectorFamily").textContent =
-    `${opening.family} family · ${opening.plies} plies in the catalogued line.`;
-  document.getElementById("treeInspectorFamilyStat").textContent = opening.family;
-  document.getElementById("treeInspectorDepth").textContent = `${opening.plies} plies`;
-  document.getElementById("treeInspectorFirstMove").textContent = opening.firstMove;
-  inspectorMoves.innerHTML = fmtMoves(moves.slice(0, depth), "");
+  const lineHtml = fmtMoves(moves.slice(0, depth), "");
+  inspectorMoves.innerHTML = lineHtml;
+  inspectorCardMoves.innerHTML = lineHtml;
 
   modal.classList.add("inspector-open");
   panel.setAttribute("aria-hidden", "false");
@@ -81,6 +103,4 @@ new MutationObserver(scheduleMirrorSync).observe(sourceMoves, { childList: true,
 
 document.addEventListener("ot:tree-opening-select", e => openTreeInspector(e.detail));
 document.getElementById("treeInspectorCollapse").addEventListener("click", closeTreeInspector);
-document.getElementById("treeInspectorBack").addEventListener("click", closeTreeInspector);
-document.getElementById("treeInspectorFit").addEventListener("click", () =>
-  fitFullscreenTree(document.getElementById("treeFullscreen")));
+copyButton.addEventListener("click", copyCurrentLine);

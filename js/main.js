@@ -15,7 +15,7 @@ import { looksLikeMoves, moveTokens, isMoveSearchEnabled } from "./search.js";
 import { openStats, renderStatsView, startPracticeFromWin, recordPractice } from "./stats.js";
 import { doShare } from "./share.js";
 import { modal, input, suggestEl } from "./dom.js";
-import { closeTreeInspector } from "./tree-inspector.js?v=5";
+import { closeTreeInspector } from "./tree-inspector.js?v=7";
 
 const TREE_BUTTON_ZOOM_FACTOR = 1.3;
 const fullscreenZoomSlider = document.getElementById("treeModalZoomSlider");
