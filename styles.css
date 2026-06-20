@@ -460,14 +460,14 @@ button.tree-node:focus-visible { outline: 2px solid var(--accent-hover); outline
 }
 .tree-stage-intro {
   position: absolute; top: 24px; left: 28px; z-index: 3;
-  display: flex; align-items: center; gap: 9px; color: var(--muted); font-size: 15px;
+  display: flex; align-items: center; gap: 9px; color: var(--muted); font-size: 13.5px;
 }
-.tree-stage-intro svg { width: 24px; height: 24px; color: var(--text); }
+.tree-stage-intro svg { width: 22.5px; height: 22.5px; color: var(--text); }
 .tree-modal-controls {
   position: absolute; top: 18px; right: 20px; z-index: 4;
   display: flex; align-items: center; gap: 2px; padding: 4px;
   border: 1px solid var(--border-solid); border-radius: 8px;
-  background: rgba(30,32,37,.92); box-shadow: 0 6px 18px rgba(0,0,0,.26);
+  background: rgba(30,32,37,.92);
 }
 .tree-modal-controls .tree-tool {
   width: 28px; height: 28px; border-radius: 5px;
@@ -483,12 +483,12 @@ button.tree-node:focus-visible { outline: 2px solid var(--accent-hover); outline
   cursor: pointer;
 }
 .tree-zoom-slider::-webkit-slider-thumb {
-  appearance: none; width: 14px; height: 14px; border: 2px solid var(--surface);
-  border-radius: 50%; background: var(--accent); box-shadow: 0 0 0 1px var(--accent-dark);
+  appearance: none; width: 10px; height: 10px; border: 0;
+  border-radius: 50%; background: var(--accent);
 }
 .tree-zoom-slider::-moz-range-thumb {
-  width: 11px; height: 11px; border: 2px solid var(--surface);
-  border-radius: 50%; background: var(--accent); box-shadow: 0 0 0 1px var(--accent-dark);
+  width: 10px; height: 10px; border: 0;
+  border-radius: 50%; background: var(--accent);
 }
 .tree-zoom-slider:focus-visible { box-shadow: 0 0 0 2px rgba(97,152,202,.3); }
 .tree--fullscreen {
@@ -504,10 +504,10 @@ button.tree-node:focus-visible { outline: 2px solid var(--accent-hover); outline
   position: absolute; left: 24px; bottom: 18px; z-index: 3;
   display: flex; align-items: center; gap: 22px; padding: 9px 12px;
   border: 1px solid var(--border-solid); border-radius: 7px;
-  background: rgba(30,32,37,.88); color: var(--muted); font-size: 14px;
+  background: rgba(30,32,37,.88); color: var(--muted); font-size: 12.5px;
 }
 .tree-stage-legend span { display: inline-flex; align-items: center; gap: 7px; }
-.legend-line { display: inline-block; width: 28px; height: 2px; background: var(--miss); }
+.legend-line { display: inline-block; width: 26px; height: 2px; background: var(--miss); }
 .legend-line--target { height: 3px; background: var(--good); }
 .tree-inspector {
   position: relative; min-width: 0; overflow: hidden;
