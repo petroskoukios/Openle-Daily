@@ -11,6 +11,7 @@ const sourceBoard = document.getElementById("board");
 const sourceMoves = document.getElementById("boardCap");
 let selected = null;
 let syncFrame = null;
+let refitFrame = null;
 
 function syncBoardMirror() {
   syncFrame = null;
@@ -24,8 +25,21 @@ function scheduleMirrorSync() {
   syncFrame = requestAnimationFrame(syncBoardMirror);
 }
 
-function refitAfterTransition() {
-  setTimeout(() => fitFullscreenTree(document.getElementById("treeFullscreen")), 280);
+function refitDuringTransition() {
+  if (refitFrame) cancelAnimationFrame(refitFrame);
+  const tree = document.getElementById("treeFullscreen");
+  if (window.matchMedia?.("(prefers-reduced-motion: reduce)").matches) {
+    fitFullscreenTree(tree);
+    return;
+  }
+
+  const startedAt = performance.now();
+  const followLayout = now => {
+    fitFullscreenTree(tree);
+    if (now - startedAt < 460) refitFrame = requestAnimationFrame(followLayout);
+    else refitFrame = null;
+  };
+  refitFrame = requestAnimationFrame(followLayout);
 }
 
 export function openTreeInspector({ openingId, moves, depth }) {
@@ -45,7 +59,7 @@ export function openTreeInspector({ openingId, moves, depth }) {
   modal.classList.add("inspector-open");
   panel.setAttribute("aria-hidden", "false");
   scheduleMirrorSync();
-  refitAfterTransition();
+  refitDuringTransition();
 }
 
 export function closeTreeInspector({ refit = true } = {}) {
@@ -54,7 +68,7 @@ export function closeTreeInspector({ refit = true } = {}) {
   panel.setAttribute("aria-hidden", "true");
   document.querySelectorAll("#treeFullscreen .tree-node.is-inspected")
     .forEach(node => node.classList.remove("is-inspected"));
-  if (refit) refitAfterTransition();
+  if (refit) refitDuringTransition();
 }
 
 export function refreshTreeInspector() {
