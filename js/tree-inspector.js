@@ -9,6 +9,7 @@ const inspectorBoard = document.getElementById("treeInspectorBoard");
 const inspectorMoves = document.getElementById("treeInspectorMoves");
 const inspectorCardMoves = document.getElementById("treeInspectorCardMoves");
 const copyButton = document.getElementById("treeInspectorCopy");
+const copyFenButton = document.getElementById("treeInspectorCopyFen");
 const sourceBoard = document.getElementById("board");
 const sourceMoves = document.getElementById("boardCap");
 let selected = null;
@@ -31,18 +32,81 @@ function movesToPgn(moves) {
   return pgn.trim();
 }
 
-async function copyCurrentLine() {
-  if (!selected) return;
-  const pgn = movesToPgn(selected.moves.slice(0, selected.depth));
+function movesToFen(moves, depth) {
+  const board = window.OTChess.positionAfter(moves, depth);
+  const rows = [];
+  for (let rank = 7; rank >= 0; rank--) {
+    let row = "", empty = 0;
+    for (let file = 0; file < 8; file++) {
+      const piece = board[rank][file];
+      if (!piece) empty++;
+      else {
+        if (empty) row += empty;
+        row += piece;
+        empty = 0;
+      }
+    }
+    rows.push(row + (empty || ""));
+  }
+
+  let whiteKingMoved = false, blackKingMoved = false;
+  let whiteRookMoved = false, blackRookMoved = false;
+  for (let i = 0; i < depth; i++) {
+    const move = moves[i].replace(/[+#?!]/g, "");
+    if (i % 2 === 0) {
+      if (/^(K|O-O)/.test(move)) whiteKingMoved = true;
+      if (/^R/.test(move)) whiteRookMoved = true;
+    } else {
+      if (/^(K|O-O)/.test(move)) blackKingMoved = true;
+      if (/^R/.test(move)) blackRookMoved = true;
+    }
+  }
+  let castling = "";
+  if (!whiteKingMoved && !whiteRookMoved && board[0][4] === "K") {
+    if (board[0][7] === "R") castling += "K";
+    if (board[0][0] === "R") castling += "Q";
+  }
+  if (!blackKingMoved && !blackRookMoved && board[7][4] === "k") {
+    if (board[7][7] === "r") castling += "k";
+    if (board[7][0] === "r") castling += "q";
+  }
+
+  let enPassant = "-";
+  const last = moves[depth - 1]?.replace(/[+#?!]/g, "") || "";
+  if (/^[a-h]4$/.test(last) && depth % 2 === 1) enPassant = `${last[0]}3`;
+  if (/^[a-h]5$/.test(last) && depth % 2 === 0) enPassant = `${last[0]}6`;
+
+  let halfmove = 0;
+  for (let i = depth - 1; i >= 0; i--) {
+    const move = moves[i].replace(/[+#?!]/g, "");
+    if (/^[a-h]/.test(move) || move.includes("x")) break;
+    halfmove++;
+  }
+  return `${rows.join("/")} ${depth % 2 ? "b" : "w"} ${castling || "-"} ${enPassant} ${halfmove} ${Math.floor(depth / 2) + 1}`;
+}
+
+async function copyText(button, text, idleLabel, fallbackPrompt) {
   try {
-    await navigator.clipboard.writeText(pgn);
+    await navigator.clipboard.writeText(text);
   } catch {
-    prompt("Copy the current line:", pgn);
+    prompt(fallbackPrompt, text);
     return;
   }
-  const label = copyButton.querySelector("span");
+  const label = button.querySelector("span");
   label.textContent = "Copied";
-  setTimeout(() => { label.textContent = "Copy PGN"; }, 1200);
+  setTimeout(() => { label.textContent = idleLabel; }, 1200);
+}
+
+function copyCurrentLine() {
+  if (!selected) return;
+  const pgn = movesToPgn(selected.moves.slice(0, selected.depth));
+  copyText(copyButton, pgn, "Copy PGN", "Copy the current line:");
+}
+
+function copyCurrentFen() {
+  if (!selected) return;
+  const fen = movesToFen(selected.moves, selected.depth);
+  copyText(copyFenButton, fen, "Copy FEN", "Copy the current position:");
 }
 
 function scheduleMirrorSync() {
@@ -104,3 +168,4 @@ new MutationObserver(scheduleMirrorSync).observe(sourceMoves, { childList: true,
 document.addEventListener("ot:tree-opening-select", e => openTreeInspector(e.detail));
 document.getElementById("treeInspectorCollapse").addEventListener("click", closeTreeInspector);
 copyButton.addEventListener("click", copyCurrentLine);
+copyFenButton.addEventListener("click", copyCurrentFen);

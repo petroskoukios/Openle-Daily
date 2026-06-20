@@ -576,6 +576,12 @@ button.tree-node:focus-visible { outline: 2px solid var(--accent-hover); outline
 .tree-inspector-action:hover { color: var(--text); background: var(--panel-2); }
 .tree-inspector-action.primary { color: #fff; background: var(--accent); border-color: var(--accent-dark); }
 .tree-inspector-action svg { width: 14px; height: 14px; }
+.tree-inspector-action-split {
+  display: grid; grid-template-columns: 1fr 1fr; margin-top: 6px;
+  overflow: hidden; border: 1px solid var(--border-solid); border-radius: 7px;
+}
+.tree-inspector-action-split .tree-inspector-action { margin: 0; border: 0; border-radius: 0; }
+.tree-inspector-action-split .tree-inspector-action + .tree-inspector-action { border-left: 1px solid var(--border-solid); }
 @media (max-width: 760px) {
   .tree-modal-bg { padding: 0; }
   .tree-modal { width: 100vw; height: 100vh; height: 100dvh; border-radius: 0; }
