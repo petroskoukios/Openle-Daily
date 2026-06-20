@@ -517,7 +517,7 @@ button.tree-node:focus-visible { outline: 2px solid var(--accent-hover); outline
 }
 .tree-modal.inspector-open .tree-inspector { border-left-color: var(--border-solid); }
 .tree-inspector-scroll {
-  width: 420px; height: 100%; overflow-y: auto; padding: 20px 12px 14px 34px;
+  width: 420px; height: 100%; overflow-y: auto; padding: 7px 12px 5px;
   opacity: 0; pointer-events: none;
   transition: opacity .42s linear;
 }
@@ -533,7 +533,7 @@ button.tree-node:focus-visible { outline: 2px solid var(--accent-hover); outline
 .tree-inspector-line { display: flex; align-items: flex-start; justify-content: space-between; gap: 12px; }
 .tree-inspector-line > div { min-width: 0; }
 .tree-inspector-kicker { color: var(--muted); font-size: 11px; font-weight: 700; letter-spacing: .03em; }
-.tree-inspector-moves { min-height: 30px; margin: 3px 0 12px; color: var(--good); font: 14px/1.55 var(--mono); }
+.tree-inspector-moves { min-height: 22px; margin: 2px 0 3px; color: var(--good); font: 14px/1.45 var(--mono); }
 .tree-inspector-moves .num { color: var(--muted-2); }
 .tree-inspector-moves .sh { color: var(--good); }
 .tree-inspector-moves .branch { color: var(--miss); }
@@ -546,18 +546,18 @@ button.tree-node:focus-visible { outline: 2px solid var(--accent-hover); outline
 }
 .tree-inspector-copy:hover { background: var(--border-solid); }
 .tree-inspector-copy svg { width: 16px; height: 16px; color: var(--muted); }
-.tree-inspector-nav { margin-top: 7px; }
+.tree-inspector-nav { margin-top: 4px; }
 .tree-inspector-board {
-  width: 100%; margin: 0 auto;
+  width: 95%; margin: 3px auto 11px;
   box-shadow: 0 6px 20px rgba(0,0,0,.38);
 }
 .tree-inspector-card {
-  margin-top: 9px; padding: 10px 12px; border: 1px solid var(--border-solid);
-  border-radius: 8px; background: rgba(30,32,37,.76);
+  margin-top: 9px; padding: 10px 12px; border: 1px solid rgba(155,161,170,.24);
+  border-radius: 8px; background: rgba(48,52,61,.72);
 }
 .tree-inspector-title-row { display: flex; align-items: baseline; gap: 5px; }
 .tree-inspector-mark { color: var(--accent-hover); font-size: 13px; }
-.tree-inspector-card h3 { margin: 0; color: var(--accent-hover); font-size: 14px; line-height: 1.25; }
+.tree-inspector-card h3 { margin: 0; color: var(--accent-hover); font-size: 13px; line-height: 1.25; }
 .tree-inspector-card .eco { color: var(--muted); font: 700 10px var(--mono); }
 .tree-inspector-card-moves { margin-top: 4px; color: var(--good); font: 11px/1.35 var(--mono); }
 .tree-inspector-card-moves .num { color: var(--muted-2); }
@@ -569,19 +569,20 @@ button.tree-node:focus-visible { outline: 2px solid var(--accent-hover); outline
 .tree-inspector-meta b { display: block; overflow: hidden; margin-top: 1px; color: var(--text); font-size: 14px; text-overflow: ellipsis; white-space: nowrap; }
 .tree-inspector-action {
   display: flex; align-items: center; justify-content: center; gap: 8px;
-  width: 100%; min-height: 34px; margin-top: 6px; border: 1px solid var(--border-solid);
-  border-radius: 7px; background: transparent; color: var(--muted); cursor: pointer;
+  width: 100%; min-height: 34px; margin-top: 6px; border: 1px solid rgba(155,161,170,.24);
+  border-radius: 7px; background: rgba(48,52,61,.72);
+  color: var(--muted); cursor: pointer;
   font: 700 11px var(--sans);
 }
-.tree-inspector-action:hover { color: var(--text); background: var(--panel-2); }
+.tree-inspector-action:hover { color: var(--text); background: rgba(58,63,73,.9); }
 .tree-inspector-action.primary { color: #fff; background: var(--accent); border-color: var(--accent-dark); }
 .tree-inspector-action svg { width: 14px; height: 14px; }
 .tree-inspector-action-split {
   display: grid; grid-template-columns: 1fr 1fr; margin-top: 6px;
-  overflow: hidden; border: 1px solid var(--border-solid); border-radius: 7px;
+  overflow: hidden; border: 1px solid rgba(155,161,170,.24); border-radius: 7px;
 }
 .tree-inspector-action-split .tree-inspector-action { margin: 0; border: 0; border-radius: 0; }
-.tree-inspector-action-split .tree-inspector-action + .tree-inspector-action { border-left: 1px solid var(--border-solid); }
+.tree-inspector-action-split .tree-inspector-action + .tree-inspector-action { border-left: 1px solid rgba(155,161,170,.24); }
 @media (max-width: 760px) {
   .tree-modal-bg { padding: 0; }
   .tree-modal { width: 100vw; height: 100vh; height: 100dvh; border-radius: 0; }
