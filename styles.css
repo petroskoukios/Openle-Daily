@@ -504,19 +504,20 @@ html:has(.tree-modal-bg.open) { overflow: hidden; }
 .tree-stage-intro svg { width: 22.5px; height: 22.5px; color: var(--text); }
 .tree-modal-controls {
   position: absolute; top: 18px; right: 20px; z-index: 4;
-  display: flex; align-items: center; gap: 2px; padding: 4px;
-  border: 1px solid var(--border-solid); border-radius: 8px;
+  display: flex; align-items: center; gap: 2px; padding: 4px 6px;
+  border: 1px solid var(--border-solid); border-radius: 9px;
   background: rgba(30,32,37,.92);
 }
 .tree-modal-controls .tree-tool {
-  width: 28px; height: 28px; border-radius: 5px;
-  color: var(--muted); background: var(--panel-2);
+  width: 28px; height: 28px; border-radius: 6px;
+  color: var(--muted); background: transparent;
+  transition: color .12s, background .12s;
 }
-.tree-modal-controls .tree-tool:hover { color: #fff; background: var(--border-solid); }
-.tree-modal-controls .tree-tool svg { width: 13px; height: 13px; }
+.tree-modal-controls .tree-tool:hover { color: var(--text); background: var(--panel-2); }
+.tree-modal-controls .tree-tool svg { width: 14px; height: 14px; }
 .tree-zoom-slider {
   --zoom-progress: 21.05%;
-  width: 112px; height: 4px; margin: 0 8px;
+  width: 112px; height: 4px; margin: 0 6px;
   appearance: none; border: 0; border-radius: 999px; outline: 0;
   background: linear-gradient(to right, var(--accent) 0 var(--zoom-progress), var(--border-solid) var(--zoom-progress) 100%);
   cursor: pointer;
