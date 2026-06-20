@@ -128,7 +128,17 @@ body {
 .panel > h2 { margin: 0 0 12px; font-size: 12px; letter-spacing: .06em; text-transform: uppercase; color: var(--muted); font-weight: 700; }
 .panel .hint { color: var(--muted-2); font-size: 13px; }
 .tree-panel { padding: 10px 12px 12px; }
-.tree-panel > .tree { height: clamp(300px, 44vh, 470px); min-height: 0; }
+.tree-panel > .tree {
+  height: clamp(300px, 44vh, 470px); min-height: 0;
+  -webkit-mask-image:
+    linear-gradient(to right, transparent, #000 9px, #000 calc(100% - 9px), transparent),
+    linear-gradient(to bottom, transparent, #000 9px, #000 calc(100% - 9px), transparent);
+  -webkit-mask-composite: source-in;
+  mask-image:
+    linear-gradient(to right, transparent, #000 9px, #000 calc(100% - 9px), transparent),
+    linear-gradient(to bottom, transparent, #000 9px, #000 calc(100% - 9px), transparent);
+  mask-composite: intersect;
+}
 .panel-heading { display: flex; align-items: center; justify-content: space-between; gap: 12px; margin: 0 0 4px; }
 .panel-heading h2 { margin: 0; font-size: 12px; letter-spacing: .06em; text-transform: uppercase; color: var(--muted); font-weight: 700; }
 .tree-controls, .tree-modal-controls { display: flex; align-items: center; gap: 2px; }
