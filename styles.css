@@ -417,6 +417,8 @@ button.tree-node:focus-visible { outline: 2px solid var(--accent-hover); outline
 .how-footer .how-credit { margin-top: 5px; color: var(--muted-2); font-size: 11px; }
 .how-footer a { color: var(--accent-hover); }
 .tree-modal-bg { align-items: center; padding: 24px; overflow: hidden; }
+/* Lock the page behind the fullscreen tree so the wheel can't scroll it. */
+html:has(.tree-modal-bg.open) { overflow: hidden; }
 .tree-modal {
   display: flex; flex-direction: column;
   width: calc(100vw - 48px); height: calc(100vh - 48px); height: calc(100dvh - 48px);
