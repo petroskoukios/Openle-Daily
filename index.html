@@ -8,7 +8,7 @@
 <link rel="preconnect" href="https://fonts.googleapis.com" />
 <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin />
 <link href="https://fonts.googleapis.com/css2?family=Montserrat:wght@500;600;700;800&display=swap" rel="stylesheet" />
-<link rel="stylesheet" href="styles.css?v=24" />
+<link rel="stylesheet" href="styles.css?v=28" />
 <link rel="icon" type="image/png" sizes="256x256" href="assets/openle-icon.png?v=4" />
 <link rel="apple-touch-icon" href="assets/openle-icon.png?v=4" />
 </head>
@@ -111,23 +111,72 @@
 <!-- Fullscreen opening tree -->
 <div class="modal-bg tree-modal-bg" id="treeModal">
   <div class="modal tree-modal" role="dialog" aria-modal="true" aria-label="Openle tree">
-    <div class="tree-modal-controls" aria-label="Tree controls">
-      <button class="iconbtn tree-tool" id="treeModalZoomOut" type="button" title="Zoom out" aria-label="Zoom out">
-        <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.2" stroke-linecap="round" aria-hidden="true"><path d="M5 12h14" /></svg>
+    <header class="tree-modal-header">
+      <div class="tree-modal-brand">
+        <img src="assets/openle-logo.png" alt="Openle" />
+        <span>Tree</span>
+      </div>
+      <div class="tree-modal-context" aria-label="Puzzle context">
+        <span>Puzzle</span>
+        <span>Custom</span>
+      </div>
+      <button class="tree-modal-close" type="button" data-close>
+        <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" aria-hidden="true"><path d="m7 7 10 10M17 7 7 17" /></svg>
+        <span>Close</span>
       </button>
-      <input class="tree-zoom-slider" id="treeModalZoomSlider" type="range"
-             min="20" max="400" step="1" value="100" aria-label="Tree zoom" />
-      <button class="iconbtn tree-tool" id="treeModalZoomIn" type="button" title="Zoom in" aria-label="Zoom in">
-        <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.2" stroke-linecap="round" aria-hidden="true"><path d="M12 5v14M5 12h14" /></svg>
-      </button>
-      <span class="tree-control-divider" aria-hidden="true"></span>
-      <button class="iconbtn tree-tool tree-modal-exit" type="button" data-close title="Exit fullscreen" aria-label="Exit fullscreen">
-        <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true">
-          <path d="M9 4v5H4M15 4v5h5M9 20v-5H4M15 20v-5h5" />
-        </svg>
-      </button>
+    </header>
+
+    <div class="tree-modal-body">
+      <section class="tree-stage">
+        <div class="tree-stage-intro">
+          <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><circle cx="12" cy="5" r="2"/><circle cx="6" cy="18" r="2"/><circle cx="18" cy="18" r="2"/><path d="M12 7v4M12 11 6 16M12 11l6 5"/></svg>
+          <span>Explore the move tree and inspect an opening</span>
+        </div>
+        <div class="tree-modal-controls" aria-label="Tree controls">
+          <button class="iconbtn tree-tool" id="treeModalZoomOut" type="button" title="Zoom out" aria-label="Zoom out">
+            <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.2" stroke-linecap="round" aria-hidden="true"><path d="M5 12h14" /></svg>
+          </button>
+          <input class="tree-zoom-slider" id="treeModalZoomSlider" type="range"
+                 min="20" max="400" step="1" value="100" aria-label="Tree zoom" />
+          <button class="iconbtn tree-tool" id="treeModalZoomIn" type="button" title="Zoom in" aria-label="Zoom in">
+            <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.2" stroke-linecap="round" aria-hidden="true"><path d="M12 5v14M5 12h14" /></svg>
+          </button>
+        </div>
+        <div class="tree tree--fullscreen" id="treeFullscreen" role="region" aria-label="Fullscreen Openle tree"></div>
+        <div class="tree-stage-legend" aria-label="Tree legend">
+          <span><i class="legend-line legend-line--target"></i>Solved path</span>
+          <span><i class="legend-line"></i>Other variations</span>
+        </div>
+      </section>
+
+      <aside class="tree-inspector" id="treeInspector" aria-hidden="true">
+        <button class="tree-inspector-collapse" id="treeInspectorCollapse" type="button" title="Back to full tree" aria-label="Back to full tree">›</button>
+        <div class="tree-inspector-scroll">
+          <section class="tree-inspector-line">
+            <div class="tree-inspector-kicker">Current line</div>
+            <div class="tree-inspector-moves" id="treeInspectorMoves">Starting position</div>
+          </section>
+          <div class="board tree-inspector-board" id="treeInspectorBoard" aria-label="Selected opening position"></div>
+          <section class="tree-inspector-card">
+            <div class="tree-inspector-title-row">
+              <h3 id="treeInspectorName">Select an opening</h3>
+              <span class="eco" id="treeInspectorEco"></span>
+            </div>
+            <div class="tree-inspector-family" id="treeInspectorFamily">Choose a named node to inspect its line.</div>
+            <div class="tree-inspector-meta">
+              <div><span>Family</span><b id="treeInspectorFamilyStat">—</b></div>
+              <div><span>Line depth</span><b id="treeInspectorDepth">—</b></div>
+              <div><span>First move</span><b id="treeInspectorFirstMove">—</b></div>
+            </div>
+          </section>
+          <button class="tree-inspector-action primary" id="treeInspectorFit" type="button">
+            <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" aria-hidden="true"><path d="M8 3H3v5M16 3h5v5M8 21H3v-5M16 21h5v-5" /></svg>
+            Fit tree
+          </button>
+          <button class="tree-inspector-action" id="treeInspectorBack" type="button">← Back to the tree</button>
+        </div>
+      </aside>
     </div>
-    <div class="tree tree--fullscreen" id="treeFullscreen" role="region" aria-label="Fullscreen Openle tree"></div>
   </div>
 </div>
 
@@ -205,6 +254,6 @@
 
 <script src="openings.js"></script>
 <script src="chess.js"></script>
-<script type="module" src="js/main.js?v=29"></script>
+<script type="module" src="js/main.js?v=37"></script>
 </body>
 </html>

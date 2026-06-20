@@ -15,6 +15,7 @@ import { looksLikeMoves, moveTokens, isMoveSearchEnabled } from "./search.js";
 import { openStats, renderStatsView, startPracticeFromWin, recordPractice } from "./stats.js";
 import { doShare } from "./share.js";
 import { modal, input, suggestEl } from "./dom.js";
+import { closeTreeInspector } from "./tree-inspector.js";
 
 const TREE_BUTTON_ZOOM_FACTOR = 1.3;
 const fullscreenZoomSlider = document.getElementById("treeModalZoomSlider");
@@ -29,6 +30,7 @@ function syncFullscreenZoomSlider(zoom) {
 }
 
 function openTreeModal() {
+  closeTreeInspector({ refit: false });
   modal("treeModal", true);
   requestAnimationFrame(() => {
     const el = document.getElementById("treeFullscreen");
@@ -39,11 +41,20 @@ function openTreeModal() {
 
 /* ---------- Modal helpers ---------- */
 document.querySelectorAll("[data-close]").forEach(b =>
-  b.addEventListener("click", () => b.closest(".modal-bg").classList.remove("open")));
+  b.addEventListener("click", () => {
+    const bg = b.closest(".modal-bg");
+    if (bg.id === "treeModal") closeTreeInspector({ refit: false });
+    bg.classList.remove("open");
+  }));
 document.querySelectorAll(".modal-bg").forEach(bg =>
-  bg.addEventListener("click", e => { if (e.target === bg) bg.classList.remove("open"); }));
+  bg.addEventListener("click", e => {
+    if (e.target !== bg) return;
+    if (bg.id === "treeModal") closeTreeInspector({ refit: false });
+    bg.classList.remove("open");
+  }));
 document.addEventListener("keydown", e => {
   if (e.key === "Escape") {
+    closeTreeInspector({ refit: false });
     document.querySelectorAll(".modal-bg.open").forEach(m => m.classList.remove("open"));
     return;
   }

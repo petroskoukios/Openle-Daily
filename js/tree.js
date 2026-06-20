@@ -85,7 +85,7 @@ function panTreeTo(el, left, top, smooth = false) {
 
 export function renderTreeInto(state, el) {
   const view = treeView(el);
-  const boardNavigationEnabled = el.id !== "treeFullscreen";
+  const boardNavigationEnabled = true;
   if (view.zoomFrame) {
     cancelAnimationFrame(view.zoomFrame);
     view.zoomFrame = null;
@@ -127,13 +127,13 @@ function buildDisplayTree(state, boardNavigationEnabled) {
   const guessLeaf = (g, latest) => create(
     "guess", "off", 136, 36,
     `<span class="tree-node__name" title="${esc(g.name)}">${esc(g.name)}</span>`,
-    { latest, sortKey: g.name, edgeTone: "off", lineId: registerLine(g.moves, g.moves.length) },
+    { latest, sortKey: g.name, edgeTone: "off", openingId: g.id, lineId: registerLine(g.moves, g.moves.length) },
   );
   const answerLeaf = () => create(
     "answer", targetTone, 156, 44,
     `<span class="tree-node__name">${esc(state.target.name)}</span>` +
       `<span class="tree-node__answer-mark">${state.solved ? "★" : "Failed"}</span>`,
-    { main: true, latest: state.solved, sortKey: state.target.name, lineId: registerLine(state.target.moves, state.target.moves.length) },
+    { main: true, latest: state.solved, sortKey: state.target.name, openingId: state.target.id, lineId: registerLine(state.target.moves, state.target.moves.length) },
   );
   const tipLeaf = () => create(
     "tip", "tip", 104, 30,
@@ -207,7 +207,7 @@ function buildDisplayTree(state, boardNavigationEnabled) {
         "guess", "off", Math.max(width, 138), height + 24,
         `<span class="tree-node__name" title="${esc(g.name)}">${esc(g.name)}</span>` +
           `<span class="tree-node__sequence">${sequence}</span>`,
-        { latest: g.id === latestGuessId, sortKey: g.name, edgeTone: "off", lineId: registerLine(g.moves, g.moves.length) },
+        { latest: g.id === latestGuessId, sortKey: g.name, edgeTone: "off", openingId: g.id, lineId: registerLine(g.moves, g.moves.length) },
       );
     }
 
@@ -483,6 +483,7 @@ function paintTree(el, displayRoot, allNodes, svgWidth, svgHeight, view, boardNa
     let attrs = "";
     if (depthClickable) attrs = ` type="button" data-tree-depth="${node.boardDepth}" title="Show this position on the board"`;
     else if (lineClickable) attrs = ` role="button" tabindex="0" data-tree-line="${node.lineId}" title="Play this opening on the board"`;
+    if (node.openingId != null) attrs += ` data-opening-id="${node.openingId}"`;
     const interactive = (depthClickable || lineClickable) ? " tree-node--clickable" : "";
     return `<foreignObject x="${node.x}" y="${node.y}" width="${node.width}" height="${node.height}">` +
       `<${tag} xmlns="http://www.w3.org/1999/xhtml" ` +
@@ -514,7 +515,16 @@ function wireTreeNav(el, treeLines) {
     const activate = e => {
       e.stopPropagation(); // a move token shouldn't also trigger its box's full line
       const line = treeLines.get(node.dataset.treeLine);
-      if (line) goBoardLine(line.moves, line.depth);
+      if (!line) return;
+      goBoardLine(line.moves, line.depth);
+      const openingNode = node.closest(".tree-node[data-opening-id]");
+      if (el.id === "treeFullscreen" && openingNode) {
+        el.querySelectorAll(".tree-node.is-inspected").forEach(item => item.classList.remove("is-inspected"));
+        openingNode.classList.add("is-inspected");
+        document.dispatchEvent(new CustomEvent("ot:tree-opening-select", {
+          detail: { openingId: Number(openingNode.dataset.openingId), moves: line.moves.slice(), depth: line.depth },
+        }));
+      }
     };
     node.addEventListener("click", activate);
     node.addEventListener("keydown", e => {
@@ -578,6 +588,8 @@ function focusTree(el, state, view, allNodes, displayRoot, prevScroll) {
   const freshView = view.puzzleKey !== puzzleKey;
   const newTarget = view.targetKey !== targetKey;
   const rootCx = displayRoot.cx;
+  view.rootCenterX = displayRoot.cx;
+  view.rootCenterY = displayRoot.y + displayRoot.height / 2;
   requestAnimationFrame(() => {
     if (freshView) {
       panTreeTo(el, centeredLeft, focusedTop, !newTarget && view.puzzleKey != null);
