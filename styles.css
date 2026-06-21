@@ -570,13 +570,17 @@ html:has(.tree-modal-bg.open) { overflow: hidden; }
 .tree-modal.inspector-open .tree-inspector-scroll { opacity: 1; pointer-events: auto; }
 .tree-inspector-collapse {
   position: absolute; right: 0; top: 20%; z-index: 5; width: 30px; height: 54px;
+  display: flex; align-items: center; justify-content: center;
   transform: translateY(-50%); border: 1px solid var(--ins-border); border-right: 0;
   border-radius: 8px 0 0 8px; background: var(--ins-raise); color: var(--text);
-  cursor: pointer; font: 700 26px/1 var(--sans); opacity: 0; pointer-events: none;
-  transition: right .42s cubic-bezier(.4, 0, .2, 1), opacity .18s ease;
+  cursor: pointer; font: 700 26px/1 var(--sans);
+  transition: right .42s cubic-bezier(.4, 0, .2, 1), background .12s ease;
 }
+/* Collapsed: chevron points left ("open"). Expanded: points right ("collapse"). */
+.tree-inspector-collapse::before { content: "\2039"; }
 .tree-inspector-collapse:hover { background: var(--ins-raise-hover); }
-.tree-modal.inspector-open .tree-inspector-collapse { right: 525px; opacity: 1; pointer-events: auto; }
+.tree-modal.inspector-open .tree-inspector-collapse { right: 525px; }
+.tree-modal.inspector-open .tree-inspector-collapse::before { content: "\203A"; }
 
 /* ---- Current line (top row) ---- */
 .tree-inspector-line { display: flex; align-items: flex-start; justify-content: space-between; gap: 14px; margin-bottom: 16px; }

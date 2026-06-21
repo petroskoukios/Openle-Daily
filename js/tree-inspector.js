@@ -15,6 +15,7 @@ const copyFenButton = document.getElementById("treeInspectorCopyFen");
 const sourceBoard = document.getElementById("board");
 const sourceMoves = document.getElementById("boardCap");
 let selected = null;
+let lastSelected = null;   // survives a collapse so the tab can re-expand to it
 let syncFrame = null;
 let refitFrame = null;
 
@@ -138,6 +139,7 @@ export function openTreeInspector({ openingId, moves, depth }) {
   if (!opening) return;
   const wasOpen = modal.classList.contains("inspector-open");
   selected = { openingId, moves: moves.slice(), depth };
+  lastSelected = selected;
 
   document.getElementById("treeInspectorName").textContent = opening.name;
   document.getElementById("treeInspectorEco").textContent = opening.eco;
@@ -155,14 +157,29 @@ export function openTreeInspector({ openingId, moves, depth }) {
   if (!wasOpen) refitDuringTransition();
 }
 
-export function closeTreeInspector({ refit = true } = {}) {
+export function closeTreeInspector({ refit = true, forget = true } = {}) {
   const wasOpen = modal.classList.contains("inspector-open");
   selected = null;
+  if (forget) lastSelected = null;   // a collapse (forget:false) keeps it for re-expand
   modal.classList.remove("inspector-open");
   panel.setAttribute("aria-hidden", "true");
   document.querySelectorAll("#treeFullscreen .tree-node.is-inspected")
     .forEach(node => node.classList.remove("is-inspected"));
   if (refit && wasOpen) refitDuringTransition();
+}
+
+// The edge tab toggles the panel: collapse when open, re-expand otherwise.
+function toggleTreeInspector() {
+  if (modal.classList.contains("inspector-open")) {
+    closeTreeInspector({ forget: false });
+  } else if (lastSelected) {
+    openTreeInspector(lastSelected);
+  } else {
+    modal.classList.add("inspector-open");
+    panel.setAttribute("aria-hidden", "false");
+    scheduleMirrorSync();
+    refitDuringTransition();
+  }
 }
 
 export function refreshTreeInspector() {
@@ -174,6 +191,6 @@ new MutationObserver(scheduleMirrorSync).observe(sourceBoard, { childList: true,
 new MutationObserver(scheduleMirrorSync).observe(sourceMoves, { childList: true, subtree: true, characterData: true });
 
 document.addEventListener("ot:tree-opening-select", e => openTreeInspector(e.detail));
-document.getElementById("treeInspectorCollapse").addEventListener("click", closeTreeInspector);
+document.getElementById("treeInspectorCollapse").addEventListener("click", toggleTreeInspector);
 copyButton.addEventListener("click", copyCurrentLine);
 copyFenButton.addEventListener("click", copyCurrentFen);
