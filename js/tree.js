@@ -88,23 +88,26 @@ function panTreeTo(el, left, top, smooth = false) {
 export function renderTreeInto(state, el) {
   const view = treeView(el);
   const boardNavigationEnabled = true;
+  // Fullscreen is an inspector: only whole openings are selectable there — not
+  // the root, sequence boxes, or individual moves.
+  const openingsOnly = el.id === "treeFullscreen";
   if (view.zoomFrame) {
     cancelAnimationFrame(view.zoomFrame);
     view.zoomFrame = null;
     view.zoomTarget = view.zoom;
   }
 
-  const { displayRoot, treeLines } = buildDisplayTree(state, boardNavigationEnabled);
+  const { displayRoot, treeLines } = buildDisplayTree(state, boardNavigationEnabled, openingsOnly);
   const { allNodes, svgWidth, svgHeight } = layoutTree(displayRoot, el, view);
   const prevScroll = { left: el.scrollLeft, top: el.scrollTop };
-  paintTree(el, displayRoot, allNodes, svgWidth, svgHeight, view, boardNavigationEnabled);
+  paintTree(el, displayRoot, allNodes, svgWidth, svgHeight, view, boardNavigationEnabled, openingsOnly);
   wireTreeNav(el, treeLines);
   focusTree(el, state, view, allNodes, displayRoot, prevScroll);
 }
 
 // Phase 1 — turn game state into a tree of display nodes (boxes), collapsing
 // linear runs, merging single-guess leaves, and ordering siblings.
-function buildDisplayTree(state, boardNavigationEnabled) {
+function buildDisplayTree(state, boardNavigationEnabled, openingsOnly) {
   const { root, tip } = buildTree(state);
   const latestGuessId = state.results.length ? state.results[state.results.length - 1].guessId : null;
   const targetTone = "target";
@@ -161,7 +164,9 @@ function buildDisplayTree(state, boardNavigationEnabled) {
   const showMoveNumber = (depth, i) => i === 0 || depth % 2 === 1;
   const seqTokenNum = (node, i) =>
     showMoveNumber(node.depth, i) ? `<i>${moveParts(node.move, node.depth).number}</i>` : "";
-  const moveToken = (html, moves, depth) => boardNavigationEnabled
+  // In openings-only mode (fullscreen) moves aren't individually selectable, so
+  // they render as plain text rather than clickable tokens.
+  const moveToken = (html, moves, depth) => (boardNavigationEnabled && !openingsOnly)
     ? `<span class="tree-seq__move" data-tree-line="${registerLine(moves, depth)}" role="button" tabindex="0" title="Show this position on the board">${html}</span>`
     : `<span>${html}</span>`;
 
@@ -456,7 +461,7 @@ function layoutTree(displayRoot, el, view) {
 }
 
 // Phase 3 — serialise edges + node boxes to SVG and write it into the element.
-function paintTree(el, displayRoot, allNodes, svgWidth, svgHeight, view, boardNavigationEnabled) {
+function paintTree(el, displayRoot, allNodes, svgWidth, svgHeight, view, boardNavigationEnabled, openingsOnly) {
   const slackX = view.padX, slackY = view.padY;
   const edges = [];
   const collectEdges = node => {
@@ -479,12 +484,18 @@ function paintTree(el, displayRoot, allNodes, svgWidth, svgHeight, view, boardNa
     // Root navigates to a board depth; guess/answer boxes play their whole line.
     // The box is the click target; inner move tokens stop propagation so they
     // still navigate to their own ply instead of the full line.
-    const depthClickable = boardNavigationEnabled && node.boardDepth != null;
-    const lineClickable = boardNavigationEnabled && node.lineId != null;
+    // In openings-only mode (fullscreen) only opening boxes are interactive; the
+    // root and sequence boxes keep their data-* hooks (so the position highlight
+    // still finds them) but render as plain, non-clickable boxes.
+    const openingBox = node.openingId != null;
+    const depthClickable = boardNavigationEnabled && !openingsOnly && node.boardDepth != null;
+    const lineClickable = boardNavigationEnabled && node.lineId != null && (!openingsOnly || openingBox);
     const tag = depthClickable ? "button" : "div";
     let attrs = "";
     if (depthClickable) attrs = ` type="button" data-tree-depth="${node.boardDepth}" title="Show this position on the board"`;
-    else if (lineClickable) attrs = ` role="button" tabindex="0" data-tree-line="${node.lineId}" title="Play this opening on the board"`;
+    else if (lineClickable) attrs = ` role="button" tabindex="0" data-tree-line="${node.lineId}" title="${openingsOnly ? "Inspect this opening" : "Play this opening on the board"}"`;
+    else if (node.boardDepth != null) attrs = ` data-tree-depth="${node.boardDepth}"`;       // hook only
+    else if (node.lineId != null) attrs = ` data-tree-line="${node.lineId}"`;                 // hook only
     if (node.openingId != null) attrs += ` data-opening-id="${node.openingId}"`;
     const interactive = (depthClickable || lineClickable) ? " tree-node--clickable" : "";
     return `<foreignObject x="${node.x}" y="${node.y}" width="${node.width}" height="${node.height}">` +
@@ -517,12 +528,32 @@ function selectInspectorLine(el, openingNode, moves, depth) {
 // Phase 4 — wire click/keyboard navigation on the freshly painted boxes.
 function wireTreeNav(el, treeLines) {
   treeLineMaps.set(el, treeLines);
-  const fullscreen = el.id === "treeFullscreen";
+
+  // Fullscreen: only whole openings are selectable. Wire just the opening boxes
+  // (which carry the full opening line); the root, sequence boxes and moves were
+  // painted as non-interactive, so nothing else responds to clicks.
+  if (el.id === "treeFullscreen") {
+    el.querySelectorAll(".tree-node[data-opening-id][data-tree-line]").forEach(node => {
+      const activate = e => {
+        e.stopPropagation();
+        const line = treeLines.get(node.dataset.treeLine);
+        if (line) selectInspectorLine(el, node, line.moves, line.depth);
+      };
+      node.addEventListener("click", activate);
+      node.addEventListener("keydown", e => {
+        if (e.key !== "Enter" && e.key !== " ") return;
+        e.preventDefault();
+        activate(e);
+      });
+    });
+    if (inspectorPosition) syncTreeBoardPosition(el, treeLines, inspectorPosition.moves, inspectorPosition.depth);
+    return;
+  }
+
+  // Inline tree: full navigation — root depth, opening lines, and single moves.
   el.querySelectorAll("[data-tree-depth]").forEach(node => {
     const depth = Number(node.dataset.treeDepth);
-    const activate = () => fullscreen
-      ? selectInspectorLine(el, null, [], depth)
-      : goBoardDepth(depth);
+    const activate = () => goBoardDepth(depth);
     node.addEventListener("click", activate);
     if (node.tagName === "BUTTON") return;
     node.addEventListener("keydown", e => {
@@ -535,9 +566,7 @@ function wireTreeNav(el, treeLines) {
     const activate = e => {
       e.stopPropagation(); // a move token shouldn't also trigger its box's full line
       const line = treeLines.get(node.dataset.treeLine);
-      if (!line) return;
-      if (fullscreen) selectInspectorLine(el, node.closest(".tree-node[data-opening-id]"), line.moves, line.depth);
-      else goBoardLine(line.moves, line.depth);
+      if (line) goBoardLine(line.moves, line.depth);
     };
     node.addEventListener("click", activate);
     node.addEventListener("keydown", e => {
@@ -546,8 +575,7 @@ function wireTreeNav(el, treeLines) {
       activate(e);
     });
   });
-  const pos = fullscreen ? inspectorPosition : boardPosition;
-  if (pos) syncTreeBoardPosition(el, treeLines, pos.moves, pos.depth);
+  if (boardPosition) syncTreeBoardPosition(el, treeLines, boardPosition.moves, boardPosition.depth);
 }
 
 function sameBoardPosition(line, moves, depth) {
