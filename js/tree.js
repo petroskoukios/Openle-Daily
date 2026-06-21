@@ -590,23 +590,32 @@ function sameBoardPosition(line, moves, depth) {
 }
 
 function syncTreeBoardPosition(el, treeLines, moves, depth) {
-  // An opening's full line can coincide with a collapsed sequence box's line, so
-  // in the fullscreen tree (where selection means an opening) prefer the opening
-  // box; fall back to the first match otherwise.
-  const preferOpenings = el.id === "treeFullscreen";
-  let selected = depth === 0 ? el.querySelector('[data-tree-depth="0"]') : null;
-  if (!selected) {
-    let fallback = null;
-    for (const target of el.querySelectorAll("[data-tree-line]")) {
-      if (!sameBoardPosition(treeLines.get(target.dataset.treeLine), moves, depth)) continue;
-      const node = target.closest(".tree-node");
-      if (!preferOpenings || node?.hasAttribute("data-opening-id")) { selected = node; break; }
-      if (!fallback) fallback = node;
-    }
-    if (!selected) selected = fallback;
-  }
   el.querySelectorAll(".tree-node.is-board-position").forEach(node => node.classList.remove("is-board-position"));
-  selected?.classList.add("is-board-position");
+
+  if (depth === 0) {
+    el.querySelector('[data-tree-depth="0"]')?.classList.add("is-board-position");
+    return;
+  }
+
+  // Every node whose registered line is exactly this position.
+  const matches = [];
+  for (const target of el.querySelectorAll("[data-tree-line]")) {
+    if (!sameBoardPosition(treeLines.get(target.dataset.treeLine), moves, depth)) continue;
+    const node = target.closest(".tree-node");
+    if (node && !matches.includes(node)) matches.push(node);
+  }
+  if (!matches.length) return;
+
+  if (el.id === "treeFullscreen") {
+    // Fullscreen: a single highlight on the opening box (selection is an opening),
+    // since an opening's full line can coincide with a collapsed sequence box.
+    const opening = matches.find(node => node.hasAttribute("data-opening-id"));
+    (opening || matches[0]).classList.add("is-board-position");
+  } else {
+    // Main tree: highlight every node at this position — e.g. the final target
+    // sequence node and the answer/opening leaf both share the same position.
+    for (const node of matches) node.classList.add("is-board-position");
+  }
 }
 
 function applyTreeBoardPosition(id, pos) {
