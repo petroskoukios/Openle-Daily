@@ -24,7 +24,9 @@ let selected = null;       // { openingId } whose info card is currently shown
 let lastSelected = null;   // last full selection, so the tab can re-expand to it
 let line = [];             // moves of the line on the inspector board
 let lineDepth = 0;         // plies of `line` shown (0 = starting position)
-let dest = null;           // { moves, depth } being played toward (null = idle)
+let queuedMoves = null;    // line the playback is walking toward (null = idle)
+let queuedDepth = null;    // destination depth within queuedMoves
+let sliding = false;       // a single-ply slide is currently in flight
 let stepTimer = null;      // ply-by-ply playback timer
 let refitFrame = null;
 
@@ -117,6 +119,16 @@ function announceInspectorPosition() {
   }));
 }
 
+// Enable/disable the nav arrows from the queued destination (like the main
+// board), so the buttons reflect where you'll end up — not whether a slide is
+// mid-flight. Repeated presses queue instead of being blocked.
+function updateInspectorNav() {
+  const navMax = (queuedMoves || line).length;
+  const ceiling = queuedDepth ?? lineDepth;
+  if (prevButton) prevButton.disabled = ceiling <= 0;
+  if (nextButton) nextButton.disabled = ceiling >= navMax;
+}
+
 // Draw the board (optionally mid-slide) and refresh the caption + nav state.
 function paintInspector(slide) {
   inspectorBoard.innerHTML = renderStaticBoard(line, lineDepth, slide);
@@ -124,48 +136,57 @@ function paintInspector(slide) {
   inspectorMoves.innerHTML = lineDepth === 0
     ? `<span class="muted">Starting position</span>`
     : fmtBoardMoves(line, lineDepth, targetMoves);
-  const busy = dest != null;
-  if (prevButton) prevButton.disabled = busy || lineDepth <= 0;
-  if (nextButton) nextButton.disabled = busy || lineDepth >= line.length;
+  updateInspectorNav();
 }
 
 function clearInspectorPlayback() {
   if (stepTimer) { clearTimeout(stepTimer); stepTimer = null; }
-  dest = null;
+  queuedMoves = null;
+  queuedDepth = null;
+  sliding = false;
 }
 
-// Walk one ply toward `dest` — sliding the moved piece — until we arrive, so the
-// inspector plays its moves in order just like the main board. Steps back along
-// the current line to the shared point, then forward along the destination.
-function stepInspectorPlayback() {
-  if (!dest) return;
+// Walk one ply toward the queued destination — sliding the moved piece — until
+// we arrive, so the inspector plays its moves in order like the main board.
+// Steps back along the current line to the shared point, then forward along the
+// destination. A press during a slide just re-points the queue; this no-ops
+// while sliding and the slide's timer resumes it toward the latest target.
+function playQueuedInspectorStep() {
+  if (sliding || queuedDepth == null || !queuedMoves) return;
   const current = lineDepth;
   const currentMoves = line;
-  const destination = dest.depth;
-  const common = commonMoveDepth(currentMoves, current, dest.moves, destination);
+  const destination = Math.max(0, Math.min(queuedMoves.length, queuedDepth));
+  const common = commonMoveDepth(currentMoves, current, queuedMoves, destination);
   if (current === destination && common === destination) {
-    line = dest.moves.slice();
+    line = queuedMoves.slice();
     lineDepth = destination;
-    dest = null;
+    queuedMoves = null;
+    queuedDepth = null;
     paintInspector(null);
     announceInspectorPosition();
     return;
   }
   const movingBack = current > common;
-  const nextMoves = (movingBack ? currentMoves : dest.moves).slice();
+  const nextMoves = (movingBack ? currentMoves : queuedMoves).slice();
   const next = movingBack ? current - 1 : current + 1;
   const slide = { fromMoves: nextMoves, fromDepth: current };
   line = nextMoves;
   lineDepth = next;
+  sliding = true;
   paintInspector(slide);
-  stepTimer = setTimeout(() => { stepTimer = null; stepInspectorPlayback(); }, BOARD_PLAYBACK_STEP_MS);
+  stepTimer = setTimeout(() => {
+    sliding = false;
+    stepTimer = null;
+    playQueuedInspectorStep();
+  }, BOARD_PLAYBACK_STEP_MS);
 }
 
-// Animate from the current position to (moves, depth).
-function playInspectorLine(moves, depth) {
-  clearInspectorPlayback();
-  dest = { moves: moves.slice(), depth: Math.max(0, Math.min(moves.length, depth)) };
-  stepInspectorPlayback();
+// Queue the inspector board to walk to (moves, depth), animating in order.
+function queueInspectorLine(moves, depth) {
+  queuedMoves = moves.slice();
+  queuedDepth = Math.max(0, Math.min(queuedMoves.length, depth));
+  updateInspectorNav();
+  playQueuedInspectorStep();
 }
 
 // Jump straight to (moves, depth) with no animation (reset / initial state).
@@ -177,11 +198,23 @@ function setInspectorLine(moves, depth) {
   announceInspectorPosition();
 }
 
+// One step of forward/back navigation. Presses queue: the base is the queued
+// destination (if a walk is already in flight) so rapid presses accumulate.
 function stepInspector(delta) {
-  if (dest) return; // ignore nav while a line is still playing
-  const next = Math.max(0, Math.min(line.length, lineDepth + delta));
-  if (next === lineDepth) return;
-  playInspectorLine(line, next);
+  const navMax = (queuedMoves || line).length;
+  const base = queuedDepth ?? lineDepth;
+  const next = Math.max(0, Math.min(navMax, base + delta));
+  if (next === base) return;
+  queuedMoves = queuedMoves || line.slice();
+  queuedDepth = next;
+  updateInspectorNav();
+  playQueuedInspectorStep();
+}
+
+// Keyboard arrows drive the inspector board while the panel is open.
+export function stepTreeInspector(delta) {
+  if (!modal.classList.contains("inspector-open")) return;
+  stepInspector(delta);
 }
 
 function showOpeningCard(openingId, moves, depth) {
@@ -216,7 +249,7 @@ function refitDuringTransition() {
 // Open (or update) the inspector for a line selected in the fullscreen tree.
 export function openTreeInspector({ openingId, moves, depth }) {
   const wasOpen = modal.classList.contains("inspector-open");
-  playInspectorLine(moves, depth);   // play the moves in order onto the board
+  queueInspectorLine(moves, depth);   // play the moves in order onto the board
   if (openingId != null) {
     selected = { openingId };
     showOpeningCard(openingId, moves, depth);

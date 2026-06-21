@@ -15,7 +15,7 @@ import { looksLikeMoves, moveTokens, isMoveSearchEnabled } from "./search.js";
 import { openStats, renderStatsView, startPracticeFromWin, recordPractice } from "./stats.js";
 import { doShare } from "./share.js";
 import { modal, input, suggestEl } from "./dom.js";
-import { closeTreeInspector } from "./tree-inspector.js?v=7";
+import { closeTreeInspector, stepTreeInspector } from "./tree-inspector.js?v=7";
 
 const TREE_BUTTON_ZOOM_FACTOR = 1.3;
 const fullscreenZoomSlider = document.getElementById("treeModalZoomSlider");
@@ -59,7 +59,15 @@ document.addEventListener("keydown", e => {
     return;
   }
   const typing = e.target.closest?.("input, textarea, select, [contenteditable='true']");
-  if (typing || suggestEl.classList.contains("open") || document.querySelector(".modal-bg.open")) return;
+  if (typing || suggestEl.classList.contains("open")) return;
+  // In the fullscreen tree, arrows drive the inspector board; elsewhere (no
+  // modal open) they drive the main board.
+  if (document.getElementById("treeModal").classList.contains("open")) {
+    if (e.key === "ArrowLeft") { e.preventDefault(); stepTreeInspector(-1); }
+    else if (e.key === "ArrowRight") { e.preventDefault(); stepTreeInspector(1); }
+    return;
+  }
+  if (document.querySelector(".modal-bg.open")) return;
   if (e.key === "ArrowLeft") { e.preventDefault(); stepBoard(-1); }
   else if (e.key === "ArrowRight") { e.preventDefault(); stepBoard(1); }
 });
