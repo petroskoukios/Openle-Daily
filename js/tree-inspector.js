@@ -112,10 +112,12 @@ function copyCurrentFen() {
   copyText(copyFenButton, movesToFen(line, lineDepth), "Copy FEN", "Copy the current position:");
 }
 
-// Tell the fullscreen tree which position the inspector board is showing.
-function announceInspectorPosition() {
+// Tell the fullscreen tree which position to highlight. Defaults to what's on
+// the board, but a selection announces its destination up front so the tree's
+// highlight jumps to the clicked opening immediately, before the moves animate.
+function announceInspectorPosition(moves = line, depth = lineDepth) {
   document.dispatchEvent(new CustomEvent("ot:inspector-position", {
-    detail: { moves: line.slice(), depth: lineDepth },
+    detail: { moves: moves.slice(), depth },
   }));
 }
 
@@ -185,6 +187,7 @@ function playQueuedInspectorStep() {
 function queueInspectorLine(moves, depth) {
   queuedMoves = moves.slice();
   queuedDepth = Math.max(0, Math.min(queuedMoves.length, depth));
+  announceInspectorPosition(queuedMoves, queuedDepth); // highlight the destination now
   updateInspectorNav();
   playQueuedInspectorStep();
 }
@@ -270,8 +273,6 @@ export function closeTreeInspector({ refit = true, forget = true } = {}) {
   }
   modal.classList.remove("inspector-open");
   panel.setAttribute("aria-hidden", "true");
-  document.querySelectorAll("#treeFullscreen .tree-node.is-inspected")
-    .forEach(node => node.classList.remove("is-inspected"));
   if (refit && wasOpen) refitDuringTransition();
 }
 

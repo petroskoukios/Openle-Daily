@@ -513,10 +513,15 @@ function paintTree(el, displayRoot, allNodes, svgWidth, svgHeight, view, boardNa
 
 // The fullscreen tree drives its own inspector board, kept fully separate from
 // the main board: clicks dispatch a line-select event instead of touching the
-// live board, and mark the chosen opening box as inspected.
-function selectInspectorLine(el, openingNode, moves, depth) {
-  el.querySelectorAll(".tree-node.is-inspected").forEach(item => item.classList.remove("is-inspected"));
-  if (openingNode) openingNode.classList.add("is-inspected");
+// live board. The "you are here" highlight uses the same is-board-position
+// marker the main board uses, and switches to the clicked opening box right
+// away — before the moves animate onto the inspector board.
+function selectInspectorLine(openingNode, moves, depth) {
+  if (openingNode) {
+    document.querySelectorAll("#treeFullscreen .tree-node.is-board-position")
+      .forEach(node => node.classList.remove("is-board-position"));
+    openingNode.classList.add("is-board-position");
+  }
   document.dispatchEvent(new CustomEvent("ot:tree-line-select", {
     detail: {
       openingId: openingNode ? Number(openingNode.dataset.openingId) : null,
@@ -537,7 +542,7 @@ function wireTreeNav(el, treeLines) {
       const activate = e => {
         e.stopPropagation();
         const line = treeLines.get(node.dataset.treeLine);
-        if (line) selectInspectorLine(el, node, line.moves, line.depth);
+        if (line) selectInspectorLine(node, line.moves, line.depth);
       };
       node.addEventListener("click", activate);
       node.addEventListener("keydown", e => {
@@ -585,13 +590,20 @@ function sameBoardPosition(line, moves, depth) {
 }
 
 function syncTreeBoardPosition(el, treeLines, moves, depth) {
+  // An opening's full line can coincide with a collapsed sequence box's line, so
+  // in the fullscreen tree (where selection means an opening) prefer the opening
+  // box; fall back to the first match otherwise.
+  const preferOpenings = el.id === "treeFullscreen";
   let selected = depth === 0 ? el.querySelector('[data-tree-depth="0"]') : null;
   if (!selected) {
+    let fallback = null;
     for (const target of el.querySelectorAll("[data-tree-line]")) {
       if (!sameBoardPosition(treeLines.get(target.dataset.treeLine), moves, depth)) continue;
-      selected = target.closest(".tree-node");
-      break;
+      const node = target.closest(".tree-node");
+      if (!preferOpenings || node?.hasAttribute("data-opening-id")) { selected = node; break; }
+      if (!fallback) fallback = node;
     }
+    if (!selected) selected = fallback;
   }
   el.querySelectorAll(".tree-node.is-board-position").forEach(node => node.classList.remove("is-board-position"));
   selected?.classList.add("is-board-position");
