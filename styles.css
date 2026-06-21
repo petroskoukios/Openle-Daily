@@ -271,6 +271,9 @@ button.tree-node:focus-visible { outline: 2px solid var(--accent-hover); outline
 .tree-node--answer.tree-node--target {
   background: linear-gradient(rgba(97,152,202,.14), rgba(97,152,202,.14)), var(--surface); border-color: var(--good-dim); color: var(--good);
 }
+/* When selected, the answer leaf takes the brighter selected-blue border like
+   the main tree's selected target nodes (the base rule above would dim it). */
+.tree-node--answer.tree-node--target.is-board-position { border-color: rgba(125,174,220,.7); }
 .tree-node__answer-mark { font-size: 8.5px; font-weight: 800; text-transform: uppercase; }
 .tree-node.is-latest { animation: tree-node-arrive .42s ease-out both; }
 @keyframes tree-node-arrive {
