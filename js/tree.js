@@ -63,7 +63,8 @@ const TREE_ZOOM_STEP = .15;
 const TREE_DEFAULT_ZOOM = 1.2;
 const treeViews = new WeakMap();
 const treeLineMaps = new WeakMap();
-let boardPosition = null;
+let boardPosition = null;       // position shown on the main board (inline tree)
+let inspectorPosition = null;   // position shown on the inspector board (fullscreen tree)
 
 function treeView(el) {
   if (!treeViews.has(el)) {
@@ -499,11 +500,29 @@ function paintTree(el, displayRoot, allNodes, svgWidth, svgHeight, view, boardNa
     `<g class="tree-edges">${edges.join("")}</g><g class="tree-nodes">${allNodes.map(nodeMarkup).join("")}</g></svg></div>`;
 }
 
+// The fullscreen tree drives its own inspector board, kept fully separate from
+// the main board: clicks dispatch a line-select event instead of touching the
+// live board, and mark the chosen opening box as inspected.
+function selectInspectorLine(el, openingNode, moves, depth) {
+  el.querySelectorAll(".tree-node.is-inspected").forEach(item => item.classList.remove("is-inspected"));
+  if (openingNode) openingNode.classList.add("is-inspected");
+  document.dispatchEvent(new CustomEvent("ot:tree-line-select", {
+    detail: {
+      openingId: openingNode ? Number(openingNode.dataset.openingId) : null,
+      moves: moves.slice(), depth,
+    },
+  }));
+}
+
 // Phase 4 — wire click/keyboard navigation on the freshly painted boxes.
 function wireTreeNav(el, treeLines) {
   treeLineMaps.set(el, treeLines);
+  const fullscreen = el.id === "treeFullscreen";
   el.querySelectorAll("[data-tree-depth]").forEach(node => {
-    const activate = () => goBoardDepth(Number(node.dataset.treeDepth));
+    const depth = Number(node.dataset.treeDepth);
+    const activate = () => fullscreen
+      ? selectInspectorLine(el, null, [], depth)
+      : goBoardDepth(depth);
     node.addEventListener("click", activate);
     if (node.tagName === "BUTTON") return;
     node.addEventListener("keydown", e => {
@@ -517,15 +536,8 @@ function wireTreeNav(el, treeLines) {
       e.stopPropagation(); // a move token shouldn't also trigger its box's full line
       const line = treeLines.get(node.dataset.treeLine);
       if (!line) return;
-      goBoardLine(line.moves, line.depth);
-      const openingNode = node.closest(".tree-node[data-opening-id]");
-      if (el.id === "treeFullscreen" && openingNode) {
-        el.querySelectorAll(".tree-node.is-inspected").forEach(item => item.classList.remove("is-inspected"));
-        openingNode.classList.add("is-inspected");
-        document.dispatchEvent(new CustomEvent("ot:tree-opening-select", {
-          detail: { openingId: Number(openingNode.dataset.openingId), moves: line.moves.slice(), depth: line.depth },
-        }));
-      }
+      if (fullscreen) selectInspectorLine(el, node.closest(".tree-node[data-opening-id]"), line.moves, line.depth);
+      else goBoardLine(line.moves, line.depth);
     };
     node.addEventListener("click", activate);
     node.addEventListener("keydown", e => {
@@ -534,7 +546,8 @@ function wireTreeNav(el, treeLines) {
       activate(e);
     });
   });
-  if (boardPosition) syncTreeBoardPosition(el, treeLines, boardPosition.moves, boardPosition.depth);
+  const pos = fullscreen ? inspectorPosition : boardPosition;
+  if (pos) syncTreeBoardPosition(el, treeLines, pos.moves, pos.depth);
 }
 
 function sameBoardPosition(line, moves, depth) {
@@ -556,13 +569,22 @@ function syncTreeBoardPosition(el, treeLines, moves, depth) {
   selected?.classList.add("is-board-position");
 }
 
+function applyTreeBoardPosition(id, pos) {
+  const el = document.getElementById(id);
+  const treeLines = el && treeLineMaps.get(el);
+  if (treeLines && pos) syncTreeBoardPosition(el, treeLines, pos.moves, pos.depth);
+}
+
+// The main board highlights the inline tree; the inspector board highlights the
+// fullscreen tree. The two stay independent so navigating one never moves the
+// other's "you are here" marker.
 document.addEventListener("ot:board-position", e => {
   boardPosition = e.detail;
-  for (const id of ["tree", "treeFullscreen"]) {
-    const el = document.getElementById(id);
-    const treeLines = el && treeLineMaps.get(el);
-    if (treeLines) syncTreeBoardPosition(el, treeLines, boardPosition.moves, boardPosition.depth);
-  }
+  applyTreeBoardPosition("tree", boardPosition);
+});
+document.addEventListener("ot:inspector-position", e => {
+  inspectorPosition = e.detail;
+  applyTreeBoardPosition("treeFullscreen", inspectorPosition);
 });
 
 // Phase 5 — centre the newly confirmed move on first render of a puzzle, but

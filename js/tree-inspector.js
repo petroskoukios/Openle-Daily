@@ -1,8 +1,13 @@
-/* Fullscreen tree inspector: opening metadata plus a live mirror of the board. */
+/* Fullscreen tree inspector: opening metadata plus a board that is fully
+   independent of the main board. It shows whatever line was selected in the
+   fullscreen tree (defaulting to the starting position) and has its own
+   prev/next navigation — navigating it never touches the main board, and the
+   main board never changes it. */
 import { OPENINGS } from "./data.js";
-import { fmtBoardMoves } from "./format.js";
+import { fmtBoardMoves, commonMoveDepth } from "./format.js";
 import { fitFullscreenTree } from "./tree.js";
 import { state } from "./state.js";
+import { renderStaticBoard, BOARD_PLAYBACK_STEP_MS } from "./board.js";
 
 const modal = document.querySelector(".tree-modal");
 const panel = document.getElementById("treeInspector");
@@ -12,19 +17,16 @@ const inspectorMoves = document.getElementById("treeInspectorMoves");
 const inspectorCardMoves = document.getElementById("treeInspectorCardMoves");
 const copyButton = document.getElementById("treeInspectorCopy");
 const copyFenButton = document.getElementById("treeInspectorCopyFen");
-const sourceBoard = document.getElementById("board");
-const sourceMoves = document.getElementById("boardCap");
-let selected = null;
-let lastSelected = null;   // survives a collapse so the tab can re-expand to it
-let syncFrame = null;
-let refitFrame = null;
+const prevButton = document.getElementById("treeInspectorPrev");
+const nextButton = document.getElementById("treeInspectorNext");
 
-function syncBoardMirror() {
-  syncFrame = null;
-  if (!modal.classList.contains("inspector-open")) return;
-  inspectorBoard.innerHTML = sourceBoard.innerHTML;
-  if (sourceMoves.textContent.trim()) inspectorMoves.innerHTML = sourceMoves.innerHTML;
-}
+let selected = null;       // { openingId } whose info card is currently shown
+let lastSelected = null;   // last full selection, so the tab can re-expand to it
+let line = [];             // moves of the line on the inspector board
+let lineDepth = 0;         // plies of `line` shown (0 = starting position)
+let dest = null;           // { moves, depth } being played toward (null = idle)
+let stepTimer = null;      // ply-by-ply playback timer
+let refitFrame = null;
 
 function movesToPgn(moves) {
   let pgn = "";
@@ -101,20 +103,97 @@ async function copyText(button, text, idleLabel, fallbackPrompt) {
 }
 
 function copyCurrentLine() {
-  if (!selected) return;
-  const pgn = movesToPgn(selected.moves.slice(0, selected.depth));
-  copyText(copyButton, pgn, "Copy PGN", "Copy the current line:");
+  copyText(copyButton, movesToPgn(line.slice(0, lineDepth)), "Copy PGN", "Copy the current line:");
 }
 
 function copyCurrentFen() {
-  if (!selected) return;
-  const fen = movesToFen(selected.moves, selected.depth);
-  copyText(copyFenButton, fen, "Copy FEN", "Copy the current position:");
+  copyText(copyFenButton, movesToFen(line, lineDepth), "Copy FEN", "Copy the current position:");
 }
 
-function scheduleMirrorSync() {
-  if (syncFrame) return;
-  syncFrame = requestAnimationFrame(syncBoardMirror);
+// Tell the fullscreen tree which position the inspector board is showing.
+function announceInspectorPosition() {
+  document.dispatchEvent(new CustomEvent("ot:inspector-position", {
+    detail: { moves: line.slice(), depth: lineDepth },
+  }));
+}
+
+// Draw the board (optionally mid-slide) and refresh the caption + nav state.
+function paintInspector(slide) {
+  inspectorBoard.innerHTML = renderStaticBoard(line, lineDepth, slide);
+  const targetMoves = (state && state.target) ? state.target.moves : line;
+  inspectorMoves.innerHTML = lineDepth === 0
+    ? `<span class="muted">Starting position</span>`
+    : fmtBoardMoves(line, lineDepth, targetMoves);
+  const busy = dest != null;
+  if (prevButton) prevButton.disabled = busy || lineDepth <= 0;
+  if (nextButton) nextButton.disabled = busy || lineDepth >= line.length;
+}
+
+function clearInspectorPlayback() {
+  if (stepTimer) { clearTimeout(stepTimer); stepTimer = null; }
+  dest = null;
+}
+
+// Walk one ply toward `dest` — sliding the moved piece — until we arrive, so the
+// inspector plays its moves in order just like the main board. Steps back along
+// the current line to the shared point, then forward along the destination.
+function stepInspectorPlayback() {
+  if (!dest) return;
+  const current = lineDepth;
+  const currentMoves = line;
+  const destination = dest.depth;
+  const common = commonMoveDepth(currentMoves, current, dest.moves, destination);
+  if (current === destination && common === destination) {
+    line = dest.moves.slice();
+    lineDepth = destination;
+    dest = null;
+    paintInspector(null);
+    announceInspectorPosition();
+    return;
+  }
+  const movingBack = current > common;
+  const nextMoves = (movingBack ? currentMoves : dest.moves).slice();
+  const next = movingBack ? current - 1 : current + 1;
+  const slide = { fromMoves: nextMoves, fromDepth: current };
+  line = nextMoves;
+  lineDepth = next;
+  paintInspector(slide);
+  stepTimer = setTimeout(() => { stepTimer = null; stepInspectorPlayback(); }, BOARD_PLAYBACK_STEP_MS);
+}
+
+// Animate from the current position to (moves, depth).
+function playInspectorLine(moves, depth) {
+  clearInspectorPlayback();
+  dest = { moves: moves.slice(), depth: Math.max(0, Math.min(moves.length, depth)) };
+  stepInspectorPlayback();
+}
+
+// Jump straight to (moves, depth) with no animation (reset / initial state).
+function setInspectorLine(moves, depth) {
+  clearInspectorPlayback();
+  line = moves.slice();
+  lineDepth = Math.max(0, Math.min(depth, line.length));
+  paintInspector(null);
+  announceInspectorPosition();
+}
+
+function stepInspector(delta) {
+  if (dest) return; // ignore nav while a line is still playing
+  const next = Math.max(0, Math.min(line.length, lineDepth + delta));
+  if (next === lineDepth) return;
+  playInspectorLine(line, next);
+}
+
+function showOpeningCard(openingId, moves, depth) {
+  const opening = OPENINGS[openingId];
+  if (!opening) return;
+  document.getElementById("treeInspectorName").textContent = opening.name;
+  document.getElementById("treeInspectorEco").textContent = opening.eco;
+  // Only the puzzle's target opening gets the accent (blue) name/star/moves.
+  inspectorCard.classList.toggle("is-target", !!state && state.target.id === openingId);
+  // Colour each ply by whether it stays on the target path (.sh) or diverges (.branch).
+  const targetMoves = (state && state.target) ? state.target.moves : moves;
+  inspectorCardMoves.innerHTML = fmtBoardMoves(moves, depth, targetMoves);
 }
 
 function refitDuringTransition() {
@@ -134,33 +213,28 @@ function refitDuringTransition() {
   refitFrame = requestAnimationFrame(followLayout);
 }
 
+// Open (or update) the inspector for a line selected in the fullscreen tree.
 export function openTreeInspector({ openingId, moves, depth }) {
-  const opening = OPENINGS[openingId];
-  if (!opening) return;
   const wasOpen = modal.classList.contains("inspector-open");
-  selected = { openingId, moves: moves.slice(), depth };
-  lastSelected = selected;
-
-  document.getElementById("treeInspectorName").textContent = opening.name;
-  document.getElementById("treeInspectorEco").textContent = opening.eco;
-  // Only the puzzle's target opening gets the accent (blue) name/star/moves.
-  inspectorCard.classList.toggle("is-target", !!state && state.target.id === openingId);
-  // Colour each ply by whether it stays on the target path (.sh) or diverges (.branch).
-  const targetMoves = (state && state.target) ? state.target.moves : moves;
-  const lineHtml = fmtBoardMoves(moves, depth, targetMoves);
-  inspectorMoves.innerHTML = lineHtml;
-  inspectorCardMoves.innerHTML = lineHtml;
+  playInspectorLine(moves, depth);   // play the moves in order onto the board
+  if (openingId != null) {
+    selected = { openingId };
+    showOpeningCard(openingId, moves, depth);
+  }
+  lastSelected = { openingId, moves: moves.slice(), depth };
 
   modal.classList.add("inspector-open");
   panel.setAttribute("aria-hidden", "false");
-  scheduleMirrorSync();
   if (!wasOpen) refitDuringTransition();
 }
 
 export function closeTreeInspector({ refit = true, forget = true } = {}) {
   const wasOpen = modal.classList.contains("inspector-open");
   selected = null;
-  if (forget) lastSelected = null;   // a collapse (forget:false) keeps it for re-expand
+  if (forget) {                 // a collapse (forget:false) keeps the line for re-expand
+    lastSelected = null;
+    setInspectorLine([], 0);    // reset to the starting position for the next open
+  }
   modal.classList.remove("inspector-open");
   panel.setAttribute("aria-hidden", "true");
   document.querySelectorAll("#treeFullscreen .tree-node.is-inspected")
@@ -175,22 +249,22 @@ function toggleTreeInspector() {
   } else if (lastSelected) {
     openTreeInspector(lastSelected);
   } else {
+    setInspectorLine([], 0);    // default state: the starting position
     modal.classList.add("inspector-open");
     panel.setAttribute("aria-hidden", "false");
-    scheduleMirrorSync();
     refitDuringTransition();
   }
 }
 
 export function refreshTreeInspector() {
-  if (!selected) return;
-  scheduleMirrorSync();
+  paintInspector(null);
 }
 
-new MutationObserver(scheduleMirrorSync).observe(sourceBoard, { childList: true, subtree: true, attributes: true });
-new MutationObserver(scheduleMirrorSync).observe(sourceMoves, { childList: true, subtree: true, characterData: true });
-
-document.addEventListener("ot:tree-opening-select", e => openTreeInspector(e.detail));
+document.addEventListener("ot:tree-line-select", e => openTreeInspector(e.detail));
 document.getElementById("treeInspectorCollapse").addEventListener("click", toggleTreeInspector);
+prevButton?.addEventListener("click", () => stepInspector(-1));
+nextButton?.addEventListener("click", () => stepInspector(1));
 copyButton.addEventListener("click", copyCurrentLine);
 copyFenButton.addEventListener("click", copyCurrentFen);
+
+setInspectorLine([], 0); // initial state: the starting position
