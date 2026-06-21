@@ -581,17 +581,17 @@ html:has(.tree-modal-bg.open) { overflow: hidden; }
 /* ---- Current line (top row) ---- */
 .tree-inspector-line { display: flex; align-items: flex-start; justify-content: space-between; gap: 14px; margin-bottom: 16px; }
 .tree-inspector-line > div { min-width: 0; }
-.tree-inspector-kicker { color: var(--muted); font-size: 13px; font-weight: 600; }
-.tree-inspector-moves { min-height: 26px; margin: 4px 0 0; color: var(--accent); font: 700 19px/1.3 var(--mono); }
+.tree-inspector-kicker { color: var(--muted); font-size: 12.5px; font-weight: 600; }
+.tree-inspector-moves { min-height: 24px; margin: 4px 0 0; color: var(--accent); font: 700 18px/1.3 var(--mono); }
 .tree-inspector-moves .num { color: var(--muted-2); }
 .tree-inspector-moves .sh { color: var(--accent); }
 .tree-inspector-moves .branch { color: var(--miss); }
 .tree-inspector-moves .muted { color: var(--muted); font-family: var(--sans); }
 .tree-inspector-nav { display: flex; gap: 7px; flex: 0 0 auto; margin-left: auto; }
 .tree-inspector-nav .iconbtn {
-  width: 40px; height: 40px; padding: 0; border-radius: 9px;
+  width: 38px; height: 38px; padding: 0; border-radius: 9px;
   border: 1px solid var(--ins-border); background: var(--ins-raise); color: var(--text);
-  font-size: 20px; line-height: 1; transition: background .12s;
+  font-size: 18px; line-height: 1; transition: background .12s;
 }
 .tree-inspector-nav .iconbtn:hover { color: var(--text); background: var(--ins-raise-hover); }
 
@@ -623,35 +623,40 @@ html:has(.tree-modal-bg.open) { overflow: hidden; }
   border-radius: 12px; background: var(--ins-card);
 }
 .tree-inspector-title-row { display: flex; align-items: center; gap: 9px; }
-.tree-inspector-mark { color: var(--accent-hover); font-size: 16px; }
-.tree-inspector-card h3 { margin: 0; color: var(--accent-hover); font-size: 18px; line-height: 1.2; font-weight: 800; }
+.tree-inspector-mark { display: none; color: var(--accent-hover); font-size: 15px; }
+.tree-inspector-card h3 { margin: 0; color: var(--text); font-size: 17px; line-height: 1.2; font-weight: 800; }
 .tree-inspector-card .eco {
   margin-left: 2px; padding: 3px 9px; border-radius: 6px;
-  background: rgba(97,152,202,.16); color: var(--accent-hover); font: 700 11px var(--mono);
+  background: rgba(97,152,202,.16); color: var(--accent-hover); font: 700 10.5px var(--mono);
 }
 .tree-inspector-card .eco:empty { display: none; }
-.tree-inspector-card-moves { margin-top: 9px; color: var(--accent); font: 700 14px/1.4 var(--mono); }
+.tree-inspector-card-moves { margin-top: 9px; font: 700 13px/1.4 var(--mono); }
 .tree-inspector-card-moves .num { color: var(--muted-2); }
-.tree-inspector-description { margin: 11px 0 0 !important; color: var(--muted) !important; font-size: 13.5px !important; line-height: 1.5; }
+.tree-inspector-card-moves .sh { color: var(--accent); }    /* correct: on the target path */
+.tree-inspector-card-moves .branch { color: var(--miss); }  /* incorrect: diverged */
+/* Only the puzzle's target opening shows the star and an accent name. */
+.tree-inspector-card.is-target .tree-inspector-mark { display: inline; }
+.tree-inspector-card.is-target h3 { color: var(--accent-hover); }
+.tree-inspector-description { margin: 11px 0 0 !important; color: var(--muted) !important; font-size: 13px !important; line-height: 1.5; }
 .tree-inspector-meta { display: grid; grid-template-columns: repeat(3, 1fr); gap: 9px; margin-top: 15px; }
 .tree-inspector-meta div {
   min-width: 0; padding: 11px 6px; text-align: center;
   border: 1px solid var(--ins-border); border-radius: 9px; background: rgba(255,255,255,.02);
 }
-.tree-inspector-meta span { display: block; color: var(--muted); font-size: 11px; }
-.tree-inspector-meta b { display: block; overflow: hidden; margin-top: 4px; color: var(--text); font-size: 20px; font-weight: 800; text-overflow: ellipsis; white-space: nowrap; }
+.tree-inspector-meta span { display: block; color: var(--muted); font-size: 10.5px; }
+.tree-inspector-meta b { display: block; overflow: hidden; margin-top: 4px; color: var(--text); font-size: 18px; font-weight: 800; text-overflow: ellipsis; white-space: nowrap; }
 
 /* ---- Action button stack ---- */
 .tree-inspector-action {
   display: flex; align-items: center; justify-content: center; gap: 10px;
-  width: 100%; min-height: 50px; margin-top: 12px; border: 1px solid var(--ins-border);
+  width: 100%; min-height: 46px; margin-top: 12px; border: 1px solid var(--ins-border);
   border-radius: 11px; background: var(--ins-raise);
   color: var(--text); cursor: pointer;
-  font: 700 14px var(--sans);
+  font: 700 13px var(--sans);
   transition: background .12s, border-color .12s, filter .12s;
 }
 .tree-inspector-action:hover { background: var(--ins-raise-hover); }
-.tree-inspector-action svg { width: 18px; height: 18px; color: var(--muted); }
+.tree-inspector-action svg { width: 16px; height: 16px; color: var(--muted); }
 .tree-inspector-card + .tree-inspector-action { margin-top: 16px; }
 .tree-inspector-action-split {
   display: grid; grid-template-columns: 1fr 1fr; margin-top: 12px;

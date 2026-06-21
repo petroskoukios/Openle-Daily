@@ -1,10 +1,12 @@
 /* Fullscreen tree inspector: opening metadata plus a live mirror of the board. */
 import { OPENINGS } from "./data.js";
-import { fmtMoves } from "./format.js";
+import { fmtBoardMoves } from "./format.js";
 import { fitFullscreenTree } from "./tree.js";
+import { state } from "./state.js";
 
 const modal = document.querySelector(".tree-modal");
 const panel = document.getElementById("treeInspector");
+const inspectorCard = document.querySelector(".tree-inspector-card");
 const inspectorBoard = document.getElementById("treeInspectorBoard");
 const inspectorMoves = document.getElementById("treeInspectorMoves");
 const inspectorCardMoves = document.getElementById("treeInspectorCardMoves");
@@ -139,7 +141,11 @@ export function openTreeInspector({ openingId, moves, depth }) {
 
   document.getElementById("treeInspectorName").textContent = opening.name;
   document.getElementById("treeInspectorEco").textContent = opening.eco;
-  const lineHtml = fmtMoves(moves.slice(0, depth), "");
+  // Only the puzzle's target opening gets the accent (blue) name/star/moves.
+  inspectorCard.classList.toggle("is-target", !!state && state.target.id === openingId);
+  // Colour each ply by whether it stays on the target path (.sh) or diverges (.branch).
+  const targetMoves = (state && state.target) ? state.target.moves : moves;
+  const lineHtml = fmtBoardMoves(moves, depth, targetMoves);
   inspectorMoves.innerHTML = lineHtml;
   inspectorCardMoves.innerHTML = lineHtml;
 
