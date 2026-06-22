@@ -476,7 +476,7 @@ html:has(.tree-modal-bg.open) { overflow: hidden; }
   background: linear-gradient(180deg, rgba(36,42,52,.96), rgba(28,32,40,.96));
 }
 .tree-modal-brand { display: flex; align-items: center; gap: 10px; transform: translateY(2px); }
-.tree-modal-brand img { display: block; width: auto; height: 27px; }
+.tree-modal-brand img { display: block; width: auto; height: 28px; }
 .tree-modal-brand span { color: var(--text); font-size: 27px; line-height: 1; font-weight: 800; letter-spacing: -.02em; transform: translateY(-2px); }
 .tree-modal-context { display: flex; gap: 3px; padding: 3px; border-radius: 7px; background: var(--surface); }
 .tree-modal-context span { padding: 5px 10px; border-radius: 5px; color: var(--muted); font-size: 13px; font-weight: 700; }
