@@ -15,6 +15,8 @@ const inspectorCard = document.querySelector(".tree-inspector-card");
 const inspectorBoard = document.getElementById("treeInspectorBoard");
 const inspectorMoves = document.getElementById("treeInspectorMoves");
 const inspectorCardMoves = document.getElementById("treeInspectorCardMoves");
+const inspectorDescription = document.getElementById("treeInspectorDescription");
+const inspectorSource = document.getElementById("treeInspectorSource");
 const copyButton = document.getElementById("treeInspectorCopy");
 const copyFenButton = document.getElementById("treeInspectorCopyFen");
 const prevButton = document.getElementById("treeInspectorPrev");
@@ -230,6 +232,23 @@ function showOpeningCard(openingId, moves, depth) {
   // Colour each ply by whether it stays on the target path (.sh) or diverges (.branch).
   const targetMoves = (state && state.target) ? state.target.moves : moves;
   inspectorCardMoves.innerHTML = fmtBoardMoves(moves, depth, targetMoves);
+  showDescription(opening.name);
+}
+
+// Family-level description from the bundled Wikipedia extracts (descriptions.js).
+function showDescription(name) {
+  const colon = name.indexOf(":");
+  const family = (colon === -1 ? name : name.slice(0, colon)).trim();
+  const desc = (window.OPENING_DESCRIPTIONS || {})[family];
+  if (desc) {
+    inspectorDescription.textContent = desc.text;
+    inspectorDescription.style.display = "";
+    inspectorSource.href = desc.url;
+    inspectorSource.style.display = "";
+  } else {
+    inspectorDescription.style.display = "none";
+    inspectorSource.style.display = "none";
+  }
 }
 
 function refitDuringTransition() {
