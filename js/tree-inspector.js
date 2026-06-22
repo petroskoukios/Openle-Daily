@@ -252,6 +252,12 @@ function refitDuringTransition() {
 // Open (or update) the inspector for a line selected in the fullscreen tree.
 export function openTreeInspector({ openingId, moves, depth }) {
   const wasOpen = modal.classList.contains("inspector-open");
+  // Clicking the opening that's already showing collapses the panel without
+  // deselecting it — the opening stays highlighted and can be re-expanded.
+  if (wasOpen && openingId != null && selected && selected.openingId === openingId) {
+    closeTreeInspector({ forget: false });
+    return;
+  }
   queueInspectorLine(moves, depth);   // play the moves in order onto the board
   if (openingId != null) {
     selected = { openingId };
