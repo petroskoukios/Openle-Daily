@@ -1,7 +1,6 @@
 /* Move-notation formatting helpers. Pure string builders — no DOM, no state. */
 
 export function esc(s) { return s.replace(/[&<>]/g, c => ({ "&": "&amp;", "<": "&lt;", ">": "&gt;" }[c])); }
-export function trunc(s, n) { return s.length > n ? s.slice(0, n - 1) + "…" : s; }
 
 // Render an array of plies as "1.e4 e5 2.Nf3" with numbered spans.
 export function fmtMoves(moves, cls) {

@@ -1,7 +1,7 @@
 /* Entry point: modal helpers, event wiring, boot, and the window.__OT hook
    that the test harness (tests.html) reads. Importing this module pulls in the
    whole graph, so the self-wiring modules (search, history) initialise too. */
-import { OPENINGS, POOLS, DIFFS, DIFF_LIMITS, GUESS_LIMITS, HINT_COST, tierOf } from "./data.js";
+import { OPENINGS, POOLS, TARGET_POOLS, DIFFS, DIFF_LIMITS, GUESS_LIMITS, HINT_COST, tierOf } from "./data.js";
 import { dailyTarget } from "./daily.js";
 import { compare, guessLimit, confirmedDepth, hintsUsed, guessBudgetUsed, guessBudgetLeft } from "./domain.js";
 import { commonMoveDepth } from "./format.js";
@@ -143,7 +143,7 @@ boot();
 
 // Debug / test hook — read by tests.html via the iframe's window.__OT.
 window.__OT = {
-  OPENINGS, POOLS, DIFFS, DIFF_LIMITS, GUESS_LIMITS, HINT_COST, guessLimit, tierOf, dailyTarget, compare, submitGuess, requestHint,
+  OPENINGS, POOLS, TARGET_POOLS, DIFFS, DIFF_LIMITS, GUESS_LIMITS, HINT_COST, guessLimit, tierOf, dailyTarget, compare, submitGuess, requestHint,
   // Pure helpers exposed for the test harness (tests.html):
   commonMoveDepth, confirmedDepth, hintsUsed, guessBudgetUsed, guessBudgetLeft, looksLikeMoves, moveTokens,
   createBoardView, resolveBoardView, navCeiling,

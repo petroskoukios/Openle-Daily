@@ -157,12 +157,12 @@
   function suiteDaily(OT) {
     group("Daily selection — dailyTarget()");
     for (const diff of OT.DIFFS) {
-      const pool = OT.POOLS[diff], len = pool.length;
+      const pool = OT.TARGET_POOLS[diff], len = pool.length;
       check(`${diff}: deterministic (same day → same target)`,
         OT.dailyTarget(100, diff) === OT.dailyTarget(100, diff));
-      check(`${diff}: target is drawn from the pool`,
-        pool.includes(OT.dailyTarget(100, diff)));
-      check(`${diff}: cycle period equals pool size`,
+      check(`${diff}: target is drawn from this tier only`,
+        pool.includes(OT.dailyTarget(100, diff)) && OT.tierOf(OT.dailyTarget(100, diff)) === diff);
+      check(`${diff}: cycle period equals target-pool size`,
         OT.dailyTarget(7, diff) === OT.dailyTarget(7 + len, diff));
       check(`${diff}: negative day numbers handled`,
         pool.includes(OT.dailyTarget(-1, diff)));
@@ -176,10 +176,10 @@
   /* ---------------- Difficulty pools ---------------- */
   function suitePools(OT) {
     group("Difficulty pools — cumulative invariants");
-    eq("pool sizes are 32 / 64 / 128 / 256",
-      OT.DIFFS.map(d => OT.POOLS[d].length), [32, 64, 128, 256]);
+    eq("pool sizes are 32 / 96 / 224 / 480",
+      OT.DIFFS.map(d => OT.POOLS[d].length), [32, 96, 224, 480]);
     eq("DIFF_LIMITS matches pool sizes",
-      OT.DIFF_LIMITS, { easy: 32, medium: 64, hard: 128, expert: 256 });
+      OT.DIFF_LIMITS, { easy: 32, medium: 96, hard: 224, expert: 480 });
 
     const ids = d => new Set(OT.POOLS[d].map(o => o.id));
     const subset = (a, b) => [...a].every(x => b.has(x));
@@ -194,6 +194,15 @@
       for (const o of OT.POOLS[d])
         if (order[OT.tierOf(o)] > order[d]) leak.push(`${o.name}@${d}`);
     check("no pool contains an above-tier opening", leak.length === 0, offenders(leak));
+
+    // Target pools are exclusive: solution comes only from that tier.
+    eq("target-pool sizes are 32 / 64 / 128 / 256",
+      OT.DIFFS.map(d => OT.TARGET_POOLS[d].length), [32, 64, 128, 256]);
+    const tgtLeak = [];
+    for (const d of OT.DIFFS)
+      for (const o of OT.TARGET_POOLS[d])
+        if (OT.tierOf(o) !== d) tgtLeak.push(`${o.name}@${d}`);
+    check("each target pool holds only its own tier", tgtLeak.length === 0, offenders(tgtLeak));
   }
 
   /* ---------------- Limits / constants ---------------- */

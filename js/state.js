@@ -2,7 +2,7 @@
    `state` and `difficulty` are live module bindings: read them directly via the
    import, mutate object properties in place, and reassign only through the
    setters so every importer sees the change. */
-import { POOLS, OPENINGS, DIFFS } from "./data.js";
+import { TARGET_POOLS, OPENINGS, DIFFS } from "./data.js";
 import { dailyTarget, localDayNumber } from "./daily.js";
 import { compare, hintsUsed } from "./domain.js";
 
@@ -13,7 +13,7 @@ export const LS = {
 
 // Daily progress is per (day, difficulty); stats are per (mode, difficulty).
 // Version daily saves whenever opening IDs or pool assignments change.
-const kDaily = (dayNo, diff) => `ot.daily.v8.${dayNo}.${diff}`;
+const kDaily = (dayNo, diff) => `ot.daily.v10.${dayNo}.${diff}`;
 export const kStats = (mode, diff) => `ot.stats.${mode}.${diff}`;
 const K_DIFF = "ot.diff";           // last-used difficulty
 
@@ -50,7 +50,7 @@ export function freshDaily(diff) {
 
 export function freshPractice(diff) {
   diff = diff || difficulty;
-  const pool = POOLS[diff];
+  const pool = TARGET_POOLS[diff];   // solution comes from this tier only
   const target = pool[Math.floor(Math.random() * pool.length)];
   return { mode: "practice", difficulty: diff, target, dayNo: null, results: [], guessedIds: new Set(), solved: false, gaveUp: false, hintPlies: 0, hintCount: 0 };
 }

@@ -1,6 +1,6 @@
 /* Autocomplete. Searches the current tier's pool (minus already-guessed
    openings) by name, or by move order when notation search is enabled. */
-import { state } from "./state.js";
+import { state, LS } from "./state.js";
 import { POOLS, DIFF_LABEL } from "./data.js";
 import { esc } from "./format.js";
 import { input, suggestEl } from "./dom.js";
@@ -8,10 +8,7 @@ import { submitGuess } from "./actions.js";
 
 const moveSearchToggle = document.getElementById("moveSearchToggle");
 const MOVE_SEARCH_KEY = "ot.moveSearch";
-function loadMoveSearchEnabled() {
-  try { return JSON.parse(localStorage.getItem(MOVE_SEARCH_KEY)) === true; } catch { return false; }
-}
-let moveSearchEnabled = loadMoveSearchEnabled();
+let moveSearchEnabled = LS.get(MOVE_SEARCH_KEY, false) === true;
 moveSearchToggle.checked = moveSearchEnabled;
 let activeIdx = -1, currentList = [];
 
@@ -132,7 +129,7 @@ input.addEventListener("input", () => renderSuggest(input.value));
 input.addEventListener("focus", () => { if (input.value.trim()) renderSuggest(input.value); });
 moveSearchToggle.addEventListener("change", () => {
   moveSearchEnabled = moveSearchToggle.checked;
-  try { localStorage.setItem(MOVE_SEARCH_KEY, JSON.stringify(moveSearchEnabled)); } catch {}
+  LS.set(MOVE_SEARCH_KEY, moveSearchEnabled);
   if (input.value.trim()) renderSuggest(input.value);
   input.focus();
 });
