@@ -642,7 +642,18 @@ html:has(.tree-modal-bg.open) { overflow: hidden; }
 /* Only the puzzle's target opening shows the star and an accent name. */
 .tree-inspector-card.is-target .tree-inspector-mark { display: inline; }
 .tree-inspector-card.is-target h3 { color: var(--accent-hover); }
-.tree-inspector-description { margin: 11px 0 0 !important; color: var(--muted) !important; font-size: 13px !important; line-height: 1.5; }
+.tree-inspector-description {
+  margin: 11px 0 0 !important; color: var(--muted) !important; font-size: 13px !important; line-height: 1.5;
+  max-height: 5.9em; overflow: hidden;   /* ~3 lines collapsed */
+}
+.tree-inspector-description.is-expanded { max-height: none; }
+.tree-inspector-description p { margin: 0; }
+.tree-inspector-description p + p { margin-top: 8px; }
+.tree-inspector-desc-toggle {
+  display: block; margin: 5px 0 0; padding: 0; border: none; background: none;
+  color: var(--accent-hover); font-size: 11px; font-weight: 600; cursor: pointer;
+}
+.tree-inspector-desc-toggle:hover { text-decoration: underline; }
 .tree-inspector-source {
   display: inline-block; margin-top: 7px; color: var(--muted-2);
   font-size: 11px; font-weight: 600; text-decoration: none;

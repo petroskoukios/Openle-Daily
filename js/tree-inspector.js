@@ -16,6 +16,7 @@ const inspectorBoard = document.getElementById("treeInspectorBoard");
 const inspectorMoves = document.getElementById("treeInspectorMoves");
 const inspectorCardMoves = document.getElementById("treeInspectorCardMoves");
 const inspectorDescription = document.getElementById("treeInspectorDescription");
+const inspectorDescToggle = document.getElementById("treeInspectorDescToggle");
 const inspectorSource = document.getElementById("treeInspectorSource");
 const copyButton = document.getElementById("treeInspectorCopy");
 const copyFenButton = document.getElementById("treeInspectorCopyFen");
@@ -236,20 +237,39 @@ function showOpeningCard(openingId, moves, depth) {
 }
 
 // Family-level description from the bundled Wikipedia extracts (descriptions.js).
+// Long descriptions are clamped to a few lines with a toggle to expand, shown
+// only when the text actually overflows that clamp.
 function showDescription(name) {
   const colon = name.indexOf(":");
   const family = (colon === -1 ? name : name.slice(0, colon)).trim();
   const desc = (window.OPENING_DESCRIPTIONS || {})[family];
+  inspectorDescription.classList.remove("is-expanded");
+  inspectorDescToggle.textContent = "Click for more";
   if (desc) {
-    inspectorDescription.textContent = desc.text;
+    // The lead section can be several paragraphs (blank-line separated); render
+    // each as its own <p> so spacing reads naturally when expanded.
+    inspectorDescription.innerHTML = "";
+    for (const para of desc.text.split(/\n{2,}/)) {
+      const p = document.createElement("p");
+      p.textContent = para.trim();
+      inspectorDescription.appendChild(p);
+    }
     inspectorDescription.style.display = "";
     inspectorSource.href = desc.url;
     inspectorSource.style.display = "";
+    const overflowing = inspectorDescription.scrollHeight > inspectorDescription.clientHeight + 1;
+    inspectorDescToggle.style.display = overflowing ? "" : "none";
   } else {
     inspectorDescription.style.display = "none";
+    inspectorDescToggle.style.display = "none";
     inspectorSource.style.display = "none";
   }
 }
+
+inspectorDescToggle?.addEventListener("click", () => {
+  const expanded = inspectorDescription.classList.toggle("is-expanded");
+  inspectorDescToggle.textContent = expanded ? "Show less" : "Click for more";
+});
 
 function refitDuringTransition() {
   // Glide from the player's current view to the auto-fit as the panel animates,
