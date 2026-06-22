@@ -5,7 +5,7 @@
    main board never changes it. */
 import { OPENINGS } from "./data.js";
 import { fmtBoardMoves, commonMoveDepth } from "./format.js";
-import { fitFullscreenTree } from "./tree.js";
+import { animateFitFullscreenTree } from "./tree.js";
 import { state } from "./state.js";
 import { renderStaticBoard, BOARD_PLAYBACK_STEP_MS } from "./board.js";
 
@@ -28,7 +28,6 @@ let queuedMoves = null;    // line the playback is walking toward (null = idle)
 let queuedDepth = null;    // destination depth within queuedMoves
 let sliding = false;       // a single-ply slide is currently in flight
 let stepTimer = null;      // ply-by-ply playback timer
-let refitFrame = null;
 
 function movesToPgn(moves) {
   let pgn = "";
@@ -234,20 +233,9 @@ function showOpeningCard(openingId, moves, depth) {
 }
 
 function refitDuringTransition() {
-  if (refitFrame) cancelAnimationFrame(refitFrame);
-  const tree = document.getElementById("treeFullscreen");
-  if (window.matchMedia?.("(prefers-reduced-motion: reduce)").matches) {
-    fitFullscreenTree(tree);
-    return;
-  }
-
-  const startedAt = performance.now();
-  const followLayout = now => {
-    fitFullscreenTree(tree);
-    if (now - startedAt < 460) refitFrame = requestAnimationFrame(followLayout);
-    else refitFrame = null;
-  };
-  refitFrame = requestAnimationFrame(followLayout);
+  // Glide from the player's current view to the auto-fit as the panel animates,
+  // rather than snapping to centre on the first frame then following.
+  animateFitFullscreenTree(document.getElementById("treeFullscreen"));
 }
 
 // Open (or update) the inspector for a line selected in the fullscreen tree.

@@ -691,7 +691,8 @@ export function renderTree(state) {
   }
 }
 
-function applyTreeZoom(el, view, zoom, contentX, contentY, anchorX, anchorY) {
+// Apply a zoom and an explicit scroll position (resizes the pan/map, sets scroll).
+function applyTreeZoomScroll(el, view, zoom, scrollLeft, scrollTop) {
   view.zoom = zoom;
   el.dispatchEvent(new CustomEvent("treezoomchange", { detail: { zoom } }));
   const padX = view.padX || 0, padY = view.padY || 0;
@@ -706,27 +707,76 @@ function applyTreeZoom(el, view, zoom, contentX, contentY, anchorX, anchorY) {
     pan.style.width = (renderW + padX * 2) + "px";
     pan.style.height = (renderH + padY * 2) + "px";
   }
-  el.scrollLeft = padX + contentX * zoom - anchorX;
-  el.scrollTop = padY + contentY * zoom - anchorY;
+  el.scrollLeft = scrollLeft;
+  el.scrollTop = scrollTop;
+}
+
+// Apply a zoom keeping content point (contentX, contentY) under viewport anchor.
+function applyTreeZoom(el, view, zoom, contentX, contentY, anchorX, anchorY) {
+  const padX = view.padX || 0, padY = view.padY || 0;
+  applyTreeZoomScroll(el, view, zoom, padX + contentX * zoom - anchorX, padY + contentY * zoom - anchorY);
+}
+
+// The auto-fit zoom for the fullscreen tree at the element's current size.
+function fullscreenFitZoom(el, view) {
+  const marginX = Math.min(36, el.clientWidth * .03);
+  const marginY = Math.min(32, el.clientHeight * .04);
+  const fitX = (el.clientWidth - marginX * 2) / view.contentWidth;
+  const fitY = (el.clientHeight - marginY * 2) / view.contentHeight;
+  return Math.max(TREE_FULLSCREEN_AUTO_ZOOM_MIN, Math.min(TREE_FULLSCREEN_AUTO_ZOOM_MAX, fitX, fitY));
+}
+
+// Scroll that centers the content for a given zoom at the current element size.
+function fullscreenCenterScroll(el, view, zoom) {
+  const padX = view.padX || 0, padY = view.padY || 0;
+  return {
+    left: padX + view.contentCenterX * zoom - el.clientWidth / 2,
+    top: padY + view.contentCenterY * zoom - el.clientHeight / 2,
+  };
+}
+
+function cancelTreeAnims(view) {
+  if (view.zoomFrame) { cancelAnimationFrame(view.zoomFrame); view.zoomFrame = null; }
+  if (view.fitFrame) { cancelAnimationFrame(view.fitFrame); view.fitFrame = null; }
 }
 
 export function fitFullscreenTree(el) {
   const view = treeView(el);
   if (!view.baseWidth || !view.baseHeight) return;
-  if (view.zoomFrame) {
-    cancelAnimationFrame(view.zoomFrame);
-    view.zoomFrame = null;
-  }
-
-  const marginX = Math.min(36, el.clientWidth * .03);
-  const marginY = Math.min(32, el.clientHeight * .04);
-  const fitX = (el.clientWidth - marginX * 2) / view.contentWidth;
-  const fitY = (el.clientHeight - marginY * 2) / view.contentHeight;
-  const zoom = Math.max(TREE_FULLSCREEN_AUTO_ZOOM_MIN,
-    Math.min(TREE_FULLSCREEN_AUTO_ZOOM_MAX, fitX, fitY));
+  cancelTreeAnims(view);
+  const zoom = fullscreenFitZoom(el, view);
   view.zoomTarget = zoom;
-  applyTreeZoom(el, view, zoom, view.contentCenterX, view.contentCenterY,
-    el.clientWidth / 2, el.clientHeight / 2);
+  const c = fullscreenCenterScroll(el, view, zoom);
+  applyTreeZoomScroll(el, view, zoom, c.left, c.top);
+}
+
+// Smoothly ease from the current view to the auto-fit (centered) view, instead
+// of snapping. Used while the inspector panel opens/closes so the pan glides
+// from wherever the player had the tree rather than jumping to centre first.
+export function animateFitFullscreenTree(el) {
+  const view = treeView(el);
+  if (!view.baseWidth || !view.baseHeight) return;
+  if (!treeMotionAllowed()) { fitFullscreenTree(el); return; }
+  cancelTreeAnims(view);
+  const startZoom = view.zoom;
+  const startLeft = el.scrollLeft, startTop = el.scrollTop;
+  const startTime = performance.now();
+  const DURATION = 460; // matches the panel's grid-template-columns transition (+slack)
+  const ease = t => 1 - Math.pow(1 - t, 3);
+  const step = now => {
+    const raw = Math.min(1, (now - startTime) / DURATION);
+    const t = ease(raw);
+    // Re-evaluate the target each frame so it tracks the still-animating width.
+    const targetZoom = fullscreenFitZoom(el, view);
+    const zoom = startZoom + (targetZoom - startZoom) * t;
+    const c = fullscreenCenterScroll(el, view, zoom);
+    applyTreeZoomScroll(el, view, zoom,
+      startLeft + (c.left - startLeft) * t,
+      startTop + (c.top - startTop) * t);
+    if (raw < 1) view.fitFrame = requestAnimationFrame(step);
+    else { view.fitFrame = null; view.zoomTarget = targetZoom; }
+  };
+  view.fitFrame = requestAnimationFrame(step);
 }
 
 function zoomTree(el, amount, clientX = null, clientY = null, smooth = false) {
@@ -737,6 +787,7 @@ function zoomTree(el, amount, clientX = null, clientY = null, smooth = false) {
     Math.round((view.zoom + amount) * 100) / 100));
   if (nextZoom === view.zoom || !view.baseWidth) return;
   view.zoomTarget = nextZoom;
+  if (view.fitFrame) { cancelAnimationFrame(view.fitFrame); view.fitFrame = null; } // a manual zoom interrupts a fit glide
 
   const rect = el.getBoundingClientRect();
   const anchorX = clientX == null ? el.clientWidth / 2 : clientX - rect.left;
