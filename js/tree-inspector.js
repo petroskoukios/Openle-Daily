@@ -165,7 +165,8 @@ function playQueuedInspectorStep() {
     queuedMoves = null;
     queuedDepth = null;
     paintInspector(null);
-    announceInspectorPosition();
+    // Note: no position announce here. The tree highlight stays on the selected
+    // opening (set when it was picked); cycling moves must not move it.
     return;
   }
   const movingBack = current > common;
