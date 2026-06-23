@@ -240,41 +240,87 @@ function showOpeningCard(openingId, moves, depth) {
 }
 
 // Family-level description from the bundled Wikipedia extracts (descriptions.js).
-// Long descriptions are clamped to a few lines with a toggle to expand, shown
-// only when the text actually overflows that clamp.
+const COLLAPSED_LINES = 3;
+let currentDesc = null;
+
+const descParas = text => text.split(/\n{2,}/).map(s => s.trim()).filter(Boolean);
+
 function showDescription(name) {
   const colon = name.indexOf(":");
   const family = (colon === -1 ? name : name.slice(0, colon)).trim();
   const desc = (window.OPENING_DESCRIPTIONS || {})[family];
-  inspectorDescription.classList.remove("is-expanded");
-  inspectorDescToggle.textContent = "Click for more";
-  if (desc) {
-    // The lead section can be several paragraphs (blank-line separated); render
-    // each as its own <p> so spacing reads naturally when expanded.
-    inspectorDescription.innerHTML = "";
-    for (const para of desc.text.split(/\n{2,}/)) {
-      const p = document.createElement("p");
-      p.textContent = para.trim();
-      inspectorDescription.appendChild(p);
-    }
-    inspectorDescription.style.display = "";
-    inspectorSource.href = desc.url;
-    const overflowing = inspectorDescription.scrollHeight > inspectorDescription.clientHeight + 1;
-    inspectorDescToggle.style.display = overflowing ? "" : "none";
-    // The Wikipedia link only rides along with the full text: hidden while the
-    // text is clamped, shown once expanded (or right away if it never clamps).
-    inspectorSource.style.display = overflowing ? "none" : "";
-  } else {
+  currentDesc = desc || null;
+  if (!desc) {
     inspectorDescription.style.display = "none";
     inspectorDescToggle.style.display = "none";
     inspectorSource.style.display = "none";
+    return;
   }
+  inspectorDescription.style.display = "";
+  inspectorSource.href = desc.url;
+  renderDescription(false);
+}
+
+// Collapsed: a single flow truncated to ~3 lines ending with "… Click for more"
+// (the toggle, inline) instead of an abrupt cut. Expanded: full paragraphs, the
+// Wikipedia link, then a "Show less" toggle below.
+function renderDescription(expanded) {
+  inspectorDescription.classList.toggle("is-expanded", expanded);
+  inspectorDescription.innerHTML = "";
+  const paras = descParas(currentDesc.text);
+
+  if (expanded) {
+    for (const para of paras) {
+      const p = document.createElement("p");
+      p.textContent = para;
+      inspectorDescription.appendChild(p);
+    }
+    inspectorSource.style.display = "";              // link above the toggle
+    inspectorDescToggle.classList.remove("is-inline");
+    inspectorDescToggle.textContent = "Show less";
+    inspectorDescToggle.style.display = "";
+    inspectorSource.after(inspectorDescToggle);      // back to its block home
+    return;
+  }
+
+  inspectorSource.style.display = "none";
+  const flow = paras.join(" ");
+  inspectorDescription.textContent = flow;
+  const lh = parseFloat(getComputedStyle(inspectorDescription).lineHeight) || 19.5;
+  const maxH = lh * COLLAPSED_LINES + 1;
+  if (inspectorDescription.scrollHeight <= maxH) {
+    // Fits whole — render as paragraphs, no toggle (kept attached at home, hidden).
+    inspectorDescription.innerHTML = "";
+    for (const para of paras) {
+      const p = document.createElement("p");
+      p.textContent = para;
+      inspectorDescription.appendChild(p);
+    }
+    inspectorDescToggle.classList.remove("is-inline");
+    inspectorSource.after(inspectorDescToggle);
+    inspectorDescToggle.style.display = "none";
+    return;
+  }
+  // Truncate to the most text that still fits the clamp once "… Click for more"
+  // is appended inline.
+  inspectorDescToggle.textContent = "...Click for more";
+  inspectorDescToggle.classList.add("is-inline");
+  inspectorDescToggle.style.display = "";
+  const measure = n => {
+    inspectorDescription.textContent = flow.slice(0, n).replace(/\s+$/, "");
+    inspectorDescription.appendChild(inspectorDescToggle);
+    return inspectorDescription.scrollHeight <= maxH;
+  };
+  let lo = 0, hi = flow.length, best = 0;
+  while (lo <= hi) {
+    const mid = (lo + hi) >> 1;
+    if (measure(mid)) { best = mid; lo = mid + 1; } else hi = mid - 1;
+  }
+  measure(best);
 }
 
 inspectorDescToggle?.addEventListener("click", () => {
-  const expanded = inspectorDescription.classList.toggle("is-expanded");
-  inspectorDescToggle.textContent = expanded ? "Show less" : "Click for more";
-  inspectorSource.style.display = expanded ? "" : "none";
+  renderDescription(!inspectorDescription.classList.contains("is-expanded"));
 });
 
 function refitDuringTransition() {
