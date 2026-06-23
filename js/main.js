@@ -163,11 +163,19 @@ document.addEventListener("ot:custom-remove-opening", e => {
 const baseBar = document.getElementById("customBaseBar");
 const baseInput = document.getElementById("customBaseInput");
 const baseSuggestEl = document.getElementById("customBaseSuggest");
+const guessSearch = document.getElementById("guessInput").closest(".search");
 let baseList = [], baseActiveIdx = -1;
 
-function closeCustomBasePicker() { baseBar.style.display = "none"; baseSuggestEl.classList.remove("open"); baseList = []; baseActiveIdx = -1; }
+// While picking a base the guess box is replaced by the base picker; once a base
+// is chosen (or the picker is dismissed) the guess box comes back.
+function closeCustomBasePicker() {
+  baseBar.style.display = "none";
+  guessSearch.style.display = "";
+  baseSuggestEl.classList.remove("open"); baseList = []; baseActiveIdx = -1;
+}
 function openCustomBasePicker() {
   if (state.mode !== "practice") return;       // custom is practice-only
+  guessSearch.style.display = "none";
   baseBar.style.display = "";
   baseInput.value = "";
   baseSuggestEl.classList.remove("open");
