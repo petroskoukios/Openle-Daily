@@ -714,15 +714,6 @@ html:has(.tree-modal-bg.open) { overflow: hidden; }
 }
 .tree-inspector-action-split .tree-inspector-action { margin: 0; border: 0; border-radius: 0; }
 .tree-inspector-action-split .tree-inspector-action + .tree-inspector-action { border-left: 1px solid var(--ins-border); }
-.tree-inspector-remove {
-  display: flex; align-items: center; justify-content: center; gap: 9px;
-  width: 100%; min-height: 42px; margin-top: 10px;
-  border: 1px solid transparent; border-radius: 11px;
-  background: transparent; color: var(--muted); cursor: pointer;
-  font: 700 13px var(--sans); transition: background .12s, color .12s, border-color .12s;
-}
-.tree-inspector-remove svg { width: 16px; height: 16px; }
-.tree-inspector-remove:hover { background: rgba(214,96,96,.12); border-color: rgba(214,96,96,.4); color: #e08a8a; }
 @media (max-width: 760px) {
   .tree-modal-bg { padding: 0; }
   .tree-modal { width: 100vw; height: 100vh; height: 100dvh; border-radius: 0; }

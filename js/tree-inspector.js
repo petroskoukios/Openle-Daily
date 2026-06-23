@@ -21,7 +21,6 @@ const inspectorDescToggle = document.getElementById("treeInspectorDescToggle");
 const inspectorSource = document.getElementById("treeInspectorSource");
 const copyButton = document.getElementById("treeInspectorCopy");
 const copyFenButton = document.getElementById("treeInspectorCopyFen");
-const removeButton = document.getElementById("treeInspectorRemove");
 const prevButton = document.getElementById("treeInspectorPrev");
 const nextButton = document.getElementById("treeInspectorNext");
 
@@ -238,8 +237,6 @@ function showOpeningCard(openingId, moves, depth) {
   const targetMoves = (onPuzzle && state && state.target) ? state.target.moves : moves;
   inspectorCardMoves.innerHTML = fmtBoardMoves(moves, depth, targetMoves);
   showDescription(opening.name);
-  // Only the custom tree lets you remove an opening you added.
-  if (removeButton) removeButton.style.display = isCustomActive() ? "" : "none";
 }
 
 // Family-level description from the bundled Wikipedia extracts (descriptions.js).
@@ -343,12 +340,5 @@ prevButton?.addEventListener("click", () => stepInspector(-1));
 nextButton?.addEventListener("click", () => stepInspector(1));
 copyButton.addEventListener("click", copyCurrentLine);
 copyFenButton.addEventListener("click", copyCurrentFen);
-// Remove the selected opening from the custom tree; main.js does the removal +
-// re-render, then we collapse the (now empty) inspector.
-removeButton?.addEventListener("click", () => {
-  if (!selected) return;
-  document.dispatchEvent(new CustomEvent("ot:custom-remove-opening", { detail: { openingId: selected.openingId } }));
-  closeTreeInspector({ refit: false });
-});
 
 setInspectorLine([], 0); // initial state: the starting position
