@@ -237,6 +237,15 @@ button.tree-node:focus-visible { outline: 2px solid var(--accent-hover); outline
 .tree-node--guess,
 .tree-node--answer { flex-direction: column; gap: 1px; padding: 3px 5px; border-radius: 4px; }
 .tree-node--guess.tree-node--off { color: var(--miss); border-color: rgba(155,161,170,.4); }
+/* Custom-tree remove handle: a corner × revealed when hovering the opening box. */
+.tree-node__remove {
+  position: absolute; top: 1px; right: 2px; width: 15px; height: 15px;
+  display: none; align-items: center; justify-content: center;
+  border-radius: 50%; background: var(--panel-2); border: 1px solid var(--border-solid);
+  color: var(--muted); font: 700 13px/1 var(--sans); cursor: pointer;
+}
+.tree-node--removable:hover .tree-node__remove { display: inline-flex; }
+.tree-node__remove:hover { background: var(--border-solid); border-color: var(--border-solid); color: var(--text); }
 /* Moves line inside a merged guess leaf: small, mono, dimmer than the name. */
 .tree-node--guess .tree-node__sequence { font-family: var(--mono); font-size: 9px; opacity: .82; margin-top: 1px; }
 .tree-node--guess .tree-node__sequence i { font-size: 7.5px; }

@@ -105,7 +105,7 @@ export function renderTreeInto(state, el) {
   const { displayRoot, treeLines } = buildDisplayTree(state, boardNavigationEnabled, openingsOnly);
   const { allNodes, svgWidth, svgHeight } = layoutTree(displayRoot, el, view);
   const prevScroll = { left: el.scrollLeft, top: el.scrollTop };
-  paintTree(el, displayRoot, allNodes, svgWidth, svgHeight, view, boardNavigationEnabled, openingsOnly);
+  paintTree(el, displayRoot, allNodes, svgWidth, svgHeight, view, boardNavigationEnabled, openingsOnly, state.custom);
   wireTreeNav(el, treeLines);
   focusTree(el, state, view, allNodes, displayRoot, prevScroll);
 }
@@ -466,7 +466,7 @@ function layoutTree(displayRoot, el, view) {
 }
 
 // Phase 3 — serialise edges + node boxes to SVG and write it into the element.
-function paintTree(el, displayRoot, allNodes, svgWidth, svgHeight, view, boardNavigationEnabled, openingsOnly) {
+function paintTree(el, displayRoot, allNodes, svgWidth, svgHeight, view, boardNavigationEnabled, openingsOnly, custom) {
   const slackX = view.padX, slackY = view.padY;
   const edges = [];
   const collectEdges = node => {
@@ -503,10 +503,14 @@ function paintTree(el, displayRoot, allNodes, svgWidth, svgHeight, view, boardNa
     else if (node.lineId != null) attrs = ` data-tree-line="${node.lineId}"`;                 // hook only
     if (node.openingId != null) attrs += ` data-opening-id="${node.openingId}"`;
     const interactive = (depthClickable || lineClickable) ? " tree-node--clickable" : "";
+    // In the custom tree, opening boxes get a corner × (shown on hover) to remove them.
+    const removeX = (custom && openingBox)
+      ? `<span class="tree-node__remove" xmlns="http://www.w3.org/1999/xhtml" role="button" tabindex="0" data-remove-opening="${node.openingId}" title="Remove from tree" aria-label="Remove opening">×</span>`
+      : "";
     return `<foreignObject x="${node.x}" y="${node.y}" width="${node.width}" height="${node.height}">` +
       `<${tag} xmlns="http://www.w3.org/1999/xhtml" ` +
-      `class="tree-node tree-node--${node.type} tree-node--${node.tone}${node.latest ? " is-latest" : ""}${interactive}"${attrs}>` +
-      `${node.html}</${tag}></foreignObject>`;
+      `class="tree-node tree-node--${node.type} tree-node--${node.tone}${node.latest ? " is-latest" : ""}${interactive}${custom && openingBox ? " tree-node--removable" : ""}"${attrs}>` +
+      `${node.html}${removeX}</${tag}></foreignObject>`;
   };
   const renderW = Math.round(svgWidth * view.zoom);
   const renderH = Math.round(svgHeight * view.zoom);
@@ -554,6 +558,22 @@ function wireTreeNav(el, treeLines) {
         if (e.key !== "Enter" && e.key !== " ") return;
         e.preventDefault();
         activate(e);
+      });
+    });
+    // Corner × on custom-tree opening boxes: remove the opening (stop the click
+    // from also triggering the box's inspect action).
+    el.querySelectorAll(".tree-node__remove[data-remove-opening]").forEach(x => {
+      const remove = e => {
+        e.stopPropagation();
+        e.preventDefault();
+        document.dispatchEvent(new CustomEvent("ot:custom-remove-opening", {
+          detail: { openingId: Number(x.dataset.removeOpening) },
+        }));
+      };
+      x.addEventListener("click", remove);
+      x.addEventListener("keydown", e => {
+        if (e.key !== "Enter" && e.key !== " ") return;
+        remove(e);
       });
     });
     if (inspectorPosition) syncTreeBoardPosition(el, treeLines, inspectorPosition.moves, inspectorPosition.depth);
