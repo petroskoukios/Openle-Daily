@@ -256,9 +256,11 @@ function showDescription(name) {
     }
     inspectorDescription.style.display = "";
     inspectorSource.href = desc.url;
-    inspectorSource.style.display = "";
     const overflowing = inspectorDescription.scrollHeight > inspectorDescription.clientHeight + 1;
     inspectorDescToggle.style.display = overflowing ? "" : "none";
+    // The Wikipedia link only rides along with the full text: hidden while the
+    // text is clamped, shown once expanded (or right away if it never clamps).
+    inspectorSource.style.display = overflowing ? "none" : "";
   } else {
     inspectorDescription.style.display = "none";
     inspectorDescToggle.style.display = "none";
@@ -269,6 +271,7 @@ function showDescription(name) {
 inspectorDescToggle?.addEventListener("click", () => {
   const expanded = inspectorDescription.classList.toggle("is-expanded");
   inspectorDescToggle.textContent = expanded ? "Show less" : "Click for more";
+  inspectorSource.style.display = expanded ? "" : "none";
 });
 
 function refitDuringTransition() {
