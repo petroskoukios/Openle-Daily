@@ -35,3 +35,11 @@ export function addCustomOpening(o) {
   st.results.push({ guessId: o.id, sharedPlies: 0 });
   return true;
 }
+
+export function removeCustomOpening(id) {
+  const st = customTreeState();
+  if (!st.guessedIds.has(id)) return false;
+  st.guessedIds.delete(id);
+  st.results = st.results.filter(r => r.guessId !== id);
+  return true;
+}

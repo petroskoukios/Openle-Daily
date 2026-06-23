@@ -12,7 +12,7 @@ import { stepBoard, clearBoardPlayback, resetBoardNav } from "./board.js";
 import { createBoardView, resolveBoardView, navCeiling } from "./board-view.js";
 import { submitGuess, requestHint, giveUp } from "./actions.js";
 import { looksLikeMoves, moveTokens, isMoveSearchEnabled, scoreMatch } from "./search.js";
-import { isCustomActive, setCustomActive, customTreeState, resetCustomTree, addCustomOpening } from "./custom-tree.js";
+import { isCustomActive, setCustomActive, customTreeState, addCustomOpening, removeCustomOpening } from "./custom-tree.js";
 import { openStats, renderStatsView, startPracticeFromWin, recordPractice } from "./stats.js";
 import { doShare } from "./share.js";
 import { modal, input, suggestEl } from "./dom.js";
@@ -56,7 +56,8 @@ function setTreeMode(mode) {
 
 function openTreeModal() {
   closeTreeInspector({ refit: false });
-  resetCustomTree();          // the custom tree starts empty each time
+  // The custom tree persists across opens — don't reset it; just start on the
+  // puzzle tab with a clear search box.
   document.getElementById("treeCustomInput").value = "";
   closeCustomSuggest();
   setCustomActive(false);
@@ -153,6 +154,9 @@ document.addEventListener("click", e => {
 document.querySelector(".tree-modal-context").addEventListener("click", e => {
   const b = e.target.closest("button[data-tree-mode]");
   if (b && !b.classList.contains("active")) setTreeMode(b.dataset.treeMode);
+});
+document.addEventListener("ot:custom-remove-opening", e => {
+  if (removeCustomOpening(e.detail.openingId)) renderFullscreen();
 });
 
 /* ---------- Modal helpers ---------- */
