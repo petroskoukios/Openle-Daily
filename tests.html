@@ -208,7 +208,7 @@
   /* ---------------- Limits / constants ---------------- */
   function suiteLimits(OT) {
     group("Guess limits & constants");
-    eq("GUESS_LIMITS", OT.GUESS_LIMITS, { easy: 10, medium: 15, hard: 20, expert: 25, custom: 10 });
+    eq("GUESS_LIMITS", OT.GUESS_LIMITS, { easy: 10, medium: 15, hard: 20, expert: 25, custom: 15 });
     eq("guessLimit('hard') = 20", OT.guessLimit("hard"), 20);
     eq("guessLimit(unknown) falls back to medium (15)", OT.guessLimit("nope"), 15);
     eq("HINT_COST = 3", OT.HINT_COST, 3);

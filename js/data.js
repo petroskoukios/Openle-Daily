@@ -31,7 +31,7 @@ export const OPENINGS = RAW.map((o, i) => {
        medium puzzle's answer is a medium opening, never an easier one. */
 export const DIFFS = ["easy", "medium", "hard", "expert"];
 export const DIFF_LABEL = { easy: "Easy", medium: "Medium", hard: "Hard", expert: "Expert", custom: "Custom" };
-export const GUESS_LIMITS = { easy: 10, medium: 15, hard: 20, expert: 25, custom: 10 };
+export const GUESS_LIMITS = { easy: 10, medium: 15, hard: 20, expert: 25, custom: 15 };
 export const HINT_COST = 3;
 export const TIER_ORDER = { easy: 0, medium: 1, hard: 2, expert: 3 };
 
