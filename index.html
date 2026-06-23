@@ -116,9 +116,9 @@
         <img src="assets/openle-logo.png" alt="Openle" />
         <span>Tree</span>
       </div>
-      <div class="tree-modal-context" aria-label="Puzzle context">
-        <span>Current puzzle</span>
-        <span>Custom tree</span>
+      <div class="tree-modal-context" role="tablist" aria-label="Tree mode">
+        <button type="button" class="tree-mode-tab active" id="treeModePuzzle" data-tree-mode="puzzle" role="tab" aria-selected="true">Current puzzle</button>
+        <button type="button" class="tree-mode-tab" id="treeModeCustom" data-tree-mode="custom" role="tab" aria-selected="false">Custom tree</button>
       </div>
       <button class="tree-modal-close" type="button" data-close>
         <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" aria-hidden="true"><path d="m7 7 10 10M17 7 7 17" /></svg>
@@ -131,6 +131,11 @@
         <div class="tree-stage-intro">
           <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><circle cx="12" cy="5" r="2"/><circle cx="6" cy="18" r="2"/><circle cx="18" cy="18" r="2"/><path d="M12 7v4M12 11 6 16M12 11l6 5"/></svg>
           <span>Explore the move tree and inspect an opening</span>
+        </div>
+        <div class="tree-custom-search search" id="treeCustomSearch">
+          <input id="treeCustomInput" type="text" autocomplete="off" spellcheck="false"
+                 placeholder="Add any opening to your tree — e.g. Sicilian, Ruy Lopez…" />
+          <ul class="suggest" id="treeCustomSuggest"></ul>
         </div>
         <div class="tree-modal-controls" aria-label="Tree controls">
           <button class="iconbtn tree-tool" id="treeModalZoomOut" type="button" title="Zoom out" aria-label="Zoom out">

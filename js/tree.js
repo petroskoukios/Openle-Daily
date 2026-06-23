@@ -9,6 +9,7 @@ import { OPENINGS } from "./data.js";
 import { confirmedDepth } from "./domain.js";
 import { esc } from "./format.js";
 import { boardMaxDepth, goBoardDepth, goBoardLine } from "./board.js";
+import { isCustomActive, customTreeState } from "./custom-tree.js";
 
 function buildTree(state) {
   const target = state.target;
@@ -29,10 +30,14 @@ function buildTree(state) {
   };
 
   // Deepest confirmed-shared depth across all guesses.
-  let best = confirmedDepth(state);
+  let best = state.custom ? 0 : confirmedDepth(state);
 
   let tip = root;
-  if (state.solved || state.gaveUp) {
+  // The custom tree has no target: skip the trunk, tip and answer entirely and
+  // let the added openings below render as plain off-path branches.
+  if (state.custom) {
+    // nothing to seed
+  } else if (state.solved || state.gaveUp) {
     // Reveal the full target line (on a win, or when the player gives up).
     const leaf = insert(target.moves, target.moves.length, target.moves.length);
     leaf.isTargetEnd = true;
@@ -272,7 +277,7 @@ function buildDisplayTree(state, boardNavigationEnabled, openingsOnly) {
     { main: true, boardDepth: 0, sortKey: "root" },
   );
   const rootBranches = [...root.children.values()].map(child => child.onTarget ? displayTargetMove(child) : displayOffPath(child));
-  if (tip === root && !state.solved && !state.gaveUp) rootBranches.push(tipLeaf());
+  if (tip === root && !state.solved && !state.gaveUp && !state.custom) rootBranches.push(tipLeaf());
   displayRoot.children = orderChildren(rootBranches);
 
   return { displayRoot, treeLines };
@@ -687,7 +692,7 @@ export function renderTree(state) {
   renderTreeInto(state, document.getElementById("tree"));
   const fullscreenTree = document.getElementById("treeFullscreen");
   if (fullscreenTree.closest(".modal-bg").classList.contains("open")) {
-    renderTreeInto(state, fullscreenTree);
+    renderTreeInto(isCustomActive() ? customTreeState() : state, fullscreenTree);
   }
 }
 

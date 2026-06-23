@@ -7,6 +7,7 @@ import { OPENINGS } from "./data.js";
 import { fmtBoardMoves, commonMoveDepth } from "./format.js";
 import { animateFitFullscreenTree } from "./tree.js";
 import { state } from "./state.js";
+import { isCustomActive } from "./custom-tree.js";
 import { renderStaticBoard, BOARD_PLAYBACK_STEP_MS } from "./board.js";
 
 const modal = document.querySelector(".tree-modal");
@@ -228,10 +229,12 @@ function showOpeningCard(openingId, moves, depth) {
   if (!opening) return;
   document.getElementById("treeInspectorName").textContent = opening.name;
   document.getElementById("treeInspectorEco").textContent = opening.eco;
-  // Only the puzzle's target opening gets the accent (blue) name/star/moves.
-  inspectorCard.classList.toggle("is-target", !!state && state.target.id === openingId);
+  // Only the puzzle's target opening gets the accent (blue) name/star/moves —
+  // never in the custom tree, which has no solution.
+  const onPuzzle = !isCustomActive();
+  inspectorCard.classList.toggle("is-target", onPuzzle && !!state && state.target.id === openingId);
   // Colour each ply by whether it stays on the target path (.sh) or diverges (.branch).
-  const targetMoves = (state && state.target) ? state.target.moves : moves;
+  const targetMoves = (onPuzzle && state && state.target) ? state.target.moves : moves;
   inspectorCardMoves.innerHTML = fmtBoardMoves(moves, depth, targetMoves);
   showDescription(opening.name);
 }

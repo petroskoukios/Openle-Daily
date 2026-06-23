@@ -4,14 +4,15 @@
 import { OPENINGS, POOLS, TARGET_POOLS, DIFFS, DIFF_LIMITS, GUESS_LIMITS, HINT_COST, tierOf } from "./data.js";
 import { dailyTarget } from "./daily.js";
 import { compare, guessLimit, confirmedDepth, hintsUsed, guessBudgetUsed, guessBudgetLeft } from "./domain.js";
-import { commonMoveDepth } from "./format.js";
+import { commonMoveDepth, esc } from "./format.js";
 import { state, setState, setDifficulty, freshDaily, freshPractice, LS } from "./state.js";
 import { render } from "./render.js";
 import { renderTreeInto, fitFullscreenTree, zoomTreeByFactor, setTreeZoom, enableTreeViewport } from "./tree.js";
 import { stepBoard, clearBoardPlayback, resetBoardNav } from "./board.js";
 import { createBoardView, resolveBoardView, navCeiling } from "./board-view.js";
 import { submitGuess, requestHint, giveUp } from "./actions.js";
-import { looksLikeMoves, moveTokens, isMoveSearchEnabled } from "./search.js";
+import { looksLikeMoves, moveTokens, isMoveSearchEnabled, scoreMatch } from "./search.js";
+import { isCustomActive, setCustomActive, customTreeState, resetCustomTree, addCustomOpening } from "./custom-tree.js";
 import { openStats, renderStatsView, startPracticeFromWin, recordPractice } from "./stats.js";
 import { doShare } from "./share.js";
 import { modal, input, suggestEl } from "./dom.js";
@@ -29,8 +30,42 @@ function syncFullscreenZoomSlider(zoom) {
   fullscreenZoomSlider.title = `${value}%`;
 }
 
+// The fullscreen tree shows either the live puzzle or the separate custom tree.
+function fullscreenState() { return isCustomActive() ? customTreeState() : state; }
+
+function renderFullscreen({ refit = true } = {}) {
+  const el = document.getElementById("treeFullscreen");
+  renderTreeInto(fullscreenState(), el);
+  if (refit) requestAnimationFrame(() => fitFullscreenTree(el));
+}
+
+function setTreeMode(mode) {
+  const custom = mode === "custom";
+  setCustomActive(custom);
+  document.querySelectorAll(".tree-mode-tab").forEach(b => {
+    const on = b.dataset.treeMode === mode;
+    b.classList.toggle("active", on);
+    b.setAttribute("aria-selected", on ? "true" : "false");
+  });
+  document.querySelector(".tree-modal").classList.toggle("is-custom", custom);
+  closeTreeInspector({ refit: false });   // the inspector belongs to whichever tree was showing
+  if (!custom) closeCustomSuggest();
+  renderFullscreen();
+  if (custom) document.getElementById("treeCustomInput").focus();
+}
+
 function openTreeModal() {
   closeTreeInspector({ refit: false });
+  resetCustomTree();          // the custom tree starts empty each time
+  document.getElementById("treeCustomInput").value = "";
+  closeCustomSuggest();
+  setCustomActive(false);
+  document.querySelectorAll(".tree-mode-tab").forEach(b => {
+    const on = b.dataset.treeMode === "puzzle";
+    b.classList.toggle("active", on);
+    b.setAttribute("aria-selected", on ? "true" : "false");
+  });
+  document.querySelector(".tree-modal").classList.remove("is-custom");
   modal("treeModal", true);
   requestAnimationFrame(() => {
     const el = document.getElementById("treeFullscreen");
@@ -38,6 +73,87 @@ function openTreeModal() {
     requestAnimationFrame(() => fitFullscreenTree(el));
   });
 }
+
+/* ---------- Custom tree: tabs + add-opening search ---------- */
+const customInput = document.getElementById("treeCustomInput");
+const customSuggestEl = document.getElementById("treeCustomSuggest");
+let customList = [], customActiveIdx = -1;
+
+function closeCustomSuggest() { customSuggestEl.classList.remove("open"); customList = []; customActiveIdx = -1; }
+
+// Search every opening by name (the custom tree isn't tier-limited), excluding
+// ones already in the tree. Reuses the puzzle search's scoring.
+function rankCustom(q) {
+  const raw = q.trim().toLowerCase();
+  if (!raw) return [];
+  const tokens = raw.split(/\s+/).filter(Boolean);
+  const added = customTreeState().guessedIds;
+  const out = [];
+  for (const o of OPENINGS) {
+    if (added.has(o.id)) continue;
+    const s = scoreMatch(o, tokens, raw);
+    if (s > -1) out.push([s, o]);
+  }
+  out.sort((a, b) => b[0] - a[0] || a[1].name.localeCompare(b[1].name));
+  return out.slice(0, 50).map(x => x[1]);
+}
+
+function renderCustomSuggest() {
+  const q = customInput.value;
+  customList = rankCustom(q);
+  customActiveIdx = customList.length ? 0 : -1;
+  if (!q.trim()) { closeCustomSuggest(); return; }
+  if (!customList.length) {
+    customSuggestEl.innerHTML = `<li class="empty">No openings match “${esc(q)}”.</li>`;
+    customSuggestEl.classList.add("open"); return;
+  }
+  customSuggestEl.innerHTML = customList.map((o, i) =>
+    `<li data-i="${i}" class="${i === customActiveIdx ? "active" : ""}">
+      <span class="nm">${esc(o.name)}</span>
+      <span class="mv">${esc(o.moves.slice(0, 6).join(" ") + (o.moves.length > 6 ? "…" : ""))}</span></li>`).join("");
+  customSuggestEl.classList.add("open");
+}
+
+function setCustomActiveIdx(i) {
+  const items = customSuggestEl.querySelectorAll("li[data-i]");
+  if (!items.length) return;
+  customActiveIdx = (i + items.length) % items.length;
+  items.forEach(li => li.classList.toggle("active", +li.dataset.i === customActiveIdx));
+  items[customActiveIdx].scrollIntoView({ block: "nearest" });
+}
+
+function addFromCustom(o) {
+  if (!o) return;
+  addCustomOpening(o);
+  customInput.value = "";
+  closeCustomSuggest();
+  renderFullscreen();
+  customInput.focus();
+}
+
+customInput.addEventListener("input", renderCustomSuggest);
+customInput.addEventListener("focus", () => { if (customInput.value.trim()) renderCustomSuggest(); });
+customInput.addEventListener("keydown", e => {
+  if (!customSuggestEl.classList.contains("open")) {
+    if (e.key === "ArrowDown" && customInput.value.trim()) renderCustomSuggest();
+    return;
+  }
+  if (e.key === "ArrowDown") { e.preventDefault(); setCustomActiveIdx(customActiveIdx + 1); }
+  else if (e.key === "ArrowUp") { e.preventDefault(); setCustomActiveIdx(customActiveIdx - 1); }
+  else if (e.key === "Enter") { e.preventDefault(); addFromCustom(customList[customActiveIdx]); }
+  else if (e.key === "Escape") { e.stopPropagation(); closeCustomSuggest(); }
+});
+customSuggestEl.addEventListener("mousedown", e => {
+  const li = e.target.closest("li[data-i]");
+  if (li) { e.preventDefault(); addFromCustom(customList[+li.dataset.i]); }
+});
+document.addEventListener("click", e => {
+  if (!e.target.closest("#treeCustomSearch")) closeCustomSuggest();
+});
+document.querySelector(".tree-modal-context").addEventListener("click", e => {
+  const b = e.target.closest("button[data-tree-mode]");
+  if (b && !b.classList.contains("active")) setTreeMode(b.dataset.treeMode);
+});
 
 /* ---------- Modal helpers ---------- */
 document.querySelectorAll("[data-close]").forEach(b =>

@@ -479,8 +479,13 @@ html:has(.tree-modal-bg.open) { overflow: hidden; }
 .tree-modal-brand img { display: block; width: auto; height: 28px; }
 .tree-modal-brand span { color: var(--text); font-size: 27px; line-height: 1; font-weight: 800; letter-spacing: -.02em; transform: translateY(-2px); }
 .tree-modal-context { display: flex; gap: 3px; padding: 3px; border-radius: 7px; background: var(--surface); }
-.tree-modal-context span { padding: 5px 10px; border-radius: 5px; color: var(--muted); font-size: 13px; font-weight: 700; }
-.tree-modal-context span:first-child { color: var(--text); background: var(--panel-2); }
+.tree-mode-tab {
+  padding: 5px 10px; border: 0; border-radius: 5px; background: transparent;
+  color: var(--muted); font: 700 13px var(--sans); cursor: pointer;
+  transition: background .12s, color .12s;
+}
+.tree-mode-tab:hover:not(.active) { color: var(--text); }
+.tree-mode-tab.active { color: var(--text); background: var(--panel-2); }
 .tree-modal-close {
   display: inline-flex; align-items: center; gap: 7px; margin-left: auto;
   height: 32px; padding: 0 11px; border: 1px solid var(--border-solid); border-radius: 7px;
@@ -511,6 +516,21 @@ html:has(.tree-modal-bg.open) { overflow: hidden; }
   display: flex; align-items: center; gap: 9px; color: var(--muted); font-size: 13.5px;
 }
 .tree-stage-intro svg { width: 22.5px; height: 22.5px; color: var(--text); }
+/* Custom-tree add-opening search: sits where the intro is, shown only in custom mode. */
+.tree-custom-search {
+  position: absolute; top: 16px; left: 24px; z-index: 5;
+  width: min(380px, 62%); margin: 0; display: none;
+}
+.tree-modal.is-custom .tree-custom-search { display: block; }
+.tree-modal.is-custom .tree-stage-intro { display: none; }
+.tree-custom-search input {
+  width: 100%; padding: 11px 13px; font-size: 14px; font-family: inherit;
+  background: rgba(30,32,37,.95); color: var(--text);
+  border: 1px solid var(--border-solid); border-radius: 8px; outline: none;
+  transition: border-color .15s, box-shadow .15s;
+}
+.tree-custom-search input::placeholder { color: var(--muted-2); }
+.tree-custom-search input:focus { border-color: var(--accent); box-shadow: 0 0 0 3px rgba(97,152,202,.22); }
 .tree-modal-controls {
   position: absolute; top: 18px; right: 20px; z-index: 4;
   display: flex; align-items: center; gap: 2px; padding: 3px 6px;

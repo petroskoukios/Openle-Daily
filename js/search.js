@@ -14,7 +14,7 @@ let activeIdx = -1, currentList = [];
 
 export function isMoveSearchEnabled() { return moveSearchEnabled; }
 
-function scoreMatch(o, tokens, raw) {
+export function scoreMatch(o, tokens, raw) {
   // Require every token to appear in the opening name.
   for (const tk of tokens) if (o.nameLower.indexOf(tk) === -1) return -1;
   let s = 0;
