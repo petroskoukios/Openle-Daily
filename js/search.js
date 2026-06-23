@@ -42,7 +42,9 @@ export function moveTokens(raw) {
 // Search is limited to the current difficulty and excludes submitted openings,
 // so previous guesses no longer remain in either autocomplete mode.
 function activePool() {
-  return POOLS[state.difficulty].filter(o => !state.guessedIds.has(o.id));
+  // Custom puzzles guess from the chosen opening's subtree; tiers use their pool.
+  const pool = state.difficulty === "custom" ? state.pool : POOLS[state.difficulty];
+  return pool.filter(o => !state.guessedIds.has(o.id));
 }
 
 function moveSearch(raw) {

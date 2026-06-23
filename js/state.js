@@ -2,7 +2,7 @@
    `state` and `difficulty` are live module bindings: read them directly via the
    import, mutate object properties in place, and reassign only through the
    setters so every importer sees the change. */
-import { TARGET_POOLS, OPENINGS, DIFFS } from "./data.js";
+import { TARGET_POOLS, OPENINGS, DIFFS, subtreeOf } from "./data.js";
 import { dailyTarget, localDayNumber } from "./daily.js";
 import { compare, hintsUsed } from "./domain.js";
 
@@ -23,7 +23,9 @@ function loadDiff() {
 }
 
 export let difficulty = loadDiff();   // current difficulty, shared across modes
-export function setDifficulty(d) { difficulty = d; LS.set(K_DIFF, d); }
+// "custom" is a per-game practice mode, not one of the four tiers — never persist
+// it as the remembered difficulty (boot/daily would have no pool for it).
+export function setDifficulty(d) { difficulty = d; if (DIFFS.includes(d)) LS.set(K_DIFF, d); }
 
 // {mode, difficulty, target, dayNo, results:[cmp], guessedIds:Set, solved, gaveUp, hintPlies, hintCount}
 export let state = null;
@@ -53,6 +55,19 @@ export function freshPractice(diff) {
   const pool = TARGET_POOLS[diff];   // solution comes from this tier only
   const target = pool[Math.floor(Math.random() * pool.length)];
   return { mode: "practice", difficulty: diff, target, dayNo: null, results: [], guessedIds: new Set(), solved: false, gaveUp: false, hintPlies: 0, hintCount: 0 };
+}
+
+// Custom practice: tree rooted at `base`, answer randomly from its subtree.
+// Seeding hintPlies with the base depth makes the board + confirmed trunk start
+// at the base for free, without it counting as a used hint.
+export function freshCustom(base) {
+  const pool = subtreeOf(base);
+  const target = pool[Math.floor(Math.random() * pool.length)];
+  return {
+    mode: "practice", difficulty: "custom", base, pool, target, dayNo: null,
+    results: [], guessedIds: new Set(), solved: false, gaveUp: false,
+    hintPlies: base.moves.length, hintCount: 0,
+  };
 }
 
 export function saveDaily() {

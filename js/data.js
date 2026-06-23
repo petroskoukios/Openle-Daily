@@ -30,8 +30,8 @@ export const OPENINGS = RAW.map((o, i) => {
      • TARGET_POOLS (exclusive) — what the SOLUTION can be: only this tier, so a
        medium puzzle's answer is a medium opening, never an easier one. */
 export const DIFFS = ["easy", "medium", "hard", "expert"];
-export const DIFF_LABEL = { easy: "Easy", medium: "Medium", hard: "Hard", expert: "Expert" };
-export const GUESS_LIMITS = { easy: 10, medium: 15, hard: 20, expert: 25 };
+export const DIFF_LABEL = { easy: "Easy", medium: "Medium", hard: "Hard", expert: "Expert", custom: "Custom" };
+export const GUESS_LIMITS = { easy: 10, medium: 15, hard: 20, expert: 25, custom: 10 };
 export const HINT_COST = 3;
 export const TIER_ORDER = { easy: 0, medium: 1, hard: 2, expert: 3 };
 
@@ -47,3 +47,23 @@ export const DIFF_LIMITS = Object.fromEntries(DIFFS.map(diff => [diff, POOLS[dif
 
 // Exclusive per-tier pools used for picking the puzzle's solution.
 export const TARGET_POOLS = Object.fromEntries(DIFFS.map(diff => [diff, OPENINGS.filter(o => tierOf(o) === diff)]));
+
+/* Custom practice: pick a base opening, and the puzzle's tree is rooted there
+   with the answer drawn from its subtree — every opening whose moves extend the
+   base's moves. A base needs at least this many deeper variations to be a real
+   puzzle. */
+export const CUSTOM_MIN_SUBTREE = 4;
+
+export function subtreeOf(base) {
+  if (!base) return [];
+  const b = base.moves;
+  return OPENINGS.filter(o =>
+    o.id !== base.id && o.plies > b.length && b.every((m, i) => o.moves[i] === m));
+}
+
+let _customBases = null;
+// Openings eligible to be a custom base: those with enough deeper variations.
+export function customBaseOptions() {
+  if (!_customBases) _customBases = OPENINGS.filter(o => subtreeOf(o).length >= CUSTOM_MIN_SUBTREE);
+  return _customBases;
+}

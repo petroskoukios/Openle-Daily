@@ -19,10 +19,13 @@ export function render() {
     ms.textContent = new Date().toLocaleDateString(undefined, { weekday: "long", year: "numeric", month: "long", day: "numeric" });
   } else {
     mt.textContent = "Practice";
-    ms.textContent = "random opening";
+    ms.textContent = state.difficulty === "custom" && state.base
+      ? `from ${state.base.name}` : "random opening";
   }
-  // difficulty selector is available in both modes
+  // difficulty selector is available in both modes; the Custom tier is practice-only.
   diff.querySelectorAll("button").forEach(x => x.classList.toggle("active", x.dataset.diff === state.difficulty));
+  const customBtn = diff.querySelector('[data-diff="custom"]');
+  if (customBtn) customBtn.style.display = state.mode === "practice" ? "" : "none";
   const gc = document.getElementById("gcount");
   const spent = guessBudgetUsed(state), left = guessBudgetLeft(state), hintN = hintsUsed(state);
   const limit = guessLimit(state);

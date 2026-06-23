@@ -55,7 +55,19 @@ function buildTree(state) {
     leaf.guesses.push(g);
   }
 
-  return { root, tip, best };
+  // Custom practice (state.base) roots the display at the base opening: walk to
+  // the node at the end of the base's moves and treat it as the tree's root.
+  // hintPlies is seeded to the base depth, so the trunk always reaches it.
+  let baseNode = root;
+  if (state.base) {
+    for (const mv of state.base.moves) {
+      const next = baseNode.children.get(mv);
+      if (!next) break;
+      baseNode = next;
+    }
+  }
+
+  return { root, tip, best, baseNode };
 }
 
 const TREE_ZOOM_MIN = .5;
@@ -113,7 +125,7 @@ export function renderTreeInto(state, el) {
 // Phase 1 — turn game state into a tree of display nodes (boxes), collapsing
 // linear runs, merging single-guess leaves, and ordering siblings.
 function buildDisplayTree(state, boardNavigationEnabled, openingsOnly) {
-  const { root, tip } = buildTree(state);
+  const { root, tip, baseNode } = buildTree(state);
   const latestGuessId = state.results.length ? state.results[state.results.length - 1].guessId : null;
   const targetTone = "target";
   let nextId = 0;
@@ -272,12 +284,17 @@ function buildDisplayTree(state, boardNavigationEnabled, openingsOnly) {
     return node;
   };
 
-  const displayRoot = create(
-    "root", state.solved ? targetTone : "root", 126, 31, "Starting position",
-    { main: true, boardDepth: 0, sortKey: "root" },
-  );
-  const rootBranches = [...root.children.values()].map(child => child.onTarget ? displayTargetMove(child) : displayOffPath(child));
-  if (tip === root && !state.solved && !state.gaveUp && !state.custom) rootBranches.push(tipLeaf());
+  // Custom practice roots the tree at the chosen base opening (shown as the root
+  // box); otherwise the root is the empty starting position.
+  const baseDepth = state.base ? state.base.moves.length : 0;
+  const displayRoot = state.base
+    ? create("root", state.solved ? targetTone : "root", 160, 40,
+        `<span class="tree-node__name">${esc(state.base.name)}</span>`,
+        { main: true, boardDepth: baseDepth, sortKey: "root" })
+    : create("root", state.solved ? targetTone : "root", 126, 31, "Starting position",
+        { main: true, boardDepth: 0, sortKey: "root" });
+  const rootBranches = [...baseNode.children.values()].map(child => child.onTarget ? displayTargetMove(child) : displayOffPath(child));
+  if (tip === baseNode && !state.solved && !state.gaveUp && !state.custom) rootBranches.push(tipLeaf());
   displayRoot.children = orderChildren(rootBranches);
 
   return { displayRoot, treeLines };

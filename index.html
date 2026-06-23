@@ -42,6 +42,7 @@
       <button data-diff="medium">Medium</button>
       <button data-diff="hard">Hard</button>
       <button data-diff="expert">Expert</button>
+      <button data-diff="custom">Custom</button>
     </span>
     <span class="gcount" id="gcount"></span>
   </div>
@@ -52,6 +53,12 @@
         <input id="guessInput" type="text" autocomplete="off" spellcheck="false"
                placeholder="Search an opening to guess — e.g. Sicilian, Ruy Lopez…" />
         <ul class="suggest" id="suggest"></ul>
+      </div>
+
+      <div class="search custom-base-bar" id="customBaseBar" style="display:none">
+        <input id="customBaseInput" type="text" autocomplete="off" spellcheck="false"
+               placeholder="Pick a starting opening — the puzzle is built from its variations…" />
+        <ul class="suggest" id="customBaseSuggest"></ul>
       </div>
 
       <section class="panel tree-panel">

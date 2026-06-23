@@ -1,11 +1,11 @@
 /* Entry point: modal helpers, event wiring, boot, and the window.__OT hook
    that the test harness (tests.html) reads. Importing this module pulls in the
    whole graph, so the self-wiring modules (search, history) initialise too. */
-import { OPENINGS, POOLS, TARGET_POOLS, DIFFS, DIFF_LIMITS, GUESS_LIMITS, HINT_COST, tierOf } from "./data.js";
+import { OPENINGS, POOLS, TARGET_POOLS, DIFFS, DIFF_LIMITS, GUESS_LIMITS, HINT_COST, tierOf, customBaseOptions } from "./data.js";
 import { dailyTarget } from "./daily.js";
 import { compare, guessLimit, confirmedDepth, hintsUsed, guessBudgetUsed, guessBudgetLeft } from "./domain.js";
 import { commonMoveDepth, esc } from "./format.js";
-import { state, setState, setDifficulty, freshDaily, freshPractice, LS } from "./state.js";
+import { state, setState, setDifficulty, freshDaily, freshPractice, freshCustom, LS } from "./state.js";
 import { render } from "./render.js";
 import { renderTreeInto, fitFullscreenTree, zoomTreeByFactor, setTreeZoom, enableTreeViewport } from "./tree.js";
 import { stepBoard, clearBoardPlayback, resetBoardNav } from "./board.js";
@@ -159,6 +159,88 @@ document.addEventListener("ot:custom-remove-opening", e => {
   if (removeCustomOpening(e.detail.openingId)) renderFullscreen();
 });
 
+/* ---------- Custom practice: base-opening picker ---------- */
+const baseBar = document.getElementById("customBaseBar");
+const baseInput = document.getElementById("customBaseInput");
+const baseSuggestEl = document.getElementById("customBaseSuggest");
+let baseList = [], baseActiveIdx = -1;
+
+function closeCustomBasePicker() { baseBar.style.display = "none"; baseSuggestEl.classList.remove("open"); baseList = []; baseActiveIdx = -1; }
+function openCustomBasePicker() {
+  if (state.mode !== "practice") return;       // custom is practice-only
+  baseBar.style.display = "";
+  baseInput.value = "";
+  baseSuggestEl.classList.remove("open");
+  baseInput.focus();
+}
+
+// Search the eligible base openings (those with enough variations) by name.
+function rankBases(q) {
+  const raw = q.trim().toLowerCase();
+  if (!raw) return [];
+  const tokens = raw.split(/\s+/).filter(Boolean);
+  const out = [];
+  for (const o of customBaseOptions()) {
+    const s = scoreMatch(o, tokens, raw);
+    if (s > -1) out.push([s, o]);
+  }
+  out.sort((a, b) => b[0] - a[0] || a[1].name.localeCompare(b[1].name));
+  return out.slice(0, 50).map(x => x[1]);
+}
+
+function renderBaseSuggest() {
+  const q = baseInput.value;
+  baseList = rankBases(q);
+  baseActiveIdx = baseList.length ? 0 : -1;
+  if (!q.trim()) { baseSuggestEl.classList.remove("open"); return; }
+  if (!baseList.length) {
+    baseSuggestEl.innerHTML = `<li class="empty">No openings with variations match “${esc(q)}”.</li>`;
+    baseSuggestEl.classList.add("open"); return;
+  }
+  baseSuggestEl.innerHTML = baseList.map((o, i) =>
+    `<li data-i="${i}" class="${i === baseActiveIdx ? "active" : ""}">
+      <span class="nm">${esc(o.name)}</span>
+      <span class="mv">${esc(o.moves.slice(0, 6).join(" ") + (o.moves.length > 6 ? "…" : ""))}</span></li>`).join("");
+  baseSuggestEl.classList.add("open");
+}
+
+function setBaseActiveIdx(i) {
+  const items = baseSuggestEl.querySelectorAll("li[data-i]");
+  if (!items.length) return;
+  baseActiveIdx = (i + items.length) % items.length;
+  items.forEach(li => li.classList.toggle("active", +li.dataset.i === baseActiveIdx));
+  items[baseActiveIdx].scrollIntoView({ block: "nearest" });
+}
+
+function pickCustomBase(o) {
+  if (!o) return;
+  if (state.mode === "practice" && guessBudgetUsed(state) && !state.solved && !state.gaveUp) recordPractice(false);
+  closeCustomBasePicker();
+  clearBoardPlayback();
+  resetBoardNav();
+  setState(freshCustom(o));
+  input.value = ""; render(); input.focus();
+}
+
+baseInput.addEventListener("input", renderBaseSuggest);
+baseInput.addEventListener("keydown", e => {
+  if (!baseSuggestEl.classList.contains("open")) {
+    if (e.key === "ArrowDown" && baseInput.value.trim()) renderBaseSuggest();
+    return;
+  }
+  if (e.key === "ArrowDown") { e.preventDefault(); setBaseActiveIdx(baseActiveIdx + 1); }
+  else if (e.key === "ArrowUp") { e.preventDefault(); setBaseActiveIdx(baseActiveIdx - 1); }
+  else if (e.key === "Enter") { e.preventDefault(); pickCustomBase(baseList[baseActiveIdx]); }
+  else if (e.key === "Escape") { closeCustomBasePicker(); }
+});
+baseSuggestEl.addEventListener("mousedown", e => {
+  const li = e.target.closest("li[data-i]");
+  if (li) { e.preventDefault(); pickCustomBase(baseList[+li.dataset.i]); }
+});
+document.addEventListener("click", e => {
+  if (!e.target.closest("#customBaseBar") && !e.target.closest('[data-diff="custom"]')) closeCustomBasePicker();
+});
+
 /* ---------- Modal helpers ---------- */
 document.querySelectorAll("[data-close]").forEach(b =>
   b.addEventListener("click", () => {
@@ -228,13 +310,18 @@ document.getElementById("newBtn").addEventListener("click", () => {
   if (guessBudgetUsed(state) && !state.solved && !state.gaveUp) recordPractice(false);
   clearBoardPlayback();
   resetBoardNav();
-  setState(freshPractice()); input.value = ""; render(); input.focus();
+  // A new custom puzzle keeps the same base; otherwise a fresh random practice one.
+  const next = state.difficulty === "custom" && state.base ? freshCustom(state.base) : freshPractice();
+  setState(next); input.value = ""; render(); input.focus();
 });
 document.getElementById("diff").addEventListener("click", e => {
   const b = e.target.closest("button[data-diff]"); if (!b) return;
-  const d = b.dataset.diff; if (d === state.difficulty) return;
+  const d = b.dataset.diff;
+  if (d === "custom") { openCustomBasePicker(); return; }  // pick a base first
+  if (d === state.difficulty) return;
   // abandoning an in-progress practice game counts as a loss; daily just switches.
   if (state.mode === "practice" && guessBudgetUsed(state) && !state.solved && !state.gaveUp) recordPractice(false);
+  closeCustomBasePicker();
   clearBoardPlayback();
   resetBoardNav();
   setDifficulty(d);
