@@ -716,12 +716,12 @@ html:has(.tree-modal-bg.open) { overflow: hidden; }
 .tree-inspector-action {
   display: flex; align-items: center; justify-content: center; gap: 10px;
   width: 100%; min-height: 46px; margin-top: 12px; border: 1px solid var(--ins-border);
-  border-radius: 11px; background: var(--ins-raise);
+  border-radius: 11px; background: var(--ins-card);
   color: var(--text); cursor: pointer;
   font: 700 13px var(--sans);
   transition: background .12s, border-color .12s, filter .12s;
 }
-.tree-inspector-action:hover { background: var(--ins-raise-hover); }
+.tree-inspector-action:hover { background: var(--ins-raise); }
 .tree-inspector-action svg { width: 16px; height: 16px; color: var(--muted); }
 .tree-inspector-card + .tree-inspector-action { margin-top: 16px; }
 .tree-inspector-action-split {
