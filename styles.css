@@ -124,8 +124,14 @@ body {
 .meta .sub { color: var(--muted); font-size: 15px; }
 .meta .diff { padding: 2px; }
 .meta .diff button { padding: 5px 12px; font-size: 14px; }
-.meta .gcount { margin-left: auto; color: var(--muted); font-size: 15px; }
+.meta .gcount {
+  margin-left: auto; align-self: center;
+  display: flex; flex-direction: column; gap: 5px;
+  width: 168px; color: var(--muted); font-size: 13.5px;
+}
 .meta .gcount b { color: var(--text); }
+.gcount-bar { height: 6px; border-radius: 999px; background: var(--surface); border: 1px solid var(--border-solid); overflow: hidden; }
+.gcount-fill { display: block; height: 100%; background: var(--accent); border-radius: 999px; transition: width .25s ease; }
 
 /* ---- Search / autocomplete ---- */
 .search { position: relative; margin-bottom: 8px; }

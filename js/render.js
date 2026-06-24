@@ -29,9 +29,12 @@ export function render() {
   const gc = document.getElementById("gcount");
   const spent = guessBudgetUsed(state), left = guessBudgetLeft(state), hintN = hintsUsed(state);
   const limit = guessLimit(state);
-  gc.innerHTML = spent
+  const gcLabel = spent
     ? `<b>${spent}</b>/${limit} guesses` + (hintN ? ` · ${hintWord(hintN)}` : "")
     : `<b>${limit}</b> guesses`;
+  const gcPct = limit ? Math.min(100, Math.round(spent / limit * 100)) : 0;
+  gc.innerHTML = `<span class="gcount-label">${gcLabel}</span>` +
+    `<span class="gcount-bar"><span class="gcount-fill" style="width:${gcPct}%"></span></span>`;
 
   // input lock
   input.disabled = state.solved || state.gaveUp;
