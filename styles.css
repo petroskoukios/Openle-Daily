@@ -523,9 +523,11 @@ html:has(.tree-modal-bg.open) { overflow: hidden; }
 .tree-modal.inspector-open .tree-modal-body { grid-template-columns: minmax(0, 1fr) 470px; }
 .tree-stage {
   position: relative; min-width: 0; min-height: 0; overflow: hidden;
+  /* Centered-spotlight vignette, ~25% from the original dark blue toward the
+     main-page palette. */
   background:
-    radial-gradient(circle at 50% 40%, rgba(54,70,89,.22), transparent 48%),
-    linear-gradient(145deg, #202630, #1c2129 65%, #20262e);
+    radial-gradient(circle at 50% 40%, rgba(58,76,96,.22), transparent 48%),
+    linear-gradient(145deg, #242c38, #21262e 65%, #23282f);
 }
 .tree-stage-intro {
   position: absolute; top: 24px; left: 28px; z-index: 3;
