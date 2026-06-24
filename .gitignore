@@ -1,0 +1,14 @@
+# OS / editor cruft
+.DS_Store
+Thumbs.db
+.vscode/
+.idea/
+
+# Local dev / scratch (one-off build & server scripts are prefixed with _)
+_*.cjs
+_*.js
+*.log
+*.tmp
+
+# Dependencies (none today, but just in case)
+node_modules/

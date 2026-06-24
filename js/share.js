@@ -24,7 +24,7 @@ function shareText() {
   // group into rows of 5 for a tidy grid
   let grid = "";
   for (let i = 0; i < squares.length; i += 5) grid += squares.slice(i, i + 5).join("") + "\n";
-  return `${head}\n${grid}♟ guess the chess opening`;
+  return `${head}\n${grid}♟ openledaily.com`;
 }
 export async function doShare() {
   const text = shareText();

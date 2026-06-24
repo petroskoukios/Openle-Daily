@@ -1,0 +1,16 @@
+# Cloudflare Pages / Netlify headers.
+#
+# Default: always revalidate (no-cache) so a new deploy is picked up immediately.
+# This is what fixes the "stale ES module after deploy" problem without any build
+# step — the browser may keep a cached copy but must check with the server (which
+# answers 304 when unchanged, or 200 with fresh code when it changed).
+/*
+  Cache-Control: no-cache
+  X-Content-Type-Options: nosniff
+  Referrer-Policy: strict-origin-when-cross-origin
+
+# Artwork rarely changes — let it sit in cache (more specific rule wins).
+/assets/*
+  Cache-Control: public, max-age=86400
+/pieces-svg/*
+  Cache-Control: public, max-age=604800
