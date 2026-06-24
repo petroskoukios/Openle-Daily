@@ -27,7 +27,7 @@ html, body { margin: 0; padding: 0; }
 body {
   background:
     radial-gradient(1100px 540px at 50% -8%, rgba(70,92,116,.26), transparent 60%) fixed,
-    linear-gradient(170deg, #2e3d4f 0%, #2d323b 45%, #2b2b30 100%) fixed, var(--bg);
+    linear-gradient(170deg, #2e3d4f 0%, #2d323b 45%, #272a30 100%) fixed, var(--bg);
   color: var(--text);
   font-family: var(--sans);
   font-size: 15px;
