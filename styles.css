@@ -312,7 +312,7 @@ button.tree-node:focus-visible { outline: 2px solid var(--accent-hover); outline
 .ghist-item:last-child { margin-bottom: 0; }
 .ghist-item.best { background: rgba(97,152,202,.12); border-color: var(--good-dim); }
 .ghist-item.win  { background: rgba(97,152,202,.12); border-color: var(--good-dim); }
-.ghist-item .gn { font-weight: 700; }
+.ghist-item .gn { font-weight: 700; color: var(--muted); }
 .ghist-item .gn .eco { color: var(--muted); font-family: var(--mono); font-size: 11.5px; margin-left: 6px; }
 .ghist-item .line { font-family: var(--mono); font-size: 13px; margin-top: 4px; }
 .ghist-item .line .num { color: var(--muted-2); }
