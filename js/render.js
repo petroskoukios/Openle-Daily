@@ -38,8 +38,8 @@ export function render() {
 
   // input lock
   input.disabled = state.solved || state.gaveUp;
-  input.placeholder = state.solved || state.gaveUp
-    ? "Puzzle complete"
+  input.placeholder = state.solved ? "Puzzle completed"
+    : state.gaveUp ? "Puzzle failed"
     : "Search an opening to guess — e.g. Sicilian, Ruy Lopez…";
 
   // panels
