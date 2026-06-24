@@ -15,7 +15,7 @@ import { looksLikeMoves, moveTokens, isMoveSearchEnabled, scoreMatch } from "./s
 import { isCustomActive, setCustomActive, customTreeState, addCustomOpening, removeCustomOpening } from "./custom-tree.js";
 import { openStats, renderStatsView, startPracticeFromWin, recordPractice } from "./stats.js";
 import { doShare } from "./share.js";
-import { modal, input, suggestEl } from "./dom.js";
+import { modal, input, suggestEl, toast } from "./dom.js";
 import { closeTreeInspector, stepTreeInspector } from "./tree-inspector.js?v=7";
 
 const TREE_BUTTON_ZOOM_FACTOR = 1.3;
@@ -285,6 +285,12 @@ document.addEventListener("keydown", e => {
 /* ---------- Wiring ---------- */
 document.getElementById("howBtn").addEventListener("click", () => modal("howModal", true));
 document.getElementById("statsBtn").addEventListener("click", openStats);
+// Footer placeholder links toast "Coming soon" until they're wired up.
+document.querySelector(".site-footer")?.addEventListener("click", e => {
+  const a = e.target.closest("a[data-soon]"); if (!a) return;
+  e.preventDefault();
+  toast("Coming soon");
+});
 document.getElementById("treeExpandBtn").addEventListener("click", openTreeModal);
 document.getElementById("treeZoomOut").addEventListener("click", () => zoomTreeByFactor(document.getElementById("tree"), 1 / TREE_BUTTON_ZOOM_FACTOR));
 document.getElementById("treeZoomIn").addEventListener("click", () => zoomTreeByFactor(document.getElementById("tree"), TREE_BUTTON_ZOOM_FACTOR));
