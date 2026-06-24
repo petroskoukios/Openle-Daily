@@ -531,9 +531,13 @@ function paintTree(el, displayRoot, allNodes, svgWidth, svgHeight, view, boardNa
   };
   const renderW = Math.round(svgWidth * view.zoom);
   const renderH = Math.round(svgHeight * view.zoom);
+  // Render the SVG at 1:1 (viewBox == width/height) and apply the zoom with a CSS
+  // transform rather than scaling via the viewBox. Scaling via viewBox leaves
+  // <foreignObject> content unscaled on iOS Safari, so node boxes drift away from
+  // the (correctly scaled) edge paths; a CSS transform scales both together.
   el.innerHTML = `<div class="tree-pan" style="width:${renderW + slackX * 2}px;height:${renderH + slackY * 2}px">` +
-    `<svg class="tree-map" style="left:${slackX}px;top:${slackY}px" viewBox="0 0 ${svgWidth} ${svgHeight}" ` +
-    `width="${renderW}" height="${renderH}" role="group" aria-label="Opening tree">` +
+    `<svg class="tree-map" style="left:${slackX}px;top:${slackY}px;transform:scale(${view.zoom});transform-origin:0 0" viewBox="0 0 ${svgWidth} ${svgHeight}" ` +
+    `width="${svgWidth}" height="${svgHeight}" role="group" aria-label="Opening tree">` +
     `<g class="tree-edges">${edges.join("")}</g><g class="tree-nodes">${allNodes.map(nodeMarkup).join("")}</g></svg></div>`;
 }
 
@@ -742,8 +746,9 @@ function applyTreeZoomScroll(el, view, zoom, scrollLeft, scrollTop) {
   const renderH = Math.round(view.baseHeight * zoom);
   const map = el.querySelector(".tree-map");
   if (!map) return;
-  map.setAttribute("width", renderW);
-  map.setAttribute("height", renderH);
+  // Zoom via CSS transform (keeps the SVG at 1:1 so foreignObject nodes stay
+  // aligned with the edges on Safari); the pan box reserves the scaled size.
+  map.style.transform = `scale(${zoom})`;
   const pan = el.querySelector(".tree-pan");
   if (pan) {
     pan.style.width = (renderW + padX * 2) + "px";
