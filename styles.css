@@ -425,7 +425,10 @@ button.tree-node:focus-visible { outline: 2px solid var(--accent-hover); outline
 }
 .btn:hover { filter: brightness(1.1); }
 .btn:active { transform: translateY(1px); box-shadow: 0 1px 5px rgba(0,0,0,.21); }
-.btn.primary { background: var(--good); color: #fff; }
+.btn.primary {
+  background: linear-gradient(rgba(97,152,202,.14), rgba(97,152,202,.14)), var(--surface);
+  border: 1px solid var(--good-dim); color: var(--good);
+}
 .btn.ghost { background: transparent; color: var(--muted); box-shadow: none; font-weight: 600; }
 .btn.ghost:hover { background: var(--panel-2); filter: none; }
 
