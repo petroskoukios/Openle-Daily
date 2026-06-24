@@ -779,27 +779,20 @@ html:has(.tree-modal-bg.open) { overflow: hidden; }
 .win-actions .btn { min-width: 126px; }
 
 /* ---- Site footer ---- */
-.site-footer { margin-top: 44px; padding-top: 24px; border-top: 1px solid var(--border-solid); }
-.foot-main {
-  display: flex; flex-wrap: wrap; align-items: center; justify-content: space-between;
-  gap: 16px 28px; padding-bottom: 20px;
+.site-footer { margin-top: 44px; padding-top: 18px; border-top: 1px solid var(--border-solid); }
+.foot-row {
+  display: flex; flex-wrap: wrap; align-items: flex-start; justify-content: space-between;
+  gap: 10px 28px;
 }
-.foot-brand { display: flex; align-items: center; gap: 14px; max-width: 520px; }
-.foot-brand .brand-logo { height: 28px; flex-shrink: 0; }
-.foot-brand p { margin: 0; font-size: 12.5px; line-height: 1.5; color: var(--muted); }
+.foot-legal { flex: 1 1 420px; min-width: 0; font-size: 11.5px; color: var(--muted-2); }
+.foot-credits { margin: 0; line-height: 1.5; }
+.foot-copy { font-weight: 600; margin-right: 8px; }
+.foot-disclaimer { margin: 4px 0 0; opacity: .85; }
+.foot-credits a { color: var(--muted-2); text-decoration: underline; text-underline-offset: 2px; }
+.foot-credits a:hover { color: var(--accent-hover); }
 .foot-links { display: flex; gap: 20px; flex-shrink: 0; }
 .foot-links a { color: var(--muted); font-size: 13px; text-decoration: none; cursor: pointer; transition: color .12s; }
 .foot-links a:hover { color: var(--text); }
-.foot-bottom {
-  display: flex; flex-wrap: wrap; align-items: center; gap: 6px 16px;
-  padding: 14px 0 0; border-top: 1px solid var(--border-solid);
-  font-size: 11.5px; color: var(--muted-2);
-}
-.foot-copy { font-weight: 600; }
-.foot-credits { flex: 1 1 320px; min-width: 0; }
-.foot-credits a { color: var(--muted-2); text-decoration: underline; text-underline-offset: 2px; }
-.foot-credits a:hover { color: var(--accent-hover); }
-.foot-disclaimer { flex-basis: 100%; color: var(--muted-2); opacity: .8; }
 
 @media (max-width: 620px) {
   .appbar { flex-wrap: wrap; gap: 10px; }
@@ -811,6 +804,5 @@ html:has(.tree-modal-bg.open) { overflow: hidden; }
   .how-footer { padding-right: 20px; padding-left: 20px; }
   .stats-grid { grid-template-columns: repeat(2, 1fr); }
   .win-stats { grid-template-columns: repeat(2, 1fr); }
-  .foot-main { flex-direction: column; align-items: flex-start; }
-  .foot-bottom { flex-direction: column; align-items: flex-start; }
+  .foot-row { flex-direction: column; align-items: flex-start; gap: 10px; }
 }
