@@ -1,0 +1,12 @@
+{
+  "name": "openle",
+  "version": "1.0.0",
+  "private": true,
+  "description": "Openle — a daily chess opening puzzle.",
+  "scripts": {
+    "test": "node scripts/run-tests.mjs"
+  },
+  "devDependencies": {
+    "playwright": "^1.48.0"
+  }
+}

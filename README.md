@@ -1,5 +1,7 @@
 # Openle
 
+[![CI](https://github.com/petroskoukios/Chess-Tree/actions/workflows/ci.yml/badge.svg)](https://github.com/petroskoukios/Chess-Tree/actions/workflows/ci.yml)
+
 Guess the chess opening. A daily puzzle game in the spirit of Wordle and Metazooa,
 but for **chess openings**.
 
@@ -86,6 +88,20 @@ With the local server running, open
 loads the real app in an iframe and tests the SAN engine, opening data, daily
 selection, comparison and budget rules, search helpers, and board-view logic. Results
 are displayed in the page and written to the browser console.
+
+### Headless / CI
+
+The same harness runs headlessly via Playwright, and on every push/PR through
+[GitHub Actions](.github/workflows/ci.yml):
+
+```bash
+npm install
+npx playwright install chromium   # first time only
+npm test
+```
+
+`npm test` serves the repo, opens `tests.html` in headless Chromium, waits for the
+suite to finish, and exits non-zero if any test fails.
 
 There is no separate build, test runner, or package-manager command.
 
