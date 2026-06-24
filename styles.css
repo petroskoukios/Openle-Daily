@@ -496,7 +496,7 @@ html:has(.tree-modal-bg.open) { overflow: hidden; }
 .tree-modal-header {
   display: flex; align-items: center; gap: 16px; flex: 0 0 54px;
   padding: 0 14px 0 20px; border-bottom: 1px solid var(--border-solid);
-  background: linear-gradient(180deg, rgba(36,42,52,.96), rgba(28,32,40,.96));
+  background: #20242c;   /* match the darker modal frame */
 }
 .tree-modal-brand { display: flex; align-items: center; gap: 10px; transform: translateY(2px); }
 .tree-modal-brand img { display: block; width: auto; height: 28px; }
@@ -519,10 +519,10 @@ html:has(.tree-modal-bg.open) { overflow: hidden; }
 .tree-modal-body {
   /* Inspector dark palette — defined here so both the inspector panel and its
      sibling collapse tab can read them. */
-  --ins-card: #23262c;
-  --ins-raise: #2a2d34;
-  --ins-raise-hover: #32353d;
-  --ins-border: #363a44;
+  --ins-card: var(--panel);
+  --ins-raise: var(--panel-2);
+  --ins-raise-hover: #434753;
+  --ins-border: var(--border-solid);
   position: relative; display: grid; grid-template-columns: minmax(0, 1fr) 0px;
   flex: 1 1 auto; min-height: 0; overflow: hidden;
   transition: grid-template-columns .42s cubic-bezier(.4, 0, .2, 1);
@@ -602,7 +602,7 @@ html:has(.tree-modal-bg.open) { overflow: hidden; }
 .tree-inspector {
   position: relative; min-width: 0; overflow: hidden;
   border-left: 1px solid transparent;
-  background: #1b1e23;
+  background: var(--surface);
   transition: border-color .18s ease;
 }
 .tree-modal.inspector-open .tree-inspector { border-left-color: var(--border-solid); }
@@ -618,7 +618,7 @@ html:has(.tree-modal-bg.open) { overflow: hidden; }
   position: absolute; right: 0; top: 14%; z-index: 5; width: 30px; height: 54px;
   display: flex; align-items: center; justify-content: center;
   transform: translateY(-50%); border: 1px solid var(--ins-border); border-right: 0;
-  border-radius: 8px 0 0 8px; background: #1b1e23; color: var(--text);
+  border-radius: 8px 0 0 8px; background: var(--surface); color: var(--text);
   cursor: pointer; font: 700 26px/1 var(--sans);
   transition: right .42s cubic-bezier(.4, 0, .2, 1), background .12s ease;
 }
