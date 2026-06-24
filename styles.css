@@ -416,13 +416,14 @@ button.tree-node:focus-visible { outline: 2px solid var(--accent-hover); outline
 .actions { display: flex; gap: 10px; flex-wrap: wrap; align-items: center; margin-top: 4px; }
 .btn {
   border: 0; background: var(--panel-2); color: var(--text);
-  padding: 11px 20px; border-radius: 6px; font-size: 14px; font-weight: 700; cursor: pointer; font-family: inherit;
-  border-bottom: 3px solid rgba(0,0,0,.3); transition: filter .12s, transform .04s, border-bottom-width .04s;
+  padding: 11px 20px; border-radius: 8px; font-size: 14px; font-weight: 700; cursor: pointer; font-family: inherit;
+  box-shadow: 0 2px 8px rgba(0,0,0,.18);
+  transition: background .12s, filter .12s, transform .06s, box-shadow .12s;
 }
-.btn:hover { filter: brightness(1.12); }
-.btn:active { transform: translateY(2px); border-bottom-width: 1px; }
-.btn.primary { background: var(--good); color: #fff; border-bottom-color: var(--accent-dark); text-transform: uppercase; letter-spacing: .03em; }
-.btn.ghost { background: transparent; color: var(--muted); border-bottom-color: transparent; font-weight: 600; }
+.btn:hover { filter: brightness(1.1); }
+.btn:active { transform: translateY(1px); box-shadow: 0 1px 4px rgba(0,0,0,.18); }
+.btn.primary { background: var(--good); color: #fff; }
+.btn.ghost { background: transparent; color: var(--muted); box-shadow: none; font-weight: 600; }
 .btn.ghost:hover { background: var(--panel-2); filter: none; }
 
 /* ---- Modal ---- */
