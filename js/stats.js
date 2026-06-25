@@ -1,7 +1,6 @@
 /* Per-difficulty statistics, the win modal, and the stats modal. */
 import { state, setState, LS, kStats, freshPractice } from "./state.js";
-import { guessBudgetUsed } from "./domain.js";
-import { esc, fmtMoves } from "./format.js";
+import { guessBudgetUsed, guessLimit } from "./domain.js";
 import { modal, input } from "./dom.js";
 import { render } from "./render.js";
 import { clearBoardPlayback, resetBoardNav } from "./board.js";
@@ -46,35 +45,41 @@ export function onSolve(delayMs = 700) {
   }, delayMs);
 }
 
-function winStatsForCurrentState() {
+// Small stroke icons for the win-modal stats card.
+const WIN_ICONS = {
+  target: `<svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.9" stroke-linecap="round" stroke-linejoin="round"><circle cx="12" cy="12" r="8"/><circle cx="12" cy="12" r="3"/></svg>`,
+  flame: `<svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.9" stroke-linecap="round" stroke-linejoin="round"><path d="M12 3c.6 2.6 2.4 3.8 3.4 5.4A5 5 0 1 1 7 11c0-1 .4-1.9 1-2.6.3 1 1 1.6 1.8 1.6C11.2 10 11 6 12 3Z"/></svg>`,
+  check: `<svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.9" stroke-linecap="round" stroke-linejoin="round"><circle cx="12" cy="12" r="9"/><path d="M8.5 12.5l2.4 2.4 4.6-5.2"/></svg>`,
+  star: `<svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.9" stroke-linecap="round" stroke-linejoin="round"><path d="M12 4.5l2.3 4.7 5.2.8-3.7 3.6.9 5.1L12 16.9 7 19.3l.9-5.1L4.2 10l5.2-.8L12 4.5Z"/></svg>`,
+  chart: `<svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.9" stroke-linecap="round" stroke-linejoin="round"><path d="M5 20V11M12 20V4M19 20v-6"/></svg>`,
+};
+
+function winStatItems() {
+  const spent = guessBudgetUsed(state), limit = guessLimit(state);
+  const items = [{ icon: "target", value: `${spent}/${limit}`, label: "Guesses used" }];
   if (state.mode === "daily") {
-    const s = LS.get(kStats("daily", state.difficulty), { played: 0, won: 0, streak: 0, maxStreak: 0, dist: {} });
-    return [
-      ["Played", s.played],
-      ["Won", s.won],
-      ["Current", s.streak],
-      ["Max", s.maxStreak],
-    ];
+    const s = LS.get(kStats("daily", state.difficulty), { played: 0, won: 0, streak: 0 });
+    const winRate = s.played ? Math.round(s.won / s.played * 100) + "%" : "—";
+    items.push({ icon: "flame", value: s.streak, label: "Day streak" });
+    items.push({ icon: "check", value: winRate, label: "Win rate" });
+  } else {
+    const s = LS.get(kStats("practice", state.difficulty), { played: 0, won: 0, totalGuesses: 0, best: null });
+    const avg = s.won ? (s.totalGuesses / s.won).toFixed(1) : "—";
+    items.push({ icon: "star", value: s.best ?? "—", label: "Best" });
+    items.push({ icon: "chart", value: avg, label: "Avg guesses" });
   }
-  const s = LS.get(kStats("practice", state.difficulty), { played: 0, won: 0, totalGuesses: 0, best: null });
-  const avg = s.won ? (s.totalGuesses / s.won).toFixed(1) : "—";
-  return [
-    ["Played", s.played],
-    ["Solved", s.won],
-    ["Avg", avg],
-    ["Best", s.best ?? "—"],
-  ];
+  return items;
 }
 
 function openWinModal() {
-  document.getElementById("winAnswer").innerHTML =
-    `${esc(state.target.name)} <span class="eco">${esc(state.target.eco)}</span>` +
-    `<span class="moves">${fmtMoves(state.target.moves, "")}</span>`;
-  document.getElementById("winStats").innerHTML = winStatsForCurrentState()
-    .map(([label, value]) => `<div class="win-stat"><div class="n">${value}</div><div class="l">${label}</div></div>`)
+  const spent = guessBudgetUsed(state), limit = guessLimit(state);
+  const where = state.mode === "daily" ? `<b>Daily #${state.dayNo}</b>` : "this puzzle";
+  document.getElementById("winSub").innerHTML =
+    `You solved ${where} in <b>${spent}/${limit}</b> ${spent === 1 ? "guess" : "guesses"}`;
+  document.getElementById("winStats").innerHTML = winStatItems()
+    .map(s => `<div class="win-stat"><span class="win-stat-ic" aria-hidden="true">${WIN_ICONS[s.icon]}</span>` +
+      `<span class="n">${s.value}</span><span class="l">${s.label}</span></div>`)
     .join("");
-  document.getElementById("winPrompt").textContent =
-    state.mode === "daily" ? "Share your score or play a practice game." : "Share your score or try another practice puzzle.";
   modal("winModal", true);
 }
 

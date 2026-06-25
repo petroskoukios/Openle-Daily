@@ -296,13 +296,21 @@
 <div class="modal-bg" id="winModal">
   <div class="modal win-modal">
     <button class="iconbtn close" data-close>✕</button>
-    <h2>You win!</h2>
-    <div class="win-answer" id="winAnswer"></div>
+    <div class="win-badge" aria-hidden="true">
+      <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.6" stroke-linecap="round" stroke-linejoin="round"><path d="M4.5 12.5l5 5 10-11"/></svg>
+    </div>
+    <h2>Puzzle completed!</h2>
+    <p class="win-sub" id="winSub"></p>
     <div class="win-stats" id="winStats"></div>
-    <p id="winPrompt">Share your score or play a practice game.</p>
     <div class="win-actions">
-      <button class="btn primary" id="winShareBtn">Share result</button>
-      <button class="btn" id="winPracticeBtn">Practice</button>
+      <button class="btn primary" id="winShareBtn">
+        <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="M4 12v7a1 1 0 0 0 1 1h14a1 1 0 0 0 1-1v-7"/><path d="M12 16V3M7.5 7.5 12 3l4.5 4.5"/></svg>
+        Share result
+      </button>
+      <div class="win-actions-row">
+        <button class="btn" id="winPracticeBtn">Practice</button>
+        <button class="btn" data-close>Close</button>
+      </div>
     </div>
   </div>
 </div>
