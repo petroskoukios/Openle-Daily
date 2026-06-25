@@ -29,15 +29,17 @@ export const OPENINGS = RAW.map((o, i) => {
        so lower-difficulty openings still show up as guesses.
      • TARGET_POOLS (exclusive) — what the SOLUTION can be: only this tier, so a
        medium puzzle's answer is a medium opening, never an easier one. */
-// "starter" is the easiest tier — a handful of super-fundamental openings
-// (1.e4, 1.d4, Queen's Gambit, Indian Defense…). Cumulative POOLS make them
-// guessable in every tier; exclusive TARGET_POOLS keep them as answers only in
-// Starter, never in Easy or above.
-export const DIFFS = ["starter", "easy", "medium", "hard", "expert"];
-export const DIFF_LABEL = { starter: "Starter", easy: "Easy", medium: "Medium", hard: "Hard", expert: "Expert", custom: "Custom" };
-export const GUESS_LIMITS = { starter: 6, easy: 10, medium: 15, hard: 20, expert: 25, custom: 15 };
+// "starter" is a guess-only tier — super-fundamental openings (1.e4, 1.d4,
+// Queen's Gambit, Indian Defense…) that can be GUESSED in every difficulty but
+// are not a playable mode and are never the answer.
+export const DIFFS = ["easy", "medium", "hard", "expert"];
+export const DIFF_LABEL = { easy: "Easy", medium: "Medium", hard: "Hard", expert: "Expert", custom: "Custom" };
+export const GUESS_LIMITS = { easy: 10, medium: 15, hard: 20, expert: 25, custom: 15 };
 export const HINT_COST = 3;
 export const TIER_ORDER = { starter: 0, easy: 1, medium: 2, hard: 3, expert: 4 };
+// Tiers whose openings are guessable: starter (guess-only) plus the playable
+// difficulties. Excludes "reserve" openings, which are neither guess nor target.
+const GUESS_TIERS = new Set(["starter", ...DIFFS]);
 
 export function tierOf(o) {
   return o.curatedTier;
@@ -45,7 +47,7 @@ export function tierOf(o) {
 
 export const POOLS = Object.fromEntries(DIFFS.map(diff => [
   diff,
-  OPENINGS.filter(o => DIFFS.includes(tierOf(o)) && TIER_ORDER[tierOf(o)] <= TIER_ORDER[diff]),
+  OPENINGS.filter(o => GUESS_TIERS.has(tierOf(o)) && TIER_ORDER[tierOf(o)] <= TIER_ORDER[diff]),
 ]));
 export const DIFF_LIMITS = Object.fromEntries(DIFFS.map(diff => [diff, POOLS[diff].length]));
 

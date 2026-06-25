@@ -176,18 +176,24 @@
   /* ---------------- Difficulty pools ---------------- */
   function suitePools(OT) {
     group("Difficulty pools — cumulative invariants");
-    eq("pool sizes are 7 / 39 / 103 / 231 / 480",
-      OT.DIFFS.map(d => OT.POOLS[d].length), [7, 39, 103, 231, 480]);
+    eq("pool sizes are 39 / 103 / 231 / 480",
+      OT.DIFFS.map(d => OT.POOLS[d].length), [39, 103, 231, 480]);
     eq("DIFF_LIMITS matches pool sizes",
-      OT.DIFF_LIMITS, { starter: 7, easy: 39, medium: 103, hard: 231, expert: 480 });
+      OT.DIFF_LIMITS, { easy: 39, medium: 103, hard: 231, expert: 480 });
 
     const ids = d => new Set(OT.POOLS[d].map(o => o.id));
     const subset = (a, b) => [...a].every(x => b.has(x));
-    const [st, e, m, h, x] = OT.DIFFS.map(ids);
-    check("starter ⊆ easy", subset(st, e));
+    const [e, m, h, x] = OT.DIFFS.map(ids);
     check("easy ⊆ medium", subset(e, m));
     check("medium ⊆ hard", subset(m, h));
     check("hard ⊆ expert", subset(h, x));
+
+    // Guess-only "starter" openings show up in every pool but are never a target.
+    const starterIds = new Set(OT.OPENINGS.filter(o => OT.tierOf(o) === "starter").map(o => o.id));
+    check("starter openings are guessable in easy", [...starterIds].every(id => e.has(id)));
+    let starterTarget = false;
+    for (const d of OT.DIFFS) for (const o of OT.TARGET_POOLS[d]) if (starterIds.has(o.id)) starterTarget = true;
+    check("starter openings are never a target", !starterTarget);
 
     const order = { starter: 0, easy: 1, medium: 2, hard: 3, expert: 4 };
     const leak = [];
@@ -197,8 +203,8 @@
     check("no pool contains an above-tier opening", leak.length === 0, offenders(leak));
 
     // Target pools are exclusive: solution comes only from that tier.
-    eq("target-pool sizes are 7 / 32 / 64 / 128 / 249",
-      OT.DIFFS.map(d => OT.TARGET_POOLS[d].length), [7, 32, 64, 128, 249]);
+    eq("target-pool sizes are 32 / 64 / 128 / 249",
+      OT.DIFFS.map(d => OT.TARGET_POOLS[d].length), [32, 64, 128, 249]);
     const tgtLeak = [];
     for (const d of OT.DIFFS)
       for (const o of OT.TARGET_POOLS[d])
@@ -209,7 +215,7 @@
   /* ---------------- Limits / constants ---------------- */
   function suiteLimits(OT) {
     group("Guess limits & constants");
-    eq("GUESS_LIMITS", OT.GUESS_LIMITS, { starter: 6, easy: 10, medium: 15, hard: 20, expert: 25, custom: 15 });
+    eq("GUESS_LIMITS", OT.GUESS_LIMITS, { easy: 10, medium: 15, hard: 20, expert: 25, custom: 15 });
     eq("guessLimit('hard') = 20", OT.guessLimit("hard"), 20);
     eq("guessLimit(unknown) falls back to medium (15)", OT.guessLimit("nope"), 15);
     eq("HINT_COST = 3", OT.HINT_COST, 3);
