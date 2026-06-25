@@ -52,7 +52,14 @@ const WIN_ICONS = {
   check: `<svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.9" stroke-linecap="round" stroke-linejoin="round"><circle cx="12" cy="12" r="9"/><path d="M8.5 12.5l2.4 2.4 4.6-5.2"/></svg>`,
   star: `<svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.9" stroke-linecap="round" stroke-linejoin="round"><path d="M12 4.5l2.3 4.7 5.2.8-3.7 3.6.9 5.1L12 16.9 7 19.3l.9-5.1L4.2 10l5.2-.8L12 4.5Z"/></svg>`,
   chart: `<svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.9" stroke-linecap="round" stroke-linejoin="round"><path d="M5 20V11M12 20V4M19 20v-6"/></svg>`,
+  games: `<svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.9" stroke-linecap="round" stroke-linejoin="round"><rect x="3" y="4" width="18" height="16" rx="2"/><path d="M3 9.5h18"/></svg>`,
 };
+
+const STAT_ICON = { Played: "games", Solved: "check", Streak: "flame", "Max streak": "flame", "Avg guesses": "chart", Best: "star" };
+function statCard(label, value) {
+  return `<div class="stat"><span class="stat-ic" aria-hidden="true">${WIN_ICONS[STAT_ICON[label] || "target"]}</span>` +
+    `<div class="n">${value}</div><div class="l">${label}</div></div>`;
+}
 
 function winStatItems() {
   const spent = guessBudgetUsed(state), limit = guessLimit(state);
@@ -109,7 +116,7 @@ export function renderStatsView(mode = statsMode, diff = statsDiff) {
     const s = LS.get(kStats("daily", diff), { played: 0, won: 0, streak: 0, maxStreak: 0, dist: {} });
     grid.innerHTML = [
       ["Played", s.played], ["Solved", s.won], ["Streak", s.streak], ["Max streak", s.maxStreak],
-    ].map(([l, n]) => `<div class="stat"><div class="n">${n}</div><div class="l">${l}</div></div>`).join("");
+    ].map(([l, n]) => statCard(l, n)).join("");
     const keys = Object.keys(s.dist).map(Number).sort((a, b) => a - b);
     const maxC = Math.max(1, ...keys.map(k => s.dist[k]));
     const curG = state.solved && state.mode === mode && state.difficulty === diff ? guessBudgetUsed(state) : -1;
@@ -123,7 +130,7 @@ export function renderStatsView(mode = statsMode, diff = statsDiff) {
     const avg = s.won ? (s.totalGuesses / s.won).toFixed(1) : "—";
     grid.innerHTML = [
       ["Played", s.played], ["Solved", s.won], ["Avg guesses", avg], ["Best", s.best ?? "—"],
-    ].map(([l, n]) => `<div class="stat"><div class="n">${n}</div><div class="l">${l}</div></div>`).join("");
+    ].map(([l, n]) => statCard(l, n)).join("");
     dist.innerHTML = "";
   }
 }
