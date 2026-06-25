@@ -293,9 +293,17 @@ document.getElementById("howBtn").addEventListener("click", () => modal("howModa
 document.getElementById("statsBtn").addEventListener("click", openStats);
 // Footer placeholder links toast "Coming soon" until they're wired up.
 document.querySelector(".site-footer")?.addEventListener("click", e => {
-  const a = e.target.closest("a[data-soon]"); if (!a) return;
+  const a = e.target.closest("a[data-modal], a[data-soon]"); if (!a) return;
   e.preventDefault();
-  toast("Coming soon");
+  if (a.dataset.modal) modal(a.dataset.modal, true);
+  else toast("Coming soon");
+});
+// Feedback modal: copy the address (mailto isn't reliable without a mail client).
+document.getElementById("feedbackCopy")?.addEventListener("click", async e => {
+  const btn = e.currentTarget;
+  try { await navigator.clipboard.writeText("hello@openledaily.com"); btn.textContent = "Copied!"; }
+  catch { toast("hello@openledaily.com"); }
+  setTimeout(() => { btn.textContent = "Copy"; }, 1500);
 });
 document.getElementById("treeExpandBtn").addEventListener("click", openTreeModal);
 document.getElementById("treeZoomOut").addEventListener("click", () => zoomTreeByFactor(document.getElementById("tree"), 1 / TREE_BUTTON_ZOOM_FACTOR));

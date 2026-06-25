@@ -136,9 +136,9 @@
         <p class="foot-disclaimer">Not affiliated with, or endorsed by, The New York Times or Wordle.</p>
       </div>
       <nav class="foot-links" aria-label="Site">
-        <a href="#" data-soon>About</a>
-        <a href="#" data-soon>Feedback</a>
-        <a href="#" data-soon>Privacy</a>
+        <a href="#" data-modal="aboutModal">About</a>
+        <a href="#" data-modal="feedbackModal">Feedback</a>
+        <a href="#" data-modal="privacyModal">Privacy</a>
       </nav>
     </div>
   </footer>
@@ -310,6 +310,42 @@
         <button class="btn" data-close>Close</button>
       </div>
     </div>
+  </div>
+</div>
+
+<!-- About modal -->
+<div class="modal-bg" id="aboutModal">
+  <div class="modal info-modal">
+    <button class="iconbtn close" data-close aria-label="Close">✕</button>
+    <h2>About Openle</h2>
+    <p>Openle is a daily chess opening puzzle. Everyone gets the same hidden opening each day — guess openings and the move tree branches where your guess stops matching the answer, showing how close you are.</p>
+    <p>Switch to <b>Practice</b> for endless random puzzles across five difficulty tiers, or build your own tree in the fullscreen view. Opening data comes from Lichess; descriptions are adapted from Wikipedia.</p>
+    <p>Made for people who love openings. Have an idea or found a bug? <a href="mailto:hello@openledaily.com?subject=Openle%20feedback">Send feedback</a>.</p>
+  </div>
+</div>
+
+<!-- Feedback modal -->
+<div class="modal-bg" id="feedbackModal">
+  <div class="modal info-modal">
+    <button class="iconbtn close" data-close aria-label="Close">✕</button>
+    <h2>Feedback</h2>
+    <p>Found a bug or have an idea? I'd love to hear it — reach me at:</p>
+    <div class="feedback-row">
+      <code>hello@openledaily.com</code>
+      <button class="btn" id="feedbackCopy" type="button">Copy</button>
+    </div>
+    <p class="feedback-compose"><a class="btn primary" href="mailto:hello@openledaily.com?subject=Openle%20feedback">Compose email</a></p>
+  </div>
+</div>
+
+<!-- Privacy modal -->
+<div class="modal-bg" id="privacyModal">
+  <div class="modal info-modal">
+    <button class="iconbtn close" data-close aria-label="Close">✕</button>
+    <h2>Privacy</h2>
+    <p>Openle keeps things simple. Your progress, statistics, and preferences are stored only in your own browser (<code>localStorage</code>) — they stay on your device and are never sent to us.</p>
+    <p>There are no accounts and no tracking cookies, and we don't collect personal information. If privacy-friendly, anonymous analytics are added in the future, this notice will be updated to say so.</p>
+    <p>Questions? Email <a href="mailto:hello@openledaily.com">hello@openledaily.com</a>.</p>
   </div>
 </div>
 

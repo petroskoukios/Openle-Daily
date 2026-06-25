@@ -460,6 +460,16 @@ button.tree-node:focus-visible { outline: 2px solid var(--accent-hover); outline
 .modal ul { padding-left: 18px; margin: 8px 0; }
 .modal li { margin: 5px 0; }
 .modal .ex { font-family: var(--mono); font-size: 13px; background: var(--panel-2); border: 1px solid var(--border-solid); border-radius: 10px; padding: 12px 14px; white-space: pre; overflow-x: auto; line-height: 1.6; }
+/* About / Privacy info modals */
+.info-modal { max-width: 460px; }
+.info-modal p { color: var(--muted); line-height: 1.55; }
+.info-modal a { color: var(--accent-hover); }
+.info-modal code { background: var(--surface); border: 1px solid var(--border-solid); border-radius: 5px; padding: 1px 6px; font: 12px var(--mono); color: var(--text); }
+.feedback-row { display: flex; align-items: center; gap: 10px; margin: 8px 0 0; }
+.feedback-row code { flex: 1; min-width: 0; padding: 10px 12px; font-size: 13px; overflow: hidden; text-overflow: ellipsis; }
+.feedback-row .btn { flex: none; }
+.feedback-compose { margin: 14px 0 0 !important; }
+.feedback-compose .btn { display: inline-flex; }
 .how-modal { max-width: 680px; padding: 0; border-radius: 16px; overflow: hidden; }
 .how-modal .close { top: 14px; right: 14px; z-index: 1; }
 .how-header { padding: 20px 58px 18px 24px; border-bottom: 1px solid var(--border-solid); background: rgba(30,32,37,.5); }
