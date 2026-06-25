@@ -41,6 +41,8 @@ before your line splits away from the target's. The goal is to feel like you're
   with the puzzle number and difficulty.
 - **Practice mode** — endless random openings at any difficulty, with its own
   per-tier statistics.
+- **Custom puzzles** — pick any starting opening and the puzzle is built from its own
+  variations, so you can drill a specific part of the tree.
 
 ## Running it
 
@@ -74,6 +76,8 @@ falls back to a copy prompt.
 | `js/actions.js` | Guess submission, hints, give-up, and end-of-game handling. |
 | `js/search.js` | Name and optional move-order autocomplete. |
 | `js/tree.js` | Opening-tree layout, rendering, selection, pan/zoom, and fullscreen behavior. |
+| `js/tree-inspector.js` | Fullscreen-tree opening inspector (selected-line detail panel). |
+| `js/custom-tree.js` | Custom-tree state: openings added to your own tree for exploration. |
 | `js/board.js`, `js/board-view.js` | Board rendering, playback, navigation, and view-state resolution. |
 | `js/render.js`, `js/history.js` | Main UI render pass and guess-history rendering. |
 | `js/stats.js`, `js/share.js` | Per-mode/per-tier statistics, win flow, and share text. |
@@ -118,15 +122,23 @@ SAN move sequence, and an opening family derived from the name.
 ### Difficulty
 
 The dataset has no popularity/frequency signal, so the retained openings were reviewed
-manually for recognizability and theoretical difficulty. Each tier uses a cumulative
-target pool: **Easy 32 · Medium 64 · Hard 128 · Expert 256**.
-That means Medium includes all Easy targets, Hard includes all Medium targets, and
-Expert includes all Hard targets. The autocomplete is limited to the current tier's
-cumulative pool, so difficulty controls both targets and allowed guesses.
+manually for recognizability and theoretical difficulty. Each tier has two pools:
 
-The `tier` metadata in `openings.js` is the source of truth: Easy has 32 unique
-openings, Medium adds 32, Hard adds 64, and Expert adds 128. The remaining 313
-entries are marked `reserve` and are excluded from targets and autocomplete.
+- **Target pool (exclusive)** — what the puzzle's answer can be. A tier's answer is
+  drawn only from that tier: **Easy 32 · Medium 64 · Hard 128 · Expert 249**. An Easy
+  answer is never a Hard opening, and vice versa.
+- **Guess / autocomplete pool (cumulative)** — what you're allowed to guess. Each tier
+  includes its own targets plus every easier tier's, so lower-difficulty openings still
+  show up as valid guesses: **Easy 39 · Medium 103 · Hard 231 · Expert 480**.
+
+A small **starter** tier of 7 super-fundamental openings (the basic king/queen pawn
+games, Queen's Gambit, Indian Defense, English, …) sits below Easy. These are
+guessable in *every* tier but are never the answer and are not a playable mode — they
+exist so the foundational lines are always available as guesses.
+
+The `tier` metadata in `openings.js` is the source of truth: starter 7, Easy 32,
+Medium 64, Hard 128, Expert 249, and the remaining 89 entries are marked `reserve`
+(excluded from both targets and autocomplete) — 569 in total.
 
 ## Credits
 

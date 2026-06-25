@@ -30,8 +30,10 @@ Openle is a static site (no backend, no build step). Recommended host:
 ## After it's live
 
 - Submit the site to **Google Search Console** (verify + submit `sitemap.xml`).
-- Add a privacy-friendly analytics snippet (Plausible/Umami) and update the
-  footer **Privacy** link.
+- Analytics: **Cloudflare Web Analytics** is enabled via automatic edge injection
+  (the domain is a zone in the Cloudflare account, so no snippet/token is needed). The
+  footer **Privacy** modal already documents it. Note the edge-level "Visits" count
+  bots/crawlers; browser-side "Pageviews" reflect real visitors.
 - Make a **1200×630** share image at `assets/openle-og.png`, point `og:image` /
   `twitter:image` at it, and switch the Twitter card to `summary_large_image`.
 
