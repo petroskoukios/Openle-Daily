@@ -7,7 +7,7 @@ import { compare, guessLimit, confirmedDepth, hintsUsed, guessBudgetUsed, guessB
 import { commonMoveDepth, esc } from "./format.js";
 import { state, setState, setDifficulty, freshDaily, freshPractice, freshCustom, LS } from "./state.js";
 import { render } from "./render.js";
-import { renderTreeInto, fitFullscreenTree, zoomTreeByFactor, setTreeZoom, enableTreeViewport } from "./tree.js";
+import { renderTreeInto, fitFullscreenTree, animateFitFullscreenTree, zoomTreeByFactor, setTreeZoom, enableTreeViewport } from "./tree.js";
 import { stepBoard, clearBoardPlayback, resetBoardNav } from "./board.js";
 import { createBoardView, resolveBoardView, navCeiling } from "./board-view.js";
 import { submitGuess, requestHint, giveUp } from "./actions.js";
@@ -48,9 +48,15 @@ function setTreeMode(mode) {
     b.setAttribute("aria-selected", on ? "true" : "false");
   });
   document.querySelector(".tree-modal").classList.toggle("is-custom", custom);
+  // Closing the inspector widens the stage over a CSS transition. If it was open,
+  // ease the fit across that transition (like the inspector's own close) instead
+  // of a one-shot fit that would measure the still-narrow stage and zoom wrong.
+  const inspectorWasOpen = document.querySelector(".tree-modal").classList.contains("inspector-open");
   closeTreeInspector({ refit: false });   // the inspector belongs to whichever tree was showing
   if (!custom) closeCustomSuggest();
-  renderFullscreen();
+  renderFullscreen({ refit: false });
+  const el = document.getElementById("treeFullscreen");
+  requestAnimationFrame(() => inspectorWasOpen ? animateFitFullscreenTree(el) : fitFullscreenTree(el));
   if (custom) document.getElementById("treeCustomInput").focus();
 }
 
