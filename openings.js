@@ -669,7 +669,7 @@ window.OPENINGS = [
     "n": "English Opening",
     "e": "A10",
     "m": "c4",
-    "tier": "expert"
+    "tier": "starter"
   },
   {
     "n": "English Opening: Adorjan Defense",
@@ -1251,7 +1251,7 @@ window.OPENINGS = [
     "n": "Indian Defense",
     "e": "A45",
     "m": "d4 Nf6",
-    "tier": "expert"
+    "tier": "starter"
   },
   {
     "n": "Indian Defense: Accelerated London System",
@@ -1599,13 +1599,13 @@ window.OPENINGS = [
     "n": "King's Knight Opening",
     "e": "C40",
     "m": "e4 e5 Nf3",
-    "tier": "expert"
+    "tier": "starter"
   },
   {
     "n": "King's Pawn Game",
     "e": "B00",
     "m": "e4",
-    "tier": "expert"
+    "tier": "starter"
   },
   {
     "n": "King's Pawn Game: Damiano Defense",
@@ -2037,7 +2037,7 @@ window.OPENINGS = [
     "n": "Queen's Gambit",
     "e": "D06",
     "m": "d4 d5 c4",
-    "tier": "expert"
+    "tier": "starter"
   },
   {
     "n": "Queen's Gambit Accepted",
@@ -2265,7 +2265,7 @@ window.OPENINGS = [
     "n": "Queen's Pawn Game",
     "e": "A40",
     "m": "d4",
-    "tier": "expert"
+    "tier": "starter"
   },
   {
     "n": "Queen's Pawn Game: Accelerated London System",
@@ -3381,7 +3381,7 @@ window.OPENINGS = [
     "n": "Zukertort Opening",
     "e": "A04",
     "m": "Nf3",
-    "tier": "expert"
+    "tier": "starter"
   },
   {
     "n": "Zukertort Opening: Kingside Fianchetto",

@@ -29,11 +29,15 @@ export const OPENINGS = RAW.map((o, i) => {
        so lower-difficulty openings still show up as guesses.
      • TARGET_POOLS (exclusive) — what the SOLUTION can be: only this tier, so a
        medium puzzle's answer is a medium opening, never an easier one. */
-export const DIFFS = ["easy", "medium", "hard", "expert"];
-export const DIFF_LABEL = { easy: "Easy", medium: "Medium", hard: "Hard", expert: "Expert", custom: "Custom" };
-export const GUESS_LIMITS = { easy: 10, medium: 15, hard: 20, expert: 25, custom: 15 };
+// "starter" is the easiest tier — a handful of super-fundamental openings
+// (1.e4, 1.d4, Queen's Gambit, Indian Defense…). Cumulative POOLS make them
+// guessable in every tier; exclusive TARGET_POOLS keep them as answers only in
+// Starter, never in Easy or above.
+export const DIFFS = ["starter", "easy", "medium", "hard", "expert"];
+export const DIFF_LABEL = { starter: "Starter", easy: "Easy", medium: "Medium", hard: "Hard", expert: "Expert", custom: "Custom" };
+export const GUESS_LIMITS = { starter: 6, easy: 10, medium: 15, hard: 20, expert: 25, custom: 15 };
 export const HINT_COST = 3;
-export const TIER_ORDER = { easy: 0, medium: 1, hard: 2, expert: 3 };
+export const TIER_ORDER = { starter: 0, easy: 1, medium: 2, hard: 3, expert: 4 };
 
 export function tierOf(o) {
   return o.curatedTier;

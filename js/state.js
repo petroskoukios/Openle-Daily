@@ -13,7 +13,7 @@ export const LS = {
 
 // Daily progress is per (day, difficulty); stats are per (mode, difficulty).
 // Version daily saves whenever opening IDs or pool assignments change.
-const kDaily = (dayNo, diff) => `ot.daily.v10.${dayNo}.${diff}`;
+const kDaily = (dayNo, diff) => `ot.daily.v11.${dayNo}.${diff}`;
 export const kStats = (mode, diff) => `ot.stats.${mode}.${diff}`;
 const K_DIFF = "ot.diff";           // last-used difficulty
 
