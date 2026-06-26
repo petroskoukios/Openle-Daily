@@ -37,8 +37,8 @@ before your line splits away from the target's. The goal is to feel like you're
   position once the puzzle ends). The position is rebuilt from the moves by a small
   built-in SAN engine and can be replayed with the on-screen controls or left/right
   arrow keys.
-- **Shareable results** — a no-spoiler grid of closeness squares, Wordle-style, tagged
-  with the puzzle number and difficulty.
+- **Shareable results** — a clean, spoiler-free one-liner with the puzzle number,
+  difficulty, and guesses used, plus a link back to the game.
 - **Practice mode** — endless random openings at any difficulty, with its own
   per-tier statistics.
 - **Custom puzzles** — pick any starting opening and the puzzle is built from its own
