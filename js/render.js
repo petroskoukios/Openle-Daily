@@ -16,7 +16,13 @@ export function render() {
   const diff = document.getElementById("diff");
   if (state.mode === "daily") {
     mt.textContent = `Daily #${state.dayNo}`;
-    ms.textContent = new Date().toLocaleDateString(undefined, { weekday: "long", year: "numeric", month: "long", day: "numeric" });
+    const d = new Date();
+    // full date on desktop, a compact date on mobile (CSS picks which to show)
+    const long = d.toLocaleDateString(undefined, { weekday: "long", year: "numeric", month: "long", day: "numeric" });
+    const short = d.toLocaleDateString(undefined, { month: "short", day: "numeric" });
+    ms.innerHTML = `<span class="sub-long"></span><span class="sub-short"></span>`;
+    ms.querySelector(".sub-long").textContent = long;
+    ms.querySelector(".sub-short").textContent = short;
   } else {
     mt.textContent = "Practice";
     ms.textContent = state.difficulty === "custom" && state.base

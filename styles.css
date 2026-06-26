@@ -117,6 +117,8 @@ body {
 .move-toggle:hover { color: var(--text); }
 .move-toggle input { width: 14px; height: 14px; margin: 0; accent-color: var(--good); cursor: pointer; }
 .move-toggle:has(input:checked) { color: var(--text); background: rgba(97,152,202,.16); }
+/* Compact label/date variants — shown only on narrow screens (see media query). */
+.mt-short, .sub-short { display: none; }
 
 /* ---- Puzzle meta ---- */
 .meta { display: flex; align-items: baseline; gap: 14px; flex-wrap: wrap; margin-bottom: 16px; font-size: 16px; }
@@ -834,8 +836,18 @@ html:has(.tree-modal-bg.open) { overflow: hidden; }
 .foot-links a:hover { color: var(--text); }
 
 @media (max-width: 620px) {
-  .appbar { flex-wrap: wrap; gap: 10px; }
+  .appbar { flex-wrap: wrap; gap: 10px 8px; padding: 14px 2px 12px; }
   .brand small { display: none; }
+  /* Shorter notation toggle + compact date to keep the top bar from crowding. */
+  .move-toggle .mt-long { display: none; }
+  .move-toggle .mt-short { display: inline; }
+  .meta { gap: 8px 12px; }
+  .meta .sub-long { display: none; }
+  .meta .sub-short { display: inline; }
+  /* Guess counter: full-width row under the controls — label left, bar fills —
+     instead of a fixed-width box stranded to the right. */
+  .meta .gcount { margin-left: 0; width: 100%; flex-direction: row; align-items: center; gap: 10px; }
+  .meta .gcount .gcount-bar { flex: 1; }
   /* Fullscreen tree needs more room than a phone has — hide its entry point. */
   #treeExpandBtn { display: none; }
   .how-grid { grid-template-columns: 1fr; padding: 18px 20px; }
