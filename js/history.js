@@ -3,6 +3,7 @@
 import { OPENINGS } from "./data.js";
 import { esc, fmtGuessLine } from "./format.js";
 import { goBoardLine } from "./board.js";
+import { canTranspose } from "./transpose.js";
 
 export function renderHistory(state) {
   const panel = document.getElementById("historyPanel");
@@ -15,9 +16,16 @@ export function renderHistory(state) {
   const items = state.results.slice().reverse().map(cmp => {
     const g = OPENINGS[cmp.guessId];
     const cls = cmp.isWin ? "win" : (cmp.sharedPlies === bestPlies && !state.solved ? "best" : "");
+    // A guess can reach the target's position by a different move order: the tree
+    // shows them splitting early, so flag the hidden connection here instead.
+    const transposes = !cmp.isWin && canTranspose(g.moves, state.target.moves);
+    const badge = transposes
+      ? `<div class="ghist-transpose" title="This opening reaches the target's position by a different move order">⇄ Can transpose into target</div>`
+      : "";
     return `<div class="ghist-item ${cls}" data-history-guess="${g.id}" role="button" tabindex="0" title="Play this opening on the board">
       <div class="gn">${cmp.isWin ? "★ " : ""}${esc(g.name)}<span class="eco">${esc(g.eco)}</span></div>
       <div class="line">${fmtGuessLine(g, cmp)}</div>
+      ${badge}
     </div>`;
   });
   document.getElementById("historyBody").innerHTML = items.join("");
