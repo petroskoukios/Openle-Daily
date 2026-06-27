@@ -841,6 +841,8 @@ html:has(.tree-modal-bg.open) { overflow: hidden; }
   /* Notation toggle is desktop-only; hide it on phones to declutter the top bar. */
   .move-toggle { display: none; }
   .meta { gap: 8px 12px; }
+  /* Drop the .modes 8px indent so the difficulty bar lines up under the title. */
+  .meta .diff { margin-left: 0; }
   .meta .sub-long { display: none; }
   .meta .sub-short { display: inline; }
   /* Guess counter: full-width row under the controls — label left, bar fills —
