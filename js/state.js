@@ -3,7 +3,7 @@
    import, mutate object properties in place, and reassign only through the
    setters so every importer sees the change. */
 import { TARGET_POOLS, OPENINGS, DIFFS, subtreeOf } from "./data.js";
-import { dailyTarget, localDayNumber } from "./daily.js";
+import { dailyTarget, utcDayNumber } from "./daily.js";
 import { compare, hintsUsed } from "./domain.js";
 
 export const LS = {
@@ -33,7 +33,7 @@ export function setState(s) { state = s; }
 
 export function freshDaily(diff) {
   diff = diff || difficulty;
-  const dayNo = localDayNumber();
+  const dayNo = utcDayNumber();
   const target = dailyTarget(dayNo, diff);
   const st = { mode: "daily", difficulty: diff, target, dayNo, results: [], guessedIds: new Set(), solved: false, gaveUp: false, hintPlies: 0, hintCount: 0 };
   const saved = LS.get(kDaily(dayNo, diff), null);

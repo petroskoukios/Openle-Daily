@@ -1,9 +1,13 @@
-/* Deterministic daily puzzle selection — same puzzle for everyone, per tier. */
+/* Deterministic daily puzzle selection — the same puzzle for everyone worldwide,
+   per tier. The day rolls over at UTC midnight (global time) rather than each
+   player's local midnight, so everyone is on the same puzzle at the same moment.
+   Using UTC also avoids the daylight-saving off-by-one that local midnights can
+   introduce. */
 import { TARGET_POOLS, DIFFS } from "./data.js";
 
-export function localDayNumber(d = new Date()) {
-  const local = new Date(d.getFullYear(), d.getMonth(), d.getDate());
-  return Math.floor((local - new Date(2024, 0, 1)) / 86400000);
+export function utcDayNumber(d = new Date()) {
+  const today = Date.UTC(d.getUTCFullYear(), d.getUTCMonth(), d.getUTCDate());
+  return Math.floor((today - Date.UTC(2024, 0, 1)) / 86400000);
 }
 
 // xmur3 + mulberry32 for a stable seeded shuffle of the pool.
