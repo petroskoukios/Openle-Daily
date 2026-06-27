@@ -117,8 +117,8 @@ body {
 .move-toggle:hover { color: var(--text); }
 .move-toggle input { width: 14px; height: 14px; margin: 0; accent-color: var(--good); cursor: pointer; }
 .move-toggle:has(input:checked) { color: var(--text); background: rgba(97,152,202,.16); }
-/* Compact label/date variants — shown only on narrow screens (see media query). */
-.mt-short, .sub-short { display: none; }
+/* Compact date variant — shown only on narrow screens (see media query). */
+.sub-short { display: none; }
 
 /* ---- Puzzle meta ---- */
 .meta { display: flex; align-items: baseline; gap: 14px; flex-wrap: wrap; margin-bottom: 16px; font-size: 16px; }
@@ -838,9 +838,8 @@ html:has(.tree-modal-bg.open) { overflow: hidden; }
 @media (max-width: 620px) {
   .appbar { flex-wrap: wrap; gap: 10px 8px; padding: 14px 2px 12px; }
   .brand small { display: none; }
-  /* Shorter notation toggle + compact date to keep the top bar from crowding. */
-  .move-toggle .mt-long { display: none; }
-  .move-toggle .mt-short { display: inline; }
+  /* Notation toggle is desktop-only; hide it on phones to declutter the top bar. */
+  .move-toggle { display: none; }
   .meta { gap: 8px 12px; }
   .meta .sub-long { display: none; }
   .meta .sub-short { display: inline; }
@@ -855,5 +854,9 @@ html:has(.tree-modal-bg.open) { overflow: hidden; }
   .how-footer { padding-right: 20px; padding-left: 20px; }
   .stats-grid { grid-template-columns: repeat(2, 1fr); }
   .win-stats { grid-template-columns: repeat(2, 1fr); }
-  .foot-row { flex-direction: column; align-items: flex-start; gap: 10px; }
+  /* Stack the footer; reset the legal block's 420px flex-basis (a width on
+     desktop, but a 420px *height* once the row becomes a column) and the
+     space-between, which together stranded the About/Feedback/Privacy links. */
+  .foot-row { flex-direction: column; align-items: flex-start; gap: 12px; justify-content: flex-start; }
+  .foot-legal { flex: 0 0 auto; }
 }
