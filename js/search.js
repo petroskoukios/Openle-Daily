@@ -108,13 +108,15 @@ function renderSuggest(q) {
     suggestEl.classList.add("open"); return;
   }
   const matchedPlies = res.mode === "move" ? moveTokens(q).length : 0;
+  // Only surface the moves when notation search is on; in name mode they're noise.
   suggestEl.innerHTML = currentList.map((o, i) => {
     const nm = res.mode === "move" ? esc(o.name) : highlight(o.name, tokens);
-    const mv = res.mode === "move" ? movePreview(o, matchedPlies)
+    const mv = !moveSearchEnabled ? ""
+      : res.mode === "move" ? movePreview(o, matchedPlies)
       : esc(o.moves.slice(0, 6).join(" ") + (o.moves.length > 6 ? "…" : ""));
     return `<li data-i="${i}" class="${i === activeIdx ? "active" : ""}">
       <span class="nm">${nm}</span>
-      <span class="mv">${mv}</span></li>`;
+      ${mv ? `<span class="mv">${mv}</span>` : ""}</li>`;
   }).join("");
   suggestEl.classList.add("open");
 }
