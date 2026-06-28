@@ -73,7 +73,7 @@ body {
   html { scrollbar-width: thin; scrollbar-color: var(--border-solid) transparent; }
 }
 
-.wrap { max-width: 1220px; margin: 0 auto; padding: 0 18px 80px; }
+.wrap { max-width: 1300px; margin: 0 auto; padding: 0 18px 80px; }
 
 /* ---- App bar ---- */
 .appbar {
@@ -181,7 +181,9 @@ body {
 .panel .hint { color: var(--muted-2); font-size: 13px; }
 .tree-panel { padding: 10px 12px 12px; }
 .tree-panel > .tree {
-  height: clamp(300px, 44vh, 470px); min-height: 0;
+  /* Sized so the tree panel's bottom lines up with the board panel's bottom,
+     accounting for the search bar that sits above the tree on the left. */
+  height: 425px; min-height: 0;
   -webkit-mask-image:
     linear-gradient(to right, transparent, #000 9px, #000 calc(100% - 9px), transparent),
     linear-gradient(to bottom, transparent, #000 9px, #000 calc(100% - 9px), transparent);
@@ -345,7 +347,9 @@ button.tree-node:focus-visible { outline: 2px solid var(--accent-hover); outline
 .ghist-item.win .line .sh { color: var(--good); }
 
 /* ---- Two-column layout: tree on the left, board on the right ---- */
-.layout { display: grid; grid-template-columns: minmax(0, 1.18fr) minmax(320px, .82fr); gap: 18px; align-items: start; }
+/* The board column is capped at its comfortable size; the tree column (1fr) takes
+   all the extra width on wide screens, so widening the page grows the tree only. */
+.layout { display: grid; grid-template-columns: minmax(0, 1fr) minmax(320px, 480px); gap: 18px; align-items: start; }
 .col-left { min-width: 0; }
 .col-right { position: sticky; top: 16px; }
 .col-left .panel:last-of-type { margin-bottom: 16px; }
