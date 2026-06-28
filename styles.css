@@ -630,12 +630,13 @@ html:has(.tree-modal-bg.open) { overflow: hidden; }
 }
 .tree-modal.inspector-open .tree-inspector { border-left-color: var(--border-solid); }
 .tree-inspector-scroll {
-  width: 470px; height: 100%; overflow-y: auto; padding: 22px 18px 24px;
+  width: 470px; height: 100%; overflow-y: hidden; padding: 22px 18px 24px;
   opacity: 0; pointer-events: none;
   transition: opacity .42s linear;
-  scrollbar-width: none;  /* content fits — hide the bar (still scrolls if a short window forces it) */
 }
-.tree-inspector-scroll::-webkit-scrollbar { display: none; }
+/* Only scroll — and show the scrollbar — once the opening description is expanded;
+   collapsed, everything fits, so no scroll/bar. */
+.tree-inspector-scroll:has(.tree-inspector-description.is-expanded) { overflow-y: auto; }
 .tree-modal.inspector-open .tree-inspector-scroll { opacity: 1; pointer-events: auto; }
 .tree-inspector-collapse {
   position: absolute; right: 0; top: 14%; z-index: 5; width: 30px; height: 54px;
