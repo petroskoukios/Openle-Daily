@@ -9,6 +9,17 @@ import { renderHistory } from "./history.js";
 import { renderBoard } from "./board.js";
 import { input } from "./dom.js";
 
+// Time left until the next daily, which rolls over at UTC midnight (global time).
+// Returns the bare duration ("5h 23m") or null once the new daily is available.
+let nextPuzzleTimer = null;
+function nextDailyCountdown() {
+  const now = new Date();
+  const ms = Date.UTC(now.getUTCFullYear(), now.getUTCMonth(), now.getUTCDate() + 1) - now.getTime();
+  if (ms <= 0) return null;
+  const totalMin = Math.floor(ms / 60000), h = Math.floor(totalMin / 60), m = totalMin % 60;
+  return h > 0 ? `${h}h ${m}m` : m > 0 ? `${m}m` : "<1m";
+}
+
 export function render() {
   // meta
   const mt = document.getElementById("metaTitle");
@@ -45,9 +56,21 @@ export function render() {
 
   // input lock
   input.disabled = state.solved || state.gaveUp;
-  input.placeholder = state.solved ? "Puzzle completed"
-    : state.gaveUp ? "Puzzle failed"
-    : "Search an opening to guess — e.g. Sicilian, Ruy Lopez…";
+  if (nextPuzzleTimer) { clearInterval(nextPuzzleTimer); nextPuzzleTimer = null; }
+  if (state.mode === "daily" && (state.solved || state.gaveUp)) {
+    // Today's daily is done — show status + a live countdown to the next one.
+    const status = state.solved ? "Puzzle complete" : "Puzzle failed";
+    const tick = () => {
+      const t = nextDailyCountdown();
+      input.placeholder = t ? `${status}, next daily in ${t}` : "New daily available — refresh";
+    };
+    tick();
+    nextPuzzleTimer = setInterval(tick, 30000);
+  } else {
+    input.placeholder = state.solved ? "Puzzle completed"
+      : state.gaveUp ? "Puzzle failed"
+      : "Search an opening to guess — e.g. Sicilian, Ruy Lopez…";
+  }
 
   // panels
   renderTree(state);
