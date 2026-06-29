@@ -26,12 +26,13 @@ export const BOARD_PLAYBACK_STEP_MS = 220; // Keep in sync with .move-ghost in s
 const view = createBoardView();
 
 // Board orientation: false = White at the bottom (default), true = Black at the
-// bottom. Shared by the main board and the fullscreen inspector board.
-let flipped = false;
+// bottom. The main board and the fullscreen inspector board flip independently.
+let mainFlipped = false;
+let inspectorFlipped = false;
 
 // Squares in display order. Flipped reverses both axes (files h→a, rank 1 on top)
 // and moves the rank/file coordinate labels to the new edges.
-function squaresHtml(boardArr, changed, hide, captured) {
+function squaresHtml(boardArr, changed, hide, captured, flipped) {
   const ranks = flipped ? [0, 1, 2, 3, 4, 5, 6, 7] : [7, 6, 5, 4, 3, 2, 1, 0];
   const files = flipped ? [7, 6, 5, 4, 3, 2, 1, 0] : [0, 1, 2, 3, 4, 5, 6, 7];
   const leftFile = flipped ? 7 : 0, bottomRank = flipped ? 7 : 0;
@@ -51,7 +52,7 @@ function squaresHtml(boardArr, changed, hide, captured) {
 
 // Move-ghost coords feed CSS (left = f·12.5%, top = (7−r)·12.5%); flipping the
 // view mirrors both axes so the slide animation lands on the displayed squares.
-function ghostsHtml(slides) {
+function ghostsHtml(slides, flipped) {
   const T = x => flipped ? 7 - x : x;
   return slides.map(m =>
     `<div class="move-ghost" style="--from-f:${T(m.fromF)};--from-r:${T(m.fromR)};--to-f:${T(m.toF)};--to-r:${T(m.toR)}">${pieceImg(m.p)}</div>`
@@ -59,9 +60,14 @@ function ghostsHtml(slides) {
 }
 
 export function toggleBoardFlip() {
-  flipped = !flipped;
-  if (state) renderBoard(state);   // refresh the main board; secondary boards refresh via their own callers
-  return flipped;
+  mainFlipped = !mainFlipped;
+  if (state) renderBoard(state);
+  return mainFlipped;
+}
+
+export function toggleInspectorFlip() {
+  inspectorFlipped = !inspectorFlipped;   // caller re-renders the inspector board
+  return inspectorFlipped;
 }
 
 export function boardMaxDepth(state) {
@@ -98,7 +104,7 @@ export function renderStaticBoard(moves, depth, slide = null) {
       if (slideFrom[r][f] && slideFrom[r][f] !== board[r][f] && !origins.has(key)) captured.add(key);
     }
   }
-  return squaresHtml(shownBoard, changed, hide, captured) + ghostsHtml(slides);
+  return squaresHtml(shownBoard, changed, hide, captured, inspectorFlipped) + ghostsHtml(slides, inspectorFlipped);
 }
 
 function movingPieces(fromBoard, toBoard) {
@@ -160,7 +166,7 @@ export function renderBoard(state) {
   }
 
   document.getElementById("board").innerHTML =
-    squaresHtml(shownBoard, changed, hide, captured) + ghostsHtml(slides);
+    squaresHtml(shownBoard, changed, hide, captured, mainFlipped) + ghostsHtml(slides, mainFlipped);
 
   const cap = document.getElementById("boardCap");
   const prevBtn = document.getElementById("boardPrev");
