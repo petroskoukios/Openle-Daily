@@ -113,7 +113,12 @@
 
     <aside class="col-right">
       <section class="panel board-panel">
-        <div class="board-line-label">CURRENT LINE</div>
+        <div class="board-line-label">
+          <span>CURRENT LINE</span>
+          <button class="iconbtn board-flip" id="boardFlip" type="button" title="Flip board" aria-label="Flip board">
+            <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="M7 4v12M4 13l3 3 3-3M17 20V8M14 11l3-3 3 3"/></svg>
+          </button>
+        </div>
         <div class="board-wrap">
           <div class="board" id="board"></div>
         </div>
@@ -206,6 +211,9 @@
               <div class="tree-inspector-moves" id="treeInspectorMoves">Starting position</div>
             </div>
             <div class="board-nav tree-inspector-nav" aria-label="Move navigation">
+              <button class="iconbtn board-flip" id="treeInspectorFlip" type="button" title="Flip board" aria-label="Flip board">
+                <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="M7 4v12M4 13l3 3 3-3M17 20V8M14 11l3-3 3 3"/></svg>
+              </button>
               <button class="iconbtn" id="treeInspectorPrev" type="button" title="Previous move" aria-label="Previous move">‹</button>
               <button class="iconbtn" id="treeInspectorNext" type="button" title="Next move" aria-label="Next move">›</button>
             </div>

@@ -8,7 +8,7 @@ import { fmtBoardMoves, commonMoveDepth } from "./format.js";
 import { animateFitFullscreenTree } from "./tree.js";
 import { state } from "./state.js";
 import { isCustomActive } from "./custom-tree.js";
-import { renderStaticBoard, BOARD_PLAYBACK_STEP_MS } from "./board.js";
+import { renderStaticBoard, BOARD_PLAYBACK_STEP_MS, toggleBoardFlip } from "./board.js";
 
 const modal = document.querySelector(".tree-modal");
 const panel = document.getElementById("treeInspector");
@@ -384,6 +384,7 @@ document.addEventListener("ot:tree-line-select", e => openTreeInspector(e.detail
 document.getElementById("treeInspectorCollapse").addEventListener("click", toggleTreeInspector);
 prevButton?.addEventListener("click", () => stepInspector(-1));
 nextButton?.addEventListener("click", () => stepInspector(1));
+document.getElementById("treeInspectorFlip")?.addEventListener("click", () => { toggleBoardFlip(); refreshTreeInspector(); });
 copyButton.addEventListener("click", copyCurrentLine);
 copyFenButton.addEventListener("click", copyCurrentFen);
 

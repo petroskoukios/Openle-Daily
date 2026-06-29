@@ -403,7 +403,12 @@ button.tree-node:focus-visible { outline: 2px solid var(--accent-hover); outline
 .sq .fl { bottom: 0px; right: 3px; }
 .sq.l .rk, .sq.l .fl { color: rgba(39,49,61,.72); }
 .sq.d .rk, .sq.d .fl { color: rgba(243,243,246,.82); }
-.board-line-label { margin: -4px 0 10px; color: var(--muted); font-size: 14px; font-weight: 700; line-height: 1.2; letter-spacing: .05em; }
+.board-line-label { display: flex; align-items: center; gap: 8px; margin: -4px 0 10px; color: var(--muted); font-size: 14px; font-weight: 700; line-height: 1.2; letter-spacing: .05em; }
+.board-flip { margin-left: auto; width: 26px; height: 26px; padding: 0; background: transparent; color: var(--muted-2); border-radius: 6px; }
+.board-flip svg { width: 16px; height: 16px; }
+.board-flip:hover { color: var(--text); background: var(--panel-2); }
+/* In the inspector nav the flip button sits beside the arrows — drop the auto margin. */
+.tree-inspector-nav .board-flip { margin-left: 0; }
 .board-footer { display: flex; align-items: center; gap: 12px; margin-top: 10px; }
 .board-cap { flex: 1; min-width: 0; font-family: var(--mono); font-size: 14px; line-height: 1.6; }
 .board-cap .ln { color: var(--good); }

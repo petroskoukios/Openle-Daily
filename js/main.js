@@ -8,7 +8,7 @@ import { commonMoveDepth, esc } from "./format.js";
 import { state, setState, setDifficulty, freshDaily, freshPractice, freshCustom, LS } from "./state.js";
 import { render } from "./render.js";
 import { renderTreeInto, fitFullscreenTree, animateFitFullscreenTree, zoomTreeByFactor, setTreeZoom, enableTreeViewport } from "./tree.js";
-import { stepBoard, clearBoardPlayback, resetBoardNav } from "./board.js";
+import { stepBoard, clearBoardPlayback, resetBoardNav, toggleBoardFlip } from "./board.js";
 import { createBoardView, resolveBoardView, navCeiling } from "./board-view.js";
 import { submitGuess, requestHint, giveUp } from "./actions.js";
 import { looksLikeMoves, moveTokens, isMoveSearchEnabled, scoreMatch } from "./search.js";
@@ -332,6 +332,7 @@ document.getElementById("winShareBtn").addEventListener("click", doShare);
 document.getElementById("winPracticeBtn").addEventListener("click", startPracticeFromWin);
 document.getElementById("boardPrev").addEventListener("click", () => stepBoard(-1));
 document.getElementById("boardNext").addEventListener("click", () => stepBoard(1));
+document.getElementById("boardFlip").addEventListener("click", () => toggleBoardFlip());
 document.getElementById("hintBtn").addEventListener("click", requestHint);
 document.getElementById("giveUpBtn").addEventListener("click", giveUp);
 document.getElementById("newBtn").addEventListener("click", () => {

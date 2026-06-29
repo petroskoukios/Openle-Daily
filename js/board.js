@@ -25,6 +25,45 @@ function pieceImg(p, cls = "") {
 export const BOARD_PLAYBACK_STEP_MS = 220; // Keep in sync with .move-ghost in styles.css.
 const view = createBoardView();
 
+// Board orientation: false = White at the bottom (default), true = Black at the
+// bottom. Shared by the main board and the fullscreen inspector board.
+let flipped = false;
+
+// Squares in display order. Flipped reverses both axes (files h→a, rank 1 on top)
+// and moves the rank/file coordinate labels to the new edges.
+function squaresHtml(boardArr, changed, hide, captured) {
+  const ranks = flipped ? [0, 1, 2, 3, 4, 5, 6, 7] : [7, 6, 5, 4, 3, 2, 1, 0];
+  const files = flipped ? [7, 6, 5, 4, 3, 2, 1, 0] : [0, 1, 2, 3, 4, 5, 6, 7];
+  const leftFile = flipped ? 7 : 0, bottomRank = flipped ? 7 : 0;
+  let html = "";
+  for (const r of ranks) for (const f of files) {
+    const p = boardArr[r][f];
+    const key = r * 8 + f;
+    const pieceClass = (hide.has(key) ? " hide" : "") + (captured.has(key) ? " captured-exit" : "");
+    const glyph = p ? pieceImg(p, pieceClass) : "";
+    const cls = ((r + f) % 2 === 0 ? "d" : "l") + (changed.has(key) ? " hl" : "");
+    const coord = (f === leftFile ? `<span class="rk">${r + 1}</span>` : "") +
+                  (r === bottomRank ? `<span class="fl">${OTChess.FILES[f]}</span>` : "");
+    html += `<div class="sq ${cls}">${coord}${glyph}</div>`;
+  }
+  return html;
+}
+
+// Move-ghost coords feed CSS (left = f·12.5%, top = (7−r)·12.5%); flipping the
+// view mirrors both axes so the slide animation lands on the displayed squares.
+function ghostsHtml(slides) {
+  const T = x => flipped ? 7 - x : x;
+  return slides.map(m =>
+    `<div class="move-ghost" style="--from-f:${T(m.fromF)};--from-r:${T(m.fromR)};--to-f:${T(m.toF)};--to-r:${T(m.toR)}">${pieceImg(m.p)}</div>`
+  ).join("");
+}
+
+export function toggleBoardFlip() {
+  flipped = !flipped;
+  if (state) renderBoard(state);   // refresh the main board; secondary boards refresh via their own callers
+  return flipped;
+}
+
 export function boardMaxDepth(state) {
   return (state.solved || state.gaveUp) ? state.target.moves.length : confirmedDepth(state);
 }
@@ -59,22 +98,7 @@ export function renderStaticBoard(moves, depth, slide = null) {
       if (slideFrom[r][f] && slideFrom[r][f] !== board[r][f] && !origins.has(key)) captured.add(key);
     }
   }
-  let html = "";
-  for (let r = 7; r >= 0; r--) {
-    for (let f = 0; f < 8; f++) {
-      const p = shownBoard[r][f];
-      const key = r * 8 + f;
-      const pieceClass = (hide.has(key) ? " hide" : "") + (captured.has(key) ? " captured-exit" : "");
-      const glyph = p ? pieceImg(p, pieceClass) : "";
-      const cls = ((r + f) % 2 === 0 ? "d" : "l") + (changed.has(key) ? " hl" : "");
-      const coord = (f === 0 ? `<span class="rk">${r + 1}</span>` : "") +
-                    (r === 0 ? `<span class="fl">${OTChess.FILES[f]}</span>` : "");
-      html += `<div class="sq ${cls}">${coord}${glyph}</div>`;
-    }
-  }
-  for (const m of slides)
-    html += `<div class="move-ghost" style="--from-f:${m.fromF};--from-r:${m.fromR};--to-f:${m.toF};--to-r:${m.toR}">${pieceImg(m.p)}</div>`;
-  return html;
+  return squaresHtml(shownBoard, changed, hide, captured) + ghostsHtml(slides);
 }
 
 function movingPieces(fromBoard, toBoard) {
@@ -135,24 +159,8 @@ export function renderBoard(state) {
     }
   }
 
-  let html = "";
-  for (let r = 7; r >= 0; r--) {
-    for (let f = 0; f < 8; f++) {
-      const p = shownBoard[r][f];
-      const key = r * 8 + f;
-      const pieceClass = (hide.has(key) ? " hide" : "") + (captured.has(key) ? " captured-exit" : "");
-      const glyph = p ? pieceImg(p, pieceClass) : "";
-      const cls = ((r + f) % 2 === 0 ? "d" : "l") + (changed.has(r * 8 + f) ? " hl" : "");
-      const coord = (f === 0 ? `<span class="rk">${r + 1}</span>` : "") +
-                    (r === 0 ? `<span class="fl">${OTChess.FILES[f]}</span>` : "");
-      html += `<div class="sq ${cls}">${coord}${glyph}</div>`;
-    }
-  }
-  for (const m of slides) {
-    html += `<div class="move-ghost" style="--from-f:${m.fromF};--from-r:${m.fromR};--to-f:${m.toF};--to-r:${m.toR}">` +
-      `${pieceImg(m.p)}</div>`;
-  }
-  document.getElementById("board").innerHTML = html;
+  document.getElementById("board").innerHTML =
+    squaresHtml(shownBoard, changed, hide, captured) + ghostsHtml(slides);
 
   const cap = document.getElementById("boardCap");
   const prevBtn = document.getElementById("boardPrev");
