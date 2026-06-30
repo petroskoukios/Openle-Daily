@@ -28,6 +28,12 @@
 <link rel="icon" type="image/png" sizes="96x96" href="/assets/favicon-96.png" />
 <link rel="icon" type="image/png" sizes="192x192" href="/assets/favicon-192.png" />
 <link rel="apple-touch-icon" href="/assets/apple-touch-icon.png" />
+<!-- PWA -->
+<link rel="manifest" href="/manifest.json" />
+<meta name="theme-color" content="#2b2d33" />
+<meta name="apple-mobile-web-app-capable" content="yes" />
+<meta name="apple-mobile-web-app-status-bar-style" content="black-translucent" />
+<meta name="apple-mobile-web-app-title" content="Openle" />
 </head>
 <body>
 <div class="wrap">
@@ -367,5 +373,9 @@
 <script src="descriptions.js"></script>
 <script src="chess.js"></script>
 <script type="module" src="js/main.js?v=43"></script>
+<script>
+  if ("serviceWorker" in navigator)
+    addEventListener("load", () => navigator.serviceWorker.register("/sw.js").catch(() => {}));
+</script>
 </body>
 </html>

@@ -179,6 +179,8 @@ function closeCustomBasePicker() {
   baseBar.style.display = "none";
   guessSearch.style.display = "";
   baseSuggestEl.classList.remove("open"); baseList = []; baseActiveIdx = -1;
+  // Restore the active tier; Custom stays lit only if a custom game is running.
+  document.querySelectorAll("#diff button").forEach(x => x.classList.toggle("active", x.dataset.diff === state.difficulty));
 }
 function openCustomBasePicker() {
   if (state.mode !== "practice") return;       // custom is practice-only
@@ -187,6 +189,8 @@ function openCustomBasePicker() {
   baseInput.value = "";
   baseSuggestEl.classList.remove("open");
   baseInput.focus();
+  // Light up Custom on the tier bar immediately, before a base is chosen.
+  document.querySelectorAll("#diff button").forEach(x => x.classList.toggle("active", x.dataset.diff === "custom"));
 }
 
 // Search the eligible base openings (those with enough variations) by name.

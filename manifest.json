@@ -1,0 +1,14 @@
+{
+  "name": "Openle — Guess the Chess Opening",
+  "short_name": "Openle",
+  "description": "A daily chess opening puzzle. Guess the hidden opening from how deep your guess shares the opening tree.",
+  "start_url": "/",
+  "scope": "/",
+  "display": "standalone",
+  "background_color": "#2b2d33",
+  "theme_color": "#2b2d33",
+  "icons": [
+    { "src": "/assets/favicon-192.png", "sizes": "192x192", "type": "image/png", "purpose": "any" },
+    { "src": "/assets/icon-512.png", "sizes": "512x512", "type": "image/png", "purpose": "any" }
+  ]
+}
