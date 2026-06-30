@@ -289,16 +289,23 @@ document.addEventListener("keydown", e => {
   else if (e.key === "ArrowRight") { e.preventDefault(); stepBoard(1); }
 });
 
-// A button clicked with the mouse/touch shouldn't keep keyboard focus —
+// A control focused by a mouse/touch click shouldn't keep keyboard focus —
 // otherwise the next keypress (e.g. the arrow keys that drive the board) flips
-// the browser into keyboard mode and lights the focused button up with a focus
-// ring. detail === 0 marks keyboard activation (Enter/Space), where the focus
-// outline should stay.
+// the browser into keyboard mode and lights the focused control up with a focus
+// ring. Blurring whatever the click focused covers every control (icon/action
+// buttons, mode + difficulty buttons, tree nodes and their move tokens,
+// guess-history items) without enumerating them. The listener runs in the
+// capture phase so tree handlers that call stopPropagation can't skip it, and
+// blurs in a microtask so it runs after that handler. detail === 0 marks
+// keyboard activation (Enter/Space), where the focus ring should stay; text
+// fields are left focused so typing isn't cut.
 document.addEventListener("click", e => {
   if (e.detail === 0) return;
-  const btn = e.target.closest(".iconbtn, .btn");
-  if (btn) btn.blur();
-});
+  queueMicrotask(() => {
+    const a = document.activeElement;
+    if (a && a !== document.body && !a.matches("input, textarea, select") && !a.isContentEditable) a.blur();
+  });
+}, true);
 
 /* ---------- Wiring ---------- */
 document.getElementById("howBtn").addEventListener("click", () => modal("howModal", true));
