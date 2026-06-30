@@ -7,10 +7,17 @@ let muted = false;
 try { muted = JSON.parse(localStorage.getItem(KEY)) === true; } catch {}
 
 let ctx = null;
+let master = null;   // shared output bus; one knob for overall loudness
+const MASTER_GAIN = 1.7;
 function ensureCtx() {
   if (!ctx) {
     const AC = window.AudioContext || window.webkitAudioContext;
-    if (AC) try { ctx = new AC(); } catch { ctx = null; }
+    if (AC) try {
+      ctx = new AC();
+      master = ctx.createGain();
+      master.gain.value = MASTER_GAIN;
+      master.connect(ctx.destination);
+    } catch { ctx = null; }
   }
   if (ctx && ctx.state === "suspended") ctx.resume();
   return ctx;
@@ -33,7 +40,7 @@ function note(freq, start, dur, { type = "sine", gain = 0.2 } = {}) {
   g.gain.setValueAtTime(0.0001, t0);
   g.gain.exponentialRampToValueAtTime(gain, t0 + 0.006);
   g.gain.exponentialRampToValueAtTime(0.0001, t0 + dur);
-  osc.connect(g).connect(ctx.destination);
+  osc.connect(g).connect(master);
   osc.start(t0);
   osc.stop(t0 + dur + 0.02);
 }
@@ -51,7 +58,7 @@ function thud(start, dur, gain, cutoff) {
   const g = ctx.createGain();
   g.gain.setValueAtTime(gain, t0);
   g.gain.exponentialRampToValueAtTime(0.0001, t0 + dur);
-  src.connect(filt).connect(g).connect(ctx.destination);
+  src.connect(filt).connect(g).connect(master);
   src.start(t0); src.stop(t0 + dur + 0.02);
 }
 
