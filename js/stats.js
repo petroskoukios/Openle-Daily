@@ -4,6 +4,7 @@ import { guessBudgetUsed, guessLimit } from "./domain.js";
 import { modal, input } from "./dom.js";
 import { render } from "./render.js";
 import { clearBoardPlayback, resetBoardNav } from "./board.js";
+import { play } from "./sound.js";
 
 export function recordDaily(won) {
   const key = kStats("daily", state.difficulty);
@@ -88,6 +89,7 @@ function openWinModal() {
       `<span class="n">${s.value}</span><span class="l">${s.label}</span></div>`)
     .join("");
   modal("winModal", true);
+  play("win");
 }
 
 export function startPracticeFromWin() {

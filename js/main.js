@@ -9,6 +9,7 @@ import { state, setState, setDifficulty, freshDaily, freshPractice, freshCustom,
 import { render } from "./render.js";
 import { renderTreeInto, fitFullscreenTree, animateFitFullscreenTree, zoomTreeByFactor, setTreeZoom, enableTreeViewport } from "./tree.js";
 import { stepBoard, clearBoardPlayback, resetBoardNav, toggleBoardFlip } from "./board.js";
+import { toggleMute, isMuted } from "./sound.js";
 import { createBoardView, resolveBoardView, navCeiling } from "./board-view.js";
 import { submitGuess, requestHint, giveUp } from "./actions.js";
 import { looksLikeMoves, moveTokens, isMoveSearchEnabled, scoreMatch } from "./search.js";
@@ -333,6 +334,9 @@ document.getElementById("winPracticeBtn").addEventListener("click", startPractic
 document.getElementById("boardPrev").addEventListener("click", () => stepBoard(-1));
 document.getElementById("boardNext").addEventListener("click", () => stepBoard(1));
 document.getElementById("boardFlip").addEventListener("click", () => toggleBoardFlip());
+const soundBtn = document.getElementById("soundBtn");
+soundBtn.classList.toggle("is-muted", isMuted());
+soundBtn.addEventListener("click", () => soundBtn.classList.toggle("is-muted", toggleMute()));
 document.getElementById("hintBtn").addEventListener("click", requestHint);
 document.getElementById("giveUpBtn").addEventListener("click", giveUp);
 document.getElementById("newBtn").addEventListener("click", () => {

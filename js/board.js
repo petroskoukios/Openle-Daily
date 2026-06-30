@@ -6,6 +6,7 @@ import { state } from "./state.js";
 import { confirmedDepth } from "./domain.js";
 import { commonMoveDepth, fmtBoardMoves } from "./format.js";
 import { createBoardView, resolveBoardView, navCeiling } from "./board-view.js";
+import { play } from "./sound.js";
 
 const OTChess = window.OTChess; // classic chess.js sets this before modules run
 
@@ -93,6 +94,10 @@ export function renderStaticBoard(moves, depth, slide = null) {
   if (slideFrom || depth > 0) for (let r = 0; r < 8; r++) for (let f = 0; f < 8; f++)
     if (board[r][f] !== comparison[r][f]) changed.add(r * 8 + f);
   const slides = slideFrom ? movingPieces(slideFrom, board) : [];
+  if (slideFrom && slides.length) {
+    const san = movingForward ? moves[depth - 1] : (slide.fromMoves[slide.fromDepth - 1] || "");
+    play(movingForward && san && san.includes("x") ? "capture" : "move");
+  }
   const hide = new Set();
   for (const m of slides)
     hide.add((movingForward ? m.fromR : m.toR) * 8 + (movingForward ? m.fromF : m.toF));
@@ -148,6 +153,10 @@ export function renderBoard(state) {
   if (slideFrom || depth > 0) for (let r = 0; r < 8; r++) for (let f = 0; f < 8; f++)
     if (board[r][f] !== comparisonBoard[r][f]) changed.add(r * 8 + f);
   const slides = slideFrom ? movingPieces(slideFrom, board) : [];
+  if (slideFrom && slides.length) {
+    const san = movingForward ? lineMoves[depth - 1] : (slideMoves[view.slideFromDepth - 1] || "");
+    play(movingForward && san && san.includes("x") ? "capture" : "move");
+  }
   const hide = new Set();
   for (const m of slides) {
     const hiddenR = movingForward ? m.fromR : m.toR;

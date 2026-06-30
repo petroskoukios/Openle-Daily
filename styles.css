@@ -106,6 +106,11 @@ body {
 .iconbtn svg { display: block; width: 17px; height: 17px; }
 .iconbtn:hover { color: #fff; background: var(--border-solid); }
 .appbar > .iconbtn { background: var(--panel); }
+/* Sound toggle: show the speaker icon, or the muted (crossed) icon when off. */
+#soundBtn .sound-off { display: none; }
+#soundBtn.is-muted .sound-on { display: none; }
+#soundBtn.is-muted .sound-off { display: block; }
+#soundBtn.is-muted { color: var(--muted-2); }
 .move-toggle {
   display: inline-flex; align-items: center; gap: 7px;
   height: 36px; padding: 0 12px; flex-shrink: 0;
@@ -845,15 +850,15 @@ html:has(.tree-modal-bg.open) { overflow: hidden; }
 .foot-links a:hover { color: var(--text); }
 
 @media (max-width: 620px) {
-  .appbar { flex-wrap: wrap; gap: 10px 6px; padding: 14px 2px 12px; }
+  .appbar { flex-wrap: wrap; gap: 10px 3px; padding: 14px 2px 12px; }
   .brand small { display: none; }
   /* Smaller logo + controls, and drop the flex spacer so the bar packs into a
      single compact row instead of pushing the icons onto a second line. */
-  .brand-logo { height: 28px; }
+  .brand-logo { height: 26px; }
   .appbar .spacer { display: none; }
   .appbar .modes { margin-left: 0; }
-  .modes button { padding: 6px 10px; font-size: 12.5px; }
-  .iconbtn { width: 32px; height: 32px; font-size: 14px; }
+  .modes button { padding: 5px 9px; font-size: 12px; }
+  .iconbtn { width: 30px; height: 30px; font-size: 14px; }
   .iconbtn svg { width: 15px; height: 15px; }
   /* Notation toggle is desktop-only; hide it on phones to declutter the top bar. */
   .move-toggle { display: none; }

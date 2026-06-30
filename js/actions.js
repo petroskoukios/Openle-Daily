@@ -9,6 +9,7 @@ import {
 import { recordDaily, recordPractice, onSolve } from "./stats.js";
 import { render } from "./render.js";
 import { input, suggestEl, toast } from "./dom.js";
+import { play } from "./sound.js";
 
 function finishOutOfGuesses() {
   clearBoardPlayback();
@@ -16,6 +17,7 @@ function finishOutOfGuesses() {
   state.gaveUp = true;
   if (state.mode === "daily") { saveDaily(); recordDaily(false); }
   else recordPractice(false);
+  play("miss");
   toast("Out of guesses.");
 }
 
@@ -29,6 +31,7 @@ export function submitGuess(opening) {
   state.guessedIds.add(opening.id);
   if (cmp.isWin) state.solved = true;
   else if (guessBudgetLeft(state) === 0) finishOutOfGuesses();
+  if (!cmp.isWin && !state.gaveUp) play("guess");   // win/miss have their own sounds
   const afterDepth = (state.solved || state.gaveUp) ? state.target.moves.length : confirmedDepth(state);
   const shouldAnimateBoard = afterDepth > beforeDepth;
   if (shouldAnimateBoard) primeBoardAnimation(beforeDepth);
@@ -57,6 +60,7 @@ export function giveUp() {
   state.gaveUp = true;
   if (state.mode === "daily") { saveDaily(); recordDaily(false); }
   else recordPractice(false);
+  play("miss");
   const afterDepth = state.target.moves.length;
   if (afterDepth > beforeDepth) primeBoardAnimation(beforeDepth);
   render();
