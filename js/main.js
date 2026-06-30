@@ -289,6 +289,17 @@ document.addEventListener("keydown", e => {
   else if (e.key === "ArrowRight") { e.preventDefault(); stepBoard(1); }
 });
 
+// A button clicked with the mouse/touch shouldn't keep keyboard focus —
+// otherwise the next keypress (e.g. the arrow keys that drive the board) flips
+// the browser into keyboard mode and lights the focused button up with a focus
+// ring. detail === 0 marks keyboard activation (Enter/Space), where the focus
+// outline should stay.
+document.addEventListener("click", e => {
+  if (e.detail === 0) return;
+  const btn = e.target.closest(".iconbtn, .btn");
+  if (btn) btn.blur();
+});
+
 /* ---------- Wiring ---------- */
 document.getElementById("howBtn").addEventListener("click", () => modal("howModal", true));
 document.getElementById("statsBtn").addEventListener("click", openStats);
