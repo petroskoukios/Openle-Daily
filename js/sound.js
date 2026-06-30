@@ -58,13 +58,13 @@ function thud(start, dur, gain, cutoff) {
 export function play(name) {
   if (muted || !ensureCtx()) return;
   switch (name) {
-    case "move":                                   // muffled low thud
-      note(170, 0, 0.09, { type: "sine", gain: 0.12 });
+    case "move":                                   // low, muffled thud
+      note(120, 0, 0.09, { type: "sine", gain: 0.12 });
       thud(0, 0.05, 0.07, 500);
       break;
-    case "capture":                                // heavy body + a bit of snap to stand out
-      note(120, 0, 0.12, { type: "sine", gain: 0.15 });
-      thud(0, 0.06, 0.13, 1100);
+    case "capture":                                // higher pitch, crisper and starker tap
+      note(170, 0, 0.12, { type: "sine", gain: 0.15 });
+      thud(0, 0.045, 0.15, 1800);
       break;
     case "win":                                    // gentle ascending arpeggio
       [523.25, 659.25, 783.99, 1046.5].forEach((f, i) => note(f, i * 0.085, 0.18, { type: "sine", gain: 0.15 }));

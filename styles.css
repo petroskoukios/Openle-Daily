@@ -188,7 +188,7 @@ body {
 .tree-panel > .tree {
   /* Sized so the tree panel's bottom lines up with the board panel's bottom,
      accounting for the search bar that sits above the tree on the left. */
-  height: 425px; min-height: 0;
+  height: 434px; min-height: 0;
   -webkit-mask-image:
     linear-gradient(to right, transparent, #000 9px, #000 calc(100% - 9px), transparent),
     linear-gradient(to bottom, transparent, #000 9px, #000 calc(100% - 9px), transparent);
