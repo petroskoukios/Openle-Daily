@@ -31,7 +31,6 @@ export function submitGuess(opening) {
   state.guessedIds.add(opening.id);
   if (cmp.isWin) state.solved = true;
   else if (guessBudgetLeft(state) === 0) finishOutOfGuesses();
-  if (!cmp.isWin && !state.gaveUp) play("guess");   // win/miss have their own sounds
   const afterDepth = (state.solved || state.gaveUp) ? state.target.moves.length : confirmedDepth(state);
   const shouldAnimateBoard = afterDepth > beforeDepth;
   if (shouldAnimateBoard) primeBoardAnimation(beforeDepth);

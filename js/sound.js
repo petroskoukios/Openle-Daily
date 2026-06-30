@@ -38,15 +38,16 @@ function note(freq, start, dur, { type = "sine", gain = 0.2 } = {}) {
   osc.stop(t0 + dur + 0.02);
 }
 
-// A short filtered-noise burst — the percussive "tap" of a piece landing.
-function click(start, dur, gain, highpass) {
+// A short filtered-noise burst — the body of a piece landing. A low lowpass
+// cutoff keeps it a dull, muffled thud rather than a crisp high tick.
+function thud(start, dur, gain, cutoff) {
   const t0 = ctx.currentTime + start;
   const len = Math.max(1, Math.floor(ctx.sampleRate * dur));
   const buf = ctx.createBuffer(1, len, ctx.sampleRate);
   const data = buf.getChannelData(0);
   for (let i = 0; i < len; i++) data[i] = (Math.random() * 2 - 1) * (1 - i / len);
   const src = ctx.createBufferSource(); src.buffer = buf;
-  const filt = ctx.createBiquadFilter(); filt.type = "highpass"; filt.frequency.value = highpass;
+  const filt = ctx.createBiquadFilter(); filt.type = "lowpass"; filt.frequency.value = cutoff;
   const g = ctx.createGain();
   g.gain.setValueAtTime(gain, t0);
   g.gain.exponentialRampToValueAtTime(0.0001, t0 + dur);
@@ -57,16 +58,13 @@ function click(start, dur, gain, highpass) {
 export function play(name) {
   if (muted || !ensureCtx()) return;
   switch (name) {
-    case "move":                                   // soft low thock
-      note(180, 0, 0.06, { type: "triangle", gain: 0.18 });
-      click(0, 0.018, 0.05, 2400);
+    case "move":                                   // muffled low thud
+      note(170, 0, 0.09, { type: "sine", gain: 0.12 });
+      thud(0, 0.05, 0.07, 500);
       break;
-    case "capture":                                // heavier, with more tap
-      note(130, 0, 0.085, { type: "triangle", gain: 0.22 });
-      click(0, 0.03, 0.13, 1700);
-      break;
-    case "guess":                                  // subtle blip on submit
-      note(520, 0, 0.05, { type: "sine", gain: 0.10 });
+    case "capture":                                // heavy body + a bit of snap to stand out
+      note(120, 0, 0.12, { type: "sine", gain: 0.15 });
+      thud(0, 0.06, 0.13, 1100);
       break;
     case "win":                                    // gentle ascending arpeggio
       [523.25, 659.25, 783.99, 1046.5].forEach((f, i) => note(f, i * 0.085, 0.18, { type: "sine", gain: 0.15 }));
