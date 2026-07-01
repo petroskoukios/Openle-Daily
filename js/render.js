@@ -79,7 +79,7 @@ export function render() {
 
   // actions
   const done = state.solved || state.gaveUp;
-  document.getElementById("shareBtn").style.display = (done && state.solved) ? "" : "none";
+  document.getElementById("shareBtn").style.display = (done && state.solved && state.mode === "daily") ? "" : "none";
   document.getElementById("hintBtn").style.display = (!done && confirmedDepth(state) < state.target.moves.length && left >= HINT_COST) ? "" : "none";
   document.getElementById("newBtn").style.display = (state.mode === "practice") ? "" : "none";
   document.getElementById("giveUpBtn").style.display = (!done && spent >= 5) ? "" : "none";

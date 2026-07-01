@@ -88,6 +88,7 @@ function openWinModal() {
     .map(s => `<div class="win-stat"><span class="win-stat-ic" aria-hidden="true">${WIN_ICONS[s.icon]}</span>` +
       `<span class="n">${s.value}</span><span class="l">${s.label}</span></div>`)
     .join("");
+  document.getElementById("winShareBtn").style.display = state.mode === "daily" ? "" : "none";
   modal("winModal", true);
   play("win");
 }
