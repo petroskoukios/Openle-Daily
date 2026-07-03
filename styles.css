@@ -73,7 +73,7 @@ body {
   html { scrollbar-width: thin; scrollbar-color: var(--border-solid) transparent; }
 }
 
-.wrap { max-width: 1300px; margin: 0 auto; padding: 0 18px 80px; }
+.wrap { max-width: 1300px; margin: 0 auto; padding: 0 18px 24px; }
 
 /* ---- App bar ---- */
 .appbar {
