@@ -47,7 +47,12 @@ export function submitGuess(opening) {
   }
   render();
   if (shouldAnimateBoard) animateBoardProgress(beforeDepth, afterDepth);
-  if (!state.solved && !state.gaveUp) input.focus();
+  // On touch devices, dismiss the on-screen keyboard after a guess; keeping the
+  // input focused (as on desktop, for the next guess) holds the keyboard open.
+  if (!state.solved && !state.gaveUp) {
+    if (matchMedia("(pointer: coarse)").matches) input.blur();
+    else input.focus();
+  }
 }
 
 export function giveUp() {
