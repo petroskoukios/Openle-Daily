@@ -850,16 +850,16 @@ html:has(.tree-modal-bg.open) { overflow: hidden; }
 .foot-links a:hover { color: var(--text); }
 
 @media (max-width: 620px) {
-  .appbar { flex-wrap: wrap; gap: 10px 3px; padding: 14px 2px 12px; }
+  .appbar { flex-wrap: wrap; gap: 10px; padding: 14px 4px 12px; margin: 0 -8px; }
   .brand small { display: none; }
-  /* Smaller logo + controls, and drop the flex spacer so the bar packs into a
-     single compact row instead of pushing the icons onto a second line. */
-  .brand-logo { height: 26px; }
+  /* Swap the wide wordmark for the compact pawn icon on phones, which frees the
+     width for large, roomy controls on a single row: logo left, controls right. */
+  .brand-logo { content: url("/assets/openle-icon.png"); height: 36px; width: 36px; }
   .appbar .spacer { display: none; }
-  .appbar .modes { margin-left: 0; }
-  .modes button { padding: 5px 9px; font-size: 12px; }
-  .iconbtn { width: 30px; height: 30px; font-size: 14px; }
-  .iconbtn svg { width: 15px; height: 15px; }
+  .appbar .modes { margin-left: auto; }
+  .modes button { padding: 7px 12px; font-size: 13.5px; }
+  .iconbtn { width: 36px; height: 36px; font-size: 15px; }
+  .iconbtn svg { width: 17px; height: 17px; }
   /* Notation toggle is desktop-only; hide it on phones to declutter the top bar. */
   .move-toggle { display: none; }
   .meta { gap: 8px 12px; }
