@@ -414,6 +414,9 @@ button.tree-node:focus-visible { outline: 2px solid var(--accent-hover); outline
 .board-flip:hover { color: var(--text); background: var(--panel-2); }
 /* In the inspector nav the flip button sits beside the arrows — drop the auto margin. */
 .tree-inspector-nav .board-flip { margin-left: 0; }
+/* A phones-only flip button that lives in the move-nav row (desktop uses the
+   one in the "current line" label instead). */
+.board-flip-mobile { display: none; }
 .board-footer { display: flex; align-items: center; gap: 12px; margin-top: 10px; }
 .board-cap { flex: 1; min-width: 0; font-family: var(--mono); font-size: 14px; line-height: 1.6; }
 .board-cap .ln { color: var(--good); }
@@ -873,6 +876,12 @@ html:has(.tree-modal-bg.open) { overflow: hidden; }
   .meta .gcount .gcount-bar { flex: 1; }
   /* Fullscreen tree needs more room than a phone has — hide its entry point. */
   #treeExpandBtn { display: none; }
+  /* Drop the "Current line" header on phones; the flip button moves into the
+     move-nav row, just left of the arrows. */
+  .board-line-label { display: none; }
+  .board-flip-mobile { display: inline-flex; margin-right: 6px; }
+  /* A little breathing room above the board now the label row is gone. */
+  .board-wrap { margin-top: 8px; }
   .how-grid { grid-template-columns: 1fr; padding: 18px 20px; }
   .how-header { padding-left: 20px; }
   .how-footer { padding-right: 20px; padding-left: 20px; }

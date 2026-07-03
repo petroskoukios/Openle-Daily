@@ -355,7 +355,8 @@ document.getElementById("winShareBtn").addEventListener("click", doShare);
 document.getElementById("winPracticeBtn").addEventListener("click", startPracticeFromWin);
 document.getElementById("boardPrev").addEventListener("click", () => stepBoard(-1));
 document.getElementById("boardNext").addEventListener("click", () => stepBoard(1));
-document.getElementById("boardFlip").addEventListener("click", () => toggleBoardFlip());
+["boardFlip", "boardFlipMobile"].forEach(id =>
+  document.getElementById(id).addEventListener("click", () => toggleBoardFlip()));
 const soundBtn = document.getElementById("soundBtn");
 soundBtn.classList.toggle("is-muted", isMuted());
 soundBtn.addEventListener("click", () => soundBtn.classList.toggle("is-muted", toggleMute()));
