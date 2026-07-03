@@ -440,10 +440,10 @@ button.tree-node:focus-visible { outline: 2px solid var(--accent-hover); outline
 .board-nav .iconbtn:disabled:hover { color: var(--muted); background: transparent; }
 
 @media (max-width: 840px) {
-  .layout { grid-template-columns: 1fr; gap: 8px; }
+  .layout { grid-template-columns: 1fr; gap: 6px; }
   .col-right { position: static; order: -1; }      /* board on top when stacked */
-  .layout > .search { order: -2; margin: 12px 0 0; }  /* space above the board region, snug to the board */
-  .board-panel { padding-top: 6px; }                  /* pull the board up under the search */
+  .layout > .search { order: -2; margin-bottom: 0; }  /* search sits snug above the board */
+  .board-panel { padding-top: 20px; }                 /* space above the board inside the box */
   .col-right .board-wrap { max-width: 420px; margin: 0 auto; }
   .tree-panel > .tree { height: clamp(280px, 52vh, 440px); }
 }
@@ -885,8 +885,6 @@ html:has(.tree-modal-bg.open) { overflow: hidden; }
      move-nav row, just left of the arrows. */
   .board-line-label { display: none; }
   .board-flip-mobile { display: inline-flex; margin-right: 6px; }
-  /* A touch of breathing room above the board now the label row is gone. */
-  .board-wrap { margin-top: 2px; }
   .how-grid { grid-template-columns: 1fr; padding: 18px 20px; }
   .how-header { padding-left: 20px; }
   .how-footer { padding-right: 20px; padding-left: 20px; }
