@@ -859,7 +859,7 @@ html:has(.tree-modal-bg.open) { overflow: hidden; }
   .brand small { display: none; }
   /* Swap the wide wordmark for the compact pawn icon on phones, which frees the
      width for large, roomy controls on a single row: logo left, controls right. */
-  .brand-logo { content: url("/assets/openle-icon.png"); height: 36px; width: 36px; }
+  .brand-logo { content: url("/assets/openle-mark.png"); height: 34px; width: auto; }
   .appbar .spacer { display: none; }
   /* Daily/Practice sit next to the logo; the gap goes before the setting icons,
      which push to the right edge. */
