@@ -357,6 +357,27 @@ document.getElementById("boardPrev").addEventListener("click", () => stepBoard(-
 document.getElementById("boardNext").addEventListener("click", () => stepBoard(1));
 ["boardFlip", "boardFlipMobile"].forEach(id =>
   document.getElementById(id).addEventListener("click", () => toggleBoardFlip()));
+
+// When the layout stacks (phones/narrow), the search bar moves above the board;
+// side-by-side it stays at the top of the left/tree column. CSS can't pull it
+// out of .col-left across containers, so move it responsively here.
+{
+  const layout = document.querySelector(".layout");
+  const colLeft = document.querySelector(".col-left");
+  const colRight = document.querySelector(".col-right");
+  const stacked = matchMedia("(max-width: 840px)");
+  const placeSearch = e => {
+    if (e.matches) {
+      layout.insertBefore(guessSearch, colRight);
+      layout.insertBefore(baseBar, colRight);
+    } else {
+      colLeft.insertBefore(baseBar, colLeft.firstChild);
+      colLeft.insertBefore(guessSearch, colLeft.firstChild);
+    }
+  };
+  placeSearch(stacked);
+  stacked.addEventListener("change", placeSearch);
+}
 const soundBtn = document.getElementById("soundBtn");
 soundBtn.classList.toggle("is-muted", isMuted());
 soundBtn.addEventListener("click", () => soundBtn.classList.toggle("is-muted", toggleMute()));
