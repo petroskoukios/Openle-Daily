@@ -34,9 +34,50 @@
 <meta name="apple-mobile-web-app-capable" content="yes" />
 <meta name="apple-mobile-web-app-status-bar-style" content="black-translucent" />
 <meta name="apple-mobile-web-app-title" content="Openle" />
+<!-- Structured data -->
+<script type="application/ld+json">
+{
+  "@context": "https://schema.org",
+  "@graph": [
+    {
+      "@type": "WebSite",
+      "@id": "https://openledaily.com/#website",
+      "url": "https://openledaily.com/",
+      "name": "Openle",
+      "description": "A free daily chess opening guessing game."
+    },
+    {
+      "@type": "WebApplication",
+      "@id": "https://openledaily.com/#app",
+      "name": "Openle",
+      "url": "https://openledaily.com/",
+      "description": "Openle is a free daily puzzle where you guess the hidden chess opening from how deep your guess shares the opening tree. Includes an endless Practice mode and a build-your-own opening tree.",
+      "applicationCategory": "GameApplication",
+      "operatingSystem": "Any (web browser)",
+      "browserRequirements": "Requires JavaScript.",
+      "inLanguage": "en",
+      "image": "https://openledaily.com/assets/openle-og.png",
+      "isAccessibleForFree": true,
+      "offers": { "@type": "Offer", "price": "0", "priceCurrency": "USD" }
+    },
+    {
+      "@type": "FAQPage",
+      "@id": "https://openledaily.com/#faq",
+      "mainEntity": [
+        { "@type": "Question", "name": "How do you play Openle?", "acceptedAnswer": { "@type": "Answer", "text": "Type an opening as your guess. Each guess reveals how many moves deep it shares the same line as the hidden opening, and the board plays out the moves so you can see where you diverged — solve it in as few guesses as you can." } },
+        { "@type": "Question", "name": "Is Openle free?", "acceptedAnswer": { "@type": "Answer", "text": "Yes. Openle is completely free, with no ads, no account, and no tracking." } },
+        { "@type": "Question", "name": "When does the daily puzzle reset?", "acceptedAnswer": { "@type": "Answer", "text": "A new daily puzzle is available every day at midnight UTC. Once you finish it, switch to Practice mode for unlimited random puzzles." } },
+        { "@type": "Question", "name": "What is a chess opening tree?", "acceptedAnswer": { "@type": "Answer", "text": "An opening tree maps how chess openings branch apart move by move from the starting position. In Openle, each guess is scored by how deep it follows the same branch as the hidden opening." } }
+      ]
+    }
+  ]
+}
+</script>
 </head>
 <body>
 <div class="wrap">
+
+  <h1 class="sr-only">Openle — the daily chess opening guessing game</h1>
 
   <header class="appbar">
     <div class="brand"><img class="brand-logo" src="assets/openle-logo.png" alt="Openle" /><small>guess the opening</small></div>
@@ -145,6 +186,29 @@
       </section>
     </aside>
   </div>
+
+  <section class="about" aria-label="About Openle">
+    <h2>What is Openle?</h2>
+    <p class="about-lead">Openle is a free daily chess opening guessing game — like Wordle, but for chess openings. Every day there's one hidden opening. Guess openings by name and each guess shows how many moves deep it shares the same line as the answer, so you narrow it down through the opening tree in as few guesses as possible. There's also an endless Practice mode across five difficulty tiers and a build-your-own opening tree. No ads, no sign-up, no tracking.</p>
+    <div class="faq">
+      <details>
+        <summary>How do you play Openle?</summary>
+        <p>Type an opening as your guess. Each guess reveals how many moves deep it shares the same line as the hidden opening, and the board plays out the moves so you can see where you diverged — solve it in as few guesses as you can.</p>
+      </details>
+      <details>
+        <summary>Is Openle free?</summary>
+        <p>Yes. Openle is completely free, with no ads, no account, and no tracking.</p>
+      </details>
+      <details>
+        <summary>When does the daily puzzle reset?</summary>
+        <p>A new daily puzzle is available every day at midnight UTC. Once you finish it, switch to Practice mode for unlimited random puzzles.</p>
+      </details>
+      <details>
+        <summary>What is a chess opening tree?</summary>
+        <p>An opening tree maps how chess openings branch apart move by move from the starting position. In Openle, each guess is scored by how deep it follows the same branch as the hidden opening.</p>
+      </details>
+    </div>
+  </section>
 
   <footer class="site-footer">
     <div class="foot-row">
