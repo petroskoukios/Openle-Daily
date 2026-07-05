@@ -476,7 +476,7 @@ button.tree-node:focus-visible { outline: 2px solid var(--accent-hover); outline
 /* Secondary buttons are quiet raised surfaces; the primary is a solid accent
    with a darker bottom edge (a subtly "physical" chess.com-style key) so the
    main action reads instantly. */
-.actions { display: flex; gap: 10px; flex-wrap: wrap; align-items: center; margin-top: 4px; }
+.actions { display: flex; gap: 10px; flex-wrap: wrap; align-items: center; margin: 4px 0 16px; }
 .btn {
   display: inline-flex; align-items: center; justify-content: center; gap: 8px;
   border: 1px solid var(--hairline); background: var(--panel-2); color: var(--text);
@@ -486,14 +486,8 @@ button.tree-node:focus-visible { outline: 2px solid var(--accent-hover); outline
 }
 .btn:hover { background: var(--panel-3); }
 .btn:active { transform: translateY(1px); }
-.btn.primary {
-  background: linear-gradient(180deg, #7db3e3, #5b93c6);
-  border-color: transparent; color: #0e1624;
-  box-shadow: inset 0 1px 0 rgba(255,255,255,.3), 0 2px 0 var(--accent-dark), 0 8px 18px rgba(60,110,160,.28);
-}
-.btn.primary:hover { background: linear-gradient(180deg, #8cbde8, #669dd0); }
-.btn.primary:active { box-shadow: inset 0 1px 0 rgba(255,255,255,.22), 0 1px 0 var(--accent-dark); }
-.btn.primary svg { color: #0e1624; }
+.btn.primary { background: rgba(97,152,202,.13); border-color: var(--accent); color: var(--accent-hover); }
+.btn.primary:hover { background: rgba(97,152,202,.22); border-color: var(--accent-hover); }
 .btn.ghost { background: transparent; border-color: transparent; color: var(--muted); font-weight: 600; }
 .btn.ghost:hover { background: var(--panel-2); color: var(--text); }
 
