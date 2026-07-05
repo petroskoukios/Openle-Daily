@@ -96,7 +96,7 @@ body {
 /* ---- App bar ---- */
 .appbar {
   display: flex; align-items: center; gap: 16px;
-  padding: 14px 2px 10px;
+  padding: 13px 2px 10px;
   border-bottom: 1px solid var(--hairline);
   margin-bottom: 11px;
 }
