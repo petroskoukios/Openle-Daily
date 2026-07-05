@@ -590,10 +590,13 @@ html:has(.tree-modal-bg.open) { overflow: hidden; }
 .tree-modal-body {
   /* Inspector dark palette — defined here so both the inspector panel and its
      sibling collapse tab can read them. */
-  --ins-card: #262931;
-  --ins-raise: #383c46;
-  --ins-raise-hover: #434753;
-  --ins-border: #40434d;
+  /* Inspector keeps the deeper "soft black" surfaces (rather than the lighter
+     halfway palette) — its card, action buttons, and nav arrows read better dark. */
+  --ins-card: #191e28;
+  --ins-raise: #252c3a;
+  --ins-raise-hover: #2e3646;
+  --ins-border: #2c3444;
+  --ins-bg: #0d1017;   /* panel backdrop behind the card + board */
   position: relative; display: grid; grid-template-columns: minmax(0, 1fr) 0px;
   flex: 1 1 auto; min-height: 0; overflow: hidden;
   transition: grid-template-columns .42s cubic-bezier(.4, 0, .2, 1);
@@ -673,7 +676,7 @@ html:has(.tree-modal-bg.open) { overflow: hidden; }
 .tree-inspector {
   position: relative; min-width: 0; overflow: hidden;
   border-left: 1px solid transparent;
-  background: var(--surface);
+  background: var(--ins-bg);
   transition: border-color .18s ease;
 }
 .tree-modal.inspector-open .tree-inspector { border-left-color: var(--border-solid); }
@@ -689,7 +692,7 @@ html:has(.tree-modal-bg.open) { overflow: hidden; }
   position: absolute; right: 0; top: 14%; z-index: 5; width: 30px; height: 54px;
   display: flex; align-items: center; justify-content: center;
   transform: translateY(-50%); border: 1px solid var(--ins-border); border-right: 0;
-  border-radius: 8px 0 0 8px; background: var(--surface); color: var(--text);
+  border-radius: 8px 0 0 8px; background: var(--ins-bg); color: var(--text);
   cursor: pointer; font: 700 26px/1 var(--sans);
   transition: right .42s cubic-bezier(.4, 0, .2, 1), background .12s ease;
 }
