@@ -588,15 +588,14 @@ html:has(.tree-modal-bg.open) { overflow: hidden; }
 .tree-modal-close:hover { color: var(--text); background: var(--panel-2); }
 .tree-modal-close svg { width: 15px; height: 15px; }
 .tree-modal-body {
-  /* Inspector dark palette — defined here so both the inspector panel and its
-     sibling collapse tab can read them. */
-  /* Inspector keeps the deeper "soft black" surfaces (rather than the lighter
-     halfway palette) — its card, action buttons, and nav arrows read better dark. */
-  --ins-card: #191e28;
-  --ins-raise: #252c3a;
-  --ins-raise-hover: #2e3646;
-  --ins-border: #2c3444;
-  --ins-bg: #0d1017;   /* panel backdrop behind the card + board */
+  /* Inspector palette — defined here so both the inspector panel and its
+     sibling collapse tab can read them. Reverted to the lighter pre-theme-rework
+     surfaces: a lighter backdrop with a raised card on top. */
+  --ins-card: #262931;
+  --ins-raise: #383c46;
+  --ins-raise-hover: #434753;
+  --ins-border: #40434d;
+  --ins-bg: #1e2025;   /* panel backdrop behind the card + board */
   position: relative; display: grid; grid-template-columns: minmax(0, 1fr) 0px;
   flex: 1 1 auto; min-height: 0; overflow: hidden;
   transition: grid-template-columns .42s cubic-bezier(.4, 0, .2, 1);
