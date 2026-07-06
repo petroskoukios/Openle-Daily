@@ -45,7 +45,7 @@ window.OPENINGS = [
     "n": "Alekhine Defense: Modern Variation",
     "e": "B04",
     "m": "e4 Nf6 e5 Nd5 d4 d6 Nf3",
-    "tier": "medium"
+    "tier": "hard"
   },
   {
     "n": "Alekhine Defense: Modern Variation, Main Line",
@@ -87,7 +87,7 @@ window.OPENINGS = [
     "n": "Benko Gambit Accepted",
     "e": "A57",
     "m": "d4 Nf6 c4 c5 d5 b5 cxb5 a6",
-    "tier": "expert"
+    "tier": "hard"
   },
   {
     "n": "Benoni Defense",
@@ -153,7 +153,7 @@ window.OPENINGS = [
     "n": "Benoni Defense: Modern Variation",
     "e": "A60",
     "m": "d4 Nf6 c4 c5 d5 e6",
-    "tier": "expert"
+    "tier": "hard"
   },
   {
     "n": "Benoni Defense: Old Benoni",
@@ -177,7 +177,7 @@ window.OPENINGS = [
     "n": "Bird Opening",
     "e": "A02",
     "m": "f4",
-    "tier": "expert"
+    "tier": "easy"
   },
   {
     "n": "Bird Opening: Dutch Variation",
@@ -219,7 +219,7 @@ window.OPENINGS = [
     "n": "Blackmar-Diemer Gambit",
     "e": "D00",
     "m": "d4 d5 e4",
-    "tier": "expert"
+    "tier": "hard"
   },
   {
     "n": "Blackmar-Diemer Gambit Accepted",
@@ -237,7 +237,7 @@ window.OPENINGS = [
     "n": "Bogo-Indian Defense",
     "e": "E11",
     "m": "d4 Nf6 c4 e6 Nf3 Bb4+",
-    "tier": "easy"
+    "tier": "hard"
   },
   {
     "n": "Bogo-Indian Defense: Exchange Variation",
@@ -309,13 +309,13 @@ window.OPENINGS = [
     "n": "Caro-Kann Defense: Advance Variation, Tal Variation",
     "e": "B12",
     "m": "e4 c6 d4 d5 e5 Bf5 h4",
-    "tier": "hard"
+    "tier": "expert"
   },
   {
     "n": "Caro-Kann Defense: Advance Variation, Van der Wiel Attack",
     "e": "B12",
     "m": "e4 c6 d4 d5 e5 Bf5 Nc3",
-    "tier": "hard"
+    "tier": "expert"
   },
   {
     "n": "Caro-Kann Defense: Advance Variation, Van der Wiel Attack, Dreyev Defense",
@@ -333,7 +333,7 @@ window.OPENINGS = [
     "n": "Caro-Kann Defense: Bronstein-Larsen Variation",
     "e": "B16",
     "m": "e4 c6 d4 d5 Nc3 dxe4 Nxe4 Nf6 Nxf6+ gxf6",
-    "tier": "hard"
+    "tier": "expert"
   },
   {
     "n": "Caro-Kann Defense: Campomanes Attack",
@@ -345,7 +345,7 @@ window.OPENINGS = [
     "n": "Caro-Kann Defense: Classical Variation",
     "e": "B18",
     "m": "e4 c6 d4 d5 Nd2 dxe4 Nxe4 Bf5",
-    "tier": "hard"
+    "tier": "medium"
   },
   {
     "n": "Caro-Kann Defense: Classical Variation, Main Line",
@@ -477,13 +477,13 @@ window.OPENINGS = [
     "n": "Caro-Kann Defense: Tartakower Variation",
     "e": "B15",
     "m": "e4 c6 d4 d5 Nc3 dxe4 Nxe4 Nf6 Nxf6+ exf6",
-    "tier": "hard"
+    "tier": "expert"
   },
   {
     "n": "Caro-Kann Defense: Two Knights Attack",
     "e": "B10",
     "m": "e4 c6 Nc3 d5 Nf3",
-    "tier": "medium"
+    "tier": "hard"
   },
   {
     "n": "Caro-Kann Defense: Two Knights Attack, Mindeno Variation",
@@ -501,7 +501,7 @@ window.OPENINGS = [
     "n": "Catalan Opening: Closed",
     "e": "E01",
     "m": "d4 Nf6 c4 e6 g3 d5 Bg2",
-    "tier": "medium"
+    "tier": "hard"
   },
   {
     "n": "Catalan Opening: Closed Variation, Traditional Variation",
@@ -525,7 +525,7 @@ window.OPENINGS = [
     "n": "Catalan Opening: Open Defense, Classical Line",
     "e": "E05",
     "m": "d4 Nf6 c4 e6 g3 d5 Bg2 dxc4 Nf3 Be7",
-    "tier": "hard"
+    "tier": "expert"
   },
   {
     "n": "Center Game",
@@ -537,7 +537,7 @@ window.OPENINGS = [
     "n": "Center Game Accepted",
     "e": "C21",
     "m": "e4 e5 d4 exd4",
-    "tier": "expert"
+    "tier": "medium"
   },
   {
     "n": "Czech Defense",
@@ -549,7 +549,7 @@ window.OPENINGS = [
     "n": "Danish Gambit",
     "e": "C21",
     "m": "e4 e5 d4 exd4 c3",
-    "tier": "expert"
+    "tier": "medium"
   },
   {
     "n": "Danish Gambit Accepted",
@@ -603,7 +603,7 @@ window.OPENINGS = [
     "n": "Dutch Defense: Hopton Attack",
     "e": "A80",
     "m": "d4 f5 Bg5",
-    "tier": "hard"
+    "tier": "expert"
   },
   {
     "n": "Dutch Defense: Leningrad Variation",
@@ -645,19 +645,19 @@ window.OPENINGS = [
     "n": "Dutch Defense: Staunton Gambit",
     "e": "A82",
     "m": "d4 f5 e4",
-    "tier": "medium"
+    "tier": "hard"
   },
   {
     "n": "Dutch Defense: Stonewall Variation",
     "e": "A92",
     "m": "d4 f5 c4 Nf6 g3 e6 Bg2 Be7 Nf3 O-O O-O d5 Nc3",
-    "tier": "hard"
+    "tier": "medium"
   },
   {
     "n": "Elephant Gambit",
     "e": "C40",
     "m": "e4 e5 Nf3 d5",
-    "tier": "expert"
+    "tier": "hard"
   },
   {
     "n": "English Defense",
@@ -741,7 +741,7 @@ window.OPENINGS = [
     "n": "English Opening: King's English Variation",
     "e": "A20",
     "m": "c4 e5",
-    "tier": "easy"
+    "tier": "hard"
   },
   {
     "n": "English Opening: King's English Variation, Botvinnik System",
@@ -753,7 +753,7 @@ window.OPENINGS = [
     "n": "English Opening: King's English Variation, Four Knights Variation",
     "e": "A28",
     "m": "c4 e5 Nc3 Nf6 Nf3 Nc6",
-    "tier": "hard"
+    "tier": "expert"
   },
   {
     "n": "English Opening: King's English Variation, Four Knights Variation, Fianchetto Line",
@@ -765,7 +765,7 @@ window.OPENINGS = [
     "n": "English Opening: King's English Variation, Keres Defense",
     "e": "A21",
     "m": "c4 e5 Nc3 d6 g3 c6",
-    "tier": "hard"
+    "tier": "expert"
   },
   {
     "n": "English Opening: King's English Variation, Reversed Closed Sicilian",
@@ -825,19 +825,19 @@ window.OPENINGS = [
     "n": "English Opening: Symmetrical Variation, Fianchetto Variation",
     "e": "A34",
     "m": "c4 Nf6 Nc3 c5 g3",
-    "tier": "hard"
+    "tier": "expert"
   },
   {
     "n": "English Opening: Symmetrical Variation, Four Knights Variation",
     "e": "A35",
     "m": "c4 Nf6 Nf3 c5 Nc3 Nc6",
-    "tier": "hard"
+    "tier": "expert"
   },
   {
     "n": "English Opening: Symmetrical Variation, Hedgehog Defense",
     "e": "A30",
     "m": "c4 e6 Nf3 Nf6 Nc3 c5 g3 b6 Bg2 Bb7 O-O Be7",
-    "tier": "expert"
+    "tier": "hard"
   },
   {
     "n": "English Opening: Symmetrical Variation, Two Knights Variation",
@@ -861,7 +861,7 @@ window.OPENINGS = [
     "n": "Englund Gambit",
     "e": "A40",
     "m": "d4 e5",
-    "tier": "expert"
+    "tier": "medium"
   },
   {
     "n": "Englund Gambit: Main Line",
@@ -885,7 +885,7 @@ window.OPENINGS = [
     "n": "Four Knights Game: Halloween Gambit",
     "e": "C47",
     "m": "e4 e5 Nf3 Nc6 Nc3 Nf6 Nxe5",
-    "tier": "expert"
+    "tier": "hard"
   },
   {
     "n": "Four Knights Game: Italian Variation",
@@ -945,7 +945,7 @@ window.OPENINGS = [
     "n": "French Defense: Advance Variation, Steinitz Variation",
     "e": "C02",
     "m": "e4 e6 d4 d5 e5 c5 dxc5",
-    "tier": "hard"
+    "tier": "expert"
   },
   {
     "n": "French Defense: Alekhine-Chatard Attack",
@@ -969,7 +969,7 @@ window.OPENINGS = [
     "n": "French Defense: Classical Variation",
     "e": "C11",
     "m": "e4 e6 d4 d5 Nc3 Nf6",
-    "tier": "medium"
+    "tier": "hard"
   },
   {
     "n": "French Defense: Classical Variation, Burn Variation",
@@ -1065,7 +1065,7 @@ window.OPENINGS = [
     "n": "French Defense: Rubinstein Variation",
     "e": "C10",
     "m": "e4 e6 d4 d5 Nc3 dxe4",
-    "tier": "medium"
+    "tier": "hard"
   },
   {
     "n": "French Defense: St. George Defense",
@@ -1101,7 +1101,7 @@ window.OPENINGS = [
     "n": "French Defense: Tarrasch Variation, Guimard Defense",
     "e": "C03",
     "m": "e4 e6 d4 d5 Nd2 Nc6",
-    "tier": "hard"
+    "tier": "expert"
   },
   {
     "n": "French Defense: Tarrasch Variation, Haberditz Variation",
@@ -1155,13 +1155,13 @@ window.OPENINGS = [
     "n": "Grünfeld Defense",
     "e": "D80",
     "m": "d4 Nf6 c4 g6 Nc3 d5",
-    "tier": "medium"
+    "tier": "easy"
   },
   {
     "n": "Grünfeld Defense: Botvinnik Variation",
     "e": "D95",
     "m": "d4 Nf6 c4 g6 Nc3 d5 Nf3 Bg7 e3 O-O Qb3 e6",
-    "tier": "hard"
+    "tier": "expert"
   },
   {
     "n": "Grünfeld Defense: Brinckmann Attack",
@@ -1209,7 +1209,7 @@ window.OPENINGS = [
     "n": "Grünfeld Defense: Makogonov Variation",
     "e": "D94",
     "m": "d4 Nf6 c4 g6 Nc3 d5 Nf3 Bg7 e3 O-O b4",
-    "tier": "hard"
+    "tier": "expert"
   },
   {
     "n": "Grünfeld Defense: Russian Variation",
@@ -1221,13 +1221,13 @@ window.OPENINGS = [
     "n": "Grünfeld Defense: Smyslov Defense",
     "e": "D94",
     "m": "d4 d5 c4 c6 Nc3 Nf6 e3 g6 Nf3 Bg7 Bd3 O-O O-O Bg4",
-    "tier": "hard"
+    "tier": "expert"
   },
   {
     "n": "Grünfeld Defense: Stockholm Variation",
     "e": "D80",
     "m": "d4 Nf6 c4 g6 Nc3 d5 Bg5",
-    "tier": "hard"
+    "tier": "expert"
   },
   {
     "n": "Grünfeld Defense: Three Knights Variation",
@@ -1371,7 +1371,7 @@ window.OPENINGS = [
     "n": "Italian Game: Two Knights Defense, Fried Liver Attack",
     "e": "C57",
     "m": "e4 e5 Nf3 Nc6 Bc4 Nf6 Ng5 d5 exd5 Nxd5 Nxf7",
-    "tier": "hard"
+    "tier": "medium"
   },
   {
     "n": "King's Gambit",
@@ -1407,13 +1407,13 @@ window.OPENINGS = [
     "n": "King's Gambit Accepted: Fischer Defense",
     "e": "C34",
     "m": "e4 e5 f4 exf4 Nf3 d6",
-    "tier": "medium"
+    "tier": "hard"
   },
   {
     "n": "King's Gambit Accepted: Hanstein Gambit",
     "e": "C38",
     "m": "e4 e5 f4 exf4 Nf3 g5 Bc4 Bg7 O-O",
-    "tier": "hard"
+    "tier": "expert"
   },
   {
     "n": "King's Gambit Accepted: Kieseritzky Gambit",
@@ -1443,7 +1443,7 @@ window.OPENINGS = [
     "n": "King's Gambit Accepted: Salvio Gambit",
     "e": "C37",
     "m": "e4 e5 f4 exf4 Nf3 g5 Bc4 g4 Ne5",
-    "tier": "hard"
+    "tier": "expert"
   },
   {
     "n": "King's Gambit Accepted: Schallopp Defense",
@@ -1467,13 +1467,13 @@ window.OPENINGS = [
     "n": "King's Gambit Declined: Falkbeer Countergambit",
     "e": "C31",
     "m": "e4 e5 f4 d5",
-    "tier": "expert"
+    "tier": "hard"
   },
   {
     "n": "King's Indian Attack",
     "e": "A05",
     "m": "Nf3 Nf6 g3 d5",
-    "tier": "expert"
+    "tier": "medium"
   },
   {
     "n": "King's Indian Defense",
@@ -1509,7 +1509,7 @@ window.OPENINGS = [
     "n": "King's Indian Defense: Fianchetto Variation",
     "e": "E60",
     "m": "d4 Nf6 c4 g6 Nf3 Bg7 g3",
-    "tier": "medium"
+    "tier": "hard"
   },
   {
     "n": "King's Indian Defense: Fianchetto Variation, Classical Fianchetto",
@@ -1569,7 +1569,7 @@ window.OPENINGS = [
     "n": "King's Indian Defense: Sämisch Variation",
     "e": "E80",
     "m": "d4 Nf6 c4 g6 Nc3 Bg7 e4 d6 f3",
-    "tier": "medium"
+    "tier": "hard"
   },
   {
     "n": "King's Indian Defense: Sämisch Variation, Panno Formation",
@@ -1611,19 +1611,19 @@ window.OPENINGS = [
     "n": "King's Pawn Game: Damiano Defense",
     "e": "C40",
     "m": "e4 e5 Nf3 f6",
-    "tier": "expert"
+    "tier": "hard"
   },
   {
     "n": "King's Pawn Game: Wayward Queen Attack",
     "e": "C20",
     "m": "e4 e5 Qh5",
-    "tier": "expert"
+    "tier": "medium"
   },
   {
     "n": "Latvian Gambit",
     "e": "C40",
     "m": "e4 e5 Nf3 f5",
-    "tier": "expert"
+    "tier": "medium"
   },
   {
     "n": "Latvian Gambit Accepted",
@@ -1743,7 +1743,7 @@ window.OPENINGS = [
     "n": "Nimzo-Indian Defense: Classical Variation, Noa Variation",
     "e": "E34",
     "m": "d4 Nf6 c4 e6 Nc3 Bb4 Qc2 d5",
-    "tier": "hard"
+    "tier": "expert"
   },
   {
     "n": "Nimzo-Indian Defense: Kmoch Variation",
@@ -1755,7 +1755,7 @@ window.OPENINGS = [
     "n": "Nimzo-Indian Defense: Leningrad Variation",
     "e": "E30",
     "m": "d4 Nf6 c4 e6 Nc3 Bb4 Bg5",
-    "tier": "hard"
+    "tier": "expert"
   },
   {
     "n": "Nimzo-Indian Defense: Mikenas Attack",
@@ -1779,19 +1779,19 @@ window.OPENINGS = [
     "n": "Nimzo-Indian Defense: Reshevsky Variation",
     "e": "E46",
     "m": "d4 Nf6 c4 e6 Nc3 Bb4 e3 O-O Ne2",
-    "tier": "hard"
+    "tier": "expert"
   },
   {
     "n": "Nimzo-Indian Defense: Romanishin Variation",
     "e": "E20",
     "m": "d4 Nf6 c4 e6 Nc3 Bb4 g3",
-    "tier": "hard"
+    "tier": "expert"
   },
   {
     "n": "Nimzo-Indian Defense: Rubinstein System",
     "e": "E40",
     "m": "d4 Nf6 c4 e6 Nc3 Bb4 e3",
-    "tier": "medium"
+    "tier": "hard"
   },
   {
     "n": "Nimzo-Indian Defense: Rubinstein System, Hübner Variation",
@@ -1803,7 +1803,7 @@ window.OPENINGS = [
     "n": "Nimzo-Indian Defense: Sämisch Variation",
     "e": "E24",
     "m": "d4 Nf6 c4 e6 Nc3 Bb4 a3",
-    "tier": "medium"
+    "tier": "hard"
   },
   {
     "n": "Nimzo-Indian Defense: Simagin Variation",
@@ -1833,19 +1833,19 @@ window.OPENINGS = [
     "n": "Nimzo-Larsen Attack",
     "e": "A01",
     "m": "b3",
-    "tier": "expert"
+    "tier": "medium"
   },
   {
     "n": "Nimzowitsch Defense",
     "e": "B00",
     "m": "e4 Nc6",
-    "tier": "expert"
+    "tier": "hard"
   },
   {
     "n": "Old Indian Defense",
     "e": "A41",
     "m": "d4 d6 c4",
-    "tier": "expert"
+    "tier": "hard"
   },
   {
     "n": "Old Indian Defense: Normal Variation",
@@ -1863,7 +1863,7 @@ window.OPENINGS = [
     "n": "Owen Defense",
     "e": "B00",
     "m": "e4 b6",
-    "tier": "expert"
+    "tier": "hard"
   },
   {
     "n": "Petrov's Defense",
@@ -1881,7 +1881,7 @@ window.OPENINGS = [
     "n": "Petrov's Defense: Cochrane Gambit",
     "e": "C42",
     "m": "e4 e5 Nf3 Nf6 Nxe5 d6 Nxf7",
-    "tier": "medium"
+    "tier": "hard"
   },
   {
     "n": "Petrov's Defense: Damiano Variation",
@@ -1947,13 +1947,13 @@ window.OPENINGS = [
     "n": "Philidor Defense: Hanham Variation",
     "e": "C41",
     "m": "e4 e5 Nf3 d6 d4 Nd7",
-    "tier": "medium"
+    "tier": "hard"
   },
   {
     "n": "Philidor Defense: Lion Variation",
     "e": "C41",
     "m": "e4 e5 Nf3 d6 d4 Nf6 Nc3 Nbd7",
-    "tier": "medium"
+    "tier": "hard"
   },
   {
     "n": "Pirc Defense",
@@ -1971,13 +1971,13 @@ window.OPENINGS = [
     "n": "Pirc Defense: Austrian Attack",
     "e": "B09",
     "m": "e4 d6 d4 Nf6 Nc3 g6 f4",
-    "tier": "medium"
+    "tier": "hard"
   },
   {
     "n": "Pirc Defense: Bayonet Attack",
     "e": "B07",
     "m": "e4 d6 d4 Nf6 Nc3 g6 Be2 Bg7 h4",
-    "tier": "hard"
+    "tier": "expert"
   },
   {
     "n": "Pirc Defense: Byrne Variation",
@@ -2007,7 +2007,7 @@ window.OPENINGS = [
     "n": "Polish Opening",
     "e": "A00",
     "m": "b4",
-    "tier": "expert"
+    "tier": "hard"
   },
   {
     "n": "Ponziani Opening",
@@ -2085,7 +2085,7 @@ window.OPENINGS = [
     "n": "Queen's Gambit Declined: Albin Countergambit",
     "e": "D08",
     "m": "d4 d5 c4 e5",
-    "tier": "hard"
+    "tier": "medium"
   },
   {
     "n": "Queen's Gambit Declined: Cambridge Springs Defense",
@@ -2145,7 +2145,7 @@ window.OPENINGS = [
     "n": "Queen's Gambit Declined: Neo-Orthodox Variation",
     "e": "D54",
     "m": "d4 Nf6 c4 e6 Nc3 d5 Bg5 Be7 e3 O-O Rc1",
-    "tier": "hard"
+    "tier": "expert"
   },
   {
     "n": "Queen's Gambit Declined: Normal Defense",
@@ -2199,7 +2199,7 @@ window.OPENINGS = [
     "n": "Queen's Gambit Declined: Vienna Variation",
     "e": "D30",
     "m": "d4 Nf6 c4 e6 Nf3 d5 Bg5 Bb4+",
-    "tier": "hard"
+    "tier": "expert"
   },
   {
     "n": "Queen's Indian Defense",
@@ -2211,7 +2211,7 @@ window.OPENINGS = [
     "n": "Queen's Indian Defense: Capablanca Variation",
     "e": "E16",
     "m": "d4 Nf6 c4 e6 Nf3 b6 g3 Bb7 Bg2 Bb4+",
-    "tier": "hard"
+    "tier": "expert"
   },
   {
     "n": "Queen's Indian Defense: Classical Variation",
@@ -2223,7 +2223,7 @@ window.OPENINGS = [
     "n": "Queen's Indian Defense: Fianchetto Variation",
     "e": "E15",
     "m": "d4 Nf6 c4 e6 Nf3 b6 g3",
-    "tier": "medium"
+    "tier": "hard"
   },
   {
     "n": "Queen's Indian Defense: Kasparov Variation",
@@ -2235,7 +2235,7 @@ window.OPENINGS = [
     "n": "Queen's Indian Defense: Kasparov-Petrosian Variation",
     "e": "E12",
     "m": "d4 Nf6 c4 e6 Nf3 b6 a3 Bb7 Nc3",
-    "tier": "hard"
+    "tier": "expert"
   },
   {
     "n": "Queen's Indian Defense: Miles Variation",
@@ -2295,7 +2295,7 @@ window.OPENINGS = [
     "n": "Queen's Pawn Game: Stonewall Attack",
     "e": "D00",
     "m": "d4 d5 e3 Nf6 Bd3",
-    "tier": "expert"
+    "tier": "medium"
   },
   {
     "n": "Rapport-Jobava System",
@@ -2337,7 +2337,7 @@ window.OPENINGS = [
     "n": "Richter-Veresov Attack",
     "e": "D01",
     "m": "d4 Nf6 Nc3 d5 Bg5",
-    "tier": "expert"
+    "tier": "hard"
   },
   {
     "n": "Richter-Veresov Attack: Two Knights System",
@@ -2403,7 +2403,7 @@ window.OPENINGS = [
     "n": "Ruy Lopez: Closed",
     "e": "C84",
     "m": "e4 e5 Nf3 Nc6 Bb5 a6 Ba4 Nf6 O-O Be7",
-    "tier": "hard"
+    "tier": "medium"
   },
   {
     "n": "Ruy Lopez: Closed, Breyer Defense",
@@ -2421,7 +2421,7 @@ window.OPENINGS = [
     "n": "Ruy Lopez: Cozio Defense",
     "e": "C60",
     "m": "e4 e5 Nf3 Nc6 Bb5 Nge7",
-    "tier": "hard"
+    "tier": "expert"
   },
   {
     "n": "Ruy Lopez: Exchange Variation",
@@ -2433,7 +2433,7 @@ window.OPENINGS = [
     "n": "Ruy Lopez: Exchange Variation, Gligoric Variation",
     "e": "C69",
     "m": "e4 e5 Nf3 Nc6 Bb5 a6 Bxc6 dxc6 O-O f6",
-    "tier": "hard"
+    "tier": "expert"
   },
   {
     "n": "Ruy Lopez: Fianchetto Defense",
@@ -2457,7 +2457,7 @@ window.OPENINGS = [
     "n": "Ruy Lopez: Morphy Defense",
     "e": "C70",
     "m": "e4 e5 Nf3 Nc6 Bb5 a6",
-    "tier": "expert"
+    "tier": "medium"
   },
   {
     "n": "Ruy Lopez: Morphy Defense, Arkhangelsk Variation",
@@ -2511,13 +2511,13 @@ window.OPENINGS = [
     "n": "Ruy Lopez: Schliemann Defense",
     "e": "C63",
     "m": "e4 e5 Nf3 Nc6 Bb5 f5",
-    "tier": "medium"
+    "tier": "hard"
   },
   {
     "n": "Ruy Lopez: Steinitz Defense",
     "e": "C62",
     "m": "e4 e5 Nf3 Nc6 Bb5 d6",
-    "tier": "medium"
+    "tier": "hard"
   },
   {
     "n": "Ruy Lopez: Vinogradov Variation",
@@ -2541,13 +2541,13 @@ window.OPENINGS = [
     "n": "Scandinavian Defense: Icelandic-Palme Gambit",
     "e": "B01",
     "m": "e4 d5 exd5 Nf6 c4 e6",
-    "tier": "medium"
+    "tier": "hard"
   },
   {
     "n": "Scandinavian Defense: Main Line",
     "e": "B01",
     "m": "e4 d5 exd5 Qxd5 Nc3 Qa5",
-    "tier": "medium"
+    "tier": "hard"
   },
   {
     "n": "Scandinavian Defense: Marshall Variation",
@@ -2571,7 +2571,7 @@ window.OPENINGS = [
     "n": "Scandinavian Defense: Portuguese Gambit",
     "e": "B01",
     "m": "e4 d5 exd5 Nf6 d4 Bg4",
-    "tier": "medium"
+    "tier": "hard"
   },
   {
     "n": "Scotch Game",
@@ -2583,7 +2583,7 @@ window.OPENINGS = [
     "n": "Scotch Game: Classical Variation",
     "e": "C45",
     "m": "e4 e5 Nf3 Nc6 d4 exd4 Nxd4 Bc5",
-    "tier": "medium"
+    "tier": "hard"
   },
   {
     "n": "Scotch Game: Göring Gambit",
@@ -2643,7 +2643,7 @@ window.OPENINGS = [
     "n": "Semi-Slav Defense: Accelerated Meran Variation",
     "e": "D45",
     "m": "d4 d5 c4 c6 Nc3 Nf6 e3 e6 Nf3 a6",
-    "tier": "hard"
+    "tier": "expert"
   },
   {
     "n": "Semi-Slav Defense: Accelerated Move Order",
@@ -2697,7 +2697,7 @@ window.OPENINGS = [
     "n": "Semi-Slav Defense: Noteboom Variation",
     "e": "D31",
     "m": "d4 d5 c4 e6 Nc3 c6 Nf3 dxc4",
-    "tier": "medium"
+    "tier": "hard"
   },
   {
     "n": "Semi-Slav Defense: Semi-Meran Variation",
@@ -2751,7 +2751,7 @@ window.OPENINGS = [
     "n": "Sicilian Defense: Bowdler Attack",
     "e": "B20",
     "m": "e4 c5 Bc4",
-    "tier": "expert"
+    "tier": "hard"
   },
   {
     "n": "Sicilian Defense: Bücker Variation",
@@ -2847,13 +2847,13 @@ window.OPENINGS = [
     "n": "Sicilian Defense: Dragon Variation, Levenfish Variation",
     "e": "B71",
     "m": "e4 c5 Nf3 d6 d4 cxd4 Nxd4 Nf6 Nc3 g6 f4",
-    "tier": "hard"
+    "tier": "expert"
   },
   {
     "n": "Sicilian Defense: Dragon Variation, Yugoslav Attack",
     "e": "B76",
     "m": "e4 c5 Nf3 d6 d4 cxd4 Nxd4 Nf6 Nc3 g6 Be3 Bg7 f3 O-O",
-    "tier": "expert"
+    "tier": "hard"
   },
   {
     "n": "Sicilian Defense: Dragon Variation, Yugoslav Attack, Main Line",
@@ -2907,7 +2907,7 @@ window.OPENINGS = [
     "n": "Sicilian Defense: Kan Variation",
     "e": "B41",
     "m": "e4 c5 Nf3 e6 d4 cxd4 Nxd4 a6",
-    "tier": "medium"
+    "tier": "hard"
   },
   {
     "n": "Sicilian Defense: Keres Variation",
@@ -2967,7 +2967,7 @@ window.OPENINGS = [
     "n": "Sicilian Defense: Moscow Variation",
     "e": "B51",
     "m": "e4 c5 Nf3 d6 Bb5+",
-    "tier": "medium"
+    "tier": "hard"
   },
   {
     "n": "Sicilian Defense: Moscow Variation, Main Line",
@@ -2985,7 +2985,7 @@ window.OPENINGS = [
     "n": "Sicilian Defense: Najdorf Variation, Adams Attack",
     "e": "B90",
     "m": "e4 c5 Nf3 d6 d4 cxd4 Nxd4 Nf6 Nc3 a6 h3",
-    "tier": "hard"
+    "tier": "expert"
   },
   {
     "n": "Sicilian Defense: Najdorf Variation, English Attack",
@@ -3009,7 +3009,7 @@ window.OPENINGS = [
     "n": "Sicilian Defense: Najdorf Variation, Poisoned Pawn Variation",
     "e": "B97",
     "m": "e4 c5 Nf3 d6 d4 cxd4 Nxd4 Nf6 Nc3 a6 Bg5 e6 f4 Qb6",
-    "tier": "expert"
+    "tier": "hard"
   },
   {
     "n": "Sicilian Defense: Najdorf Variation, Polugaevsky Variation",
@@ -3063,7 +3063,7 @@ window.OPENINGS = [
     "n": "Sicilian Defense: Open",
     "e": "B32",
     "m": "e4 c5 Nf3 Nc6 d4",
-    "tier": "expert"
+    "tier": "medium"
   },
   {
     "n": "Sicilian Defense: Richter-Rauzer Variation",
@@ -3129,13 +3129,13 @@ window.OPENINGS = [
     "n": "Sicilian Defense: Taimanov Variation",
     "e": "B44",
     "m": "e4 c5 Nf3 e6 d4 cxd4 Nxd4 Nc6",
-    "tier": "medium"
+    "tier": "hard"
   },
   {
     "n": "Sicilian Defense: Taimanov Variation, Bastrikov Variation",
     "e": "B47",
     "m": "e4 c5 Nf3 e6 d4 cxd4 Nxd4 Nc6 Nc3 Qc7",
-    "tier": "hard"
+    "tier": "expert"
   },
   {
     "n": "Sicilian Defense: Wing Gambit",
@@ -3165,13 +3165,13 @@ window.OPENINGS = [
     "n": "Slav Defense: Breyer Variation",
     "e": "D11",
     "m": "d4 d5 c4 c6 Nf3 Nf6 Nbd2",
-    "tier": "hard"
+    "tier": "expert"
   },
   {
     "n": "Slav Defense: Chebanenko Variation",
     "e": "D15",
     "m": "d4 d5 c4 c6 Nf3 Nf6 Nc3 a6",
-    "tier": "medium"
+    "tier": "hard"
   },
   {
     "n": "Slav Defense: Czech Variation",
@@ -3183,7 +3183,7 @@ window.OPENINGS = [
     "n": "Slav Defense: Exchange Variation",
     "e": "D10",
     "m": "d4 d5 c4 c6 cxd5",
-    "tier": "medium"
+    "tier": "hard"
   },
   {
     "n": "Slav Defense: Geller Gambit",
@@ -3201,7 +3201,7 @@ window.OPENINGS = [
     "n": "Slav Defense: Quiet Variation",
     "e": "D11",
     "m": "d4 d5 c4 c6 Nf3 Nf6 e3",
-    "tier": "hard"
+    "tier": "expert"
   },
   {
     "n": "Slav Defense: Schlechter Variation",
@@ -3213,7 +3213,7 @@ window.OPENINGS = [
     "n": "Slav Defense: Smyslov Variation",
     "e": "D16",
     "m": "d4 d5 c4 c6 Nf3 Nf6 Nc3 dxc4 a4 Na6",
-    "tier": "hard"
+    "tier": "expert"
   },
   {
     "n": "Slav Defense: Three Knights Variation",
@@ -3243,7 +3243,7 @@ window.OPENINGS = [
     "n": "Tarrasch Defense: Rubinstein System",
     "e": "D33",
     "m": "d4 d5 c4 e6 Nc3 c5 cxd5 exd5 Nf3 Nc6 g3",
-    "tier": "hard"
+    "tier": "expert"
   },
   {
     "n": "Tarrasch Defense: Schara Gambit",
@@ -3255,7 +3255,7 @@ window.OPENINGS = [
     "n": "Three Knights Opening",
     "e": "C46",
     "m": "e4 e5 Nf3 Nc6 Nc3",
-    "tier": "expert"
+    "tier": "medium"
   },
   {
     "n": "Torre Attack: Classical Defense",
@@ -3333,19 +3333,19 @@ window.OPENINGS = [
     "n": "Vienna Game: Frankenstein-Dracula Variation",
     "e": "C27",
     "m": "e4 e5 Nc3 Nf6 Bc4 Nxe4",
-    "tier": "medium"
+    "tier": "hard"
   },
   {
     "n": "Vienna Game: Hamppe-Meitner Variation",
     "e": "C25",
     "m": "e4 e5 Nc3 Bc5 Na4",
-    "tier": "hard"
+    "tier": "expert"
   },
   {
     "n": "Vienna Game: Hamppe-Muzio Gambit",
     "e": "C25",
     "m": "e4 e5 Nc3 Nc6 f4 exf4 Nf3 g5 Bc4 g4 O-O",
-    "tier": "hard"
+    "tier": "expert"
   },
   {
     "n": "Vienna Game: Max Lange Defense",
@@ -3363,7 +3363,7 @@ window.OPENINGS = [
     "n": "Vienna Game: Stanley Variation",
     "e": "C26",
     "m": "e4 e5 Nc3 Nf6 Bc4",
-    "tier": "hard"
+    "tier": "expert"
   },
   {
     "n": "Vienna Game: Vienna Gambit",
@@ -3405,12 +3405,12 @@ window.OPENINGS = [
     "n": "Sicilian Defense: Lasker-Pelikan Variation, Sveshnikov Variation",
     "e": "B33",
     "m": "e4 c5 Nf3 Nc6 d4 cxd4 Nxd4 Nf6 Nc3 e5 Ndb5 d6 Bg5 a6 Na3 b5",
-    "tier": "expert"
+    "tier": "hard"
   },
   {
     "n": "Scotch Game: Paulsen Attack",
     "e": "C45",
     "m": "e4 e5 Nf3 Nc6 d4 exd4 Nxd4 Bc5 Be3 Qf6 c3 Nge7 Bb5",
-    "tier": "hard"
+    "tier": "expert"
   }
 ];

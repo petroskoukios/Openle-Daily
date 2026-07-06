@@ -125,11 +125,11 @@ The dataset has no popularity/frequency signal, so the retained openings were re
 manually for recognizability and theoretical difficulty. Each tier has two pools:
 
 - **Target pool (exclusive)** — what the puzzle's answer can be. A tier's answer is
-  drawn only from that tier: **Easy 32 · Medium 64 · Hard 128 · Expert 249**. An Easy
+  drawn only from that tier: **Easy 32 · Medium 50 · Hard 130 · Expert 261**. An Easy
   answer is never a Hard opening, and vice versa.
 - **Guess / autocomplete pool (cumulative)** — what you're allowed to guess. Each tier
   includes its own targets plus every easier tier's, so lower-difficulty openings still
-  show up as valid guesses: **Easy 39 · Medium 103 · Hard 231 · Expert 480**.
+  show up as valid guesses: **Easy 39 · Medium 89 · Hard 219 · Expert 480**.
 
 A small **starter** tier of 7 super-fundamental openings (the basic king/queen pawn
 games, Queen's Gambit, Indian Defense, English, …) sits below Easy. These are
@@ -137,7 +137,7 @@ guessable in *every* tier but are never the answer and are not a playable mode �
 exist so the foundational lines are always available as guesses.
 
 The `tier` metadata in `openings.js` is the source of truth: starter 7, Easy 32,
-Medium 64, Hard 128, Expert 249, and the remaining 89 entries are marked `reserve`
+Medium 50, Hard 130, Expert 261, and the remaining 89 entries are marked `reserve`
 (excluded from both targets and autocomplete) — 569 in total.
 
 ## Credits
