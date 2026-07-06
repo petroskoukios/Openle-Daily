@@ -8,7 +8,7 @@ Openle is a static site (no backend, no build step). Recommended host:
 1. **Buy the domain** — `openledaily.com` (Cloudflare Registrar is convenient
    since the DNS lives there too).
 2. **Create a Cloudflare Pages project** → *Connect to Git* →
-   `petroskoukios/Chess-Tree`.
+   `petroskoukios/Openle-Daily`.
 3. **Build settings:** there is no build step.
    - Framework preset: **None**
    - Build command: *(leave empty)*

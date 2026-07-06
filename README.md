@@ -1,6 +1,6 @@
 # Openle
 
-[![CI](https://github.com/petroskoukios/Chess-Tree/actions/workflows/ci.yml/badge.svg)](https://github.com/petroskoukios/Chess-Tree/actions/workflows/ci.yml)
+[![CI](https://github.com/petroskoukios/Openle-Daily/actions/workflows/ci.yml/badge.svg)](https://github.com/petroskoukios/Openle-Daily/actions/workflows/ci.yml)
 
 Guess the chess opening. A daily puzzle game in the spirit of Wordle and Metazooa,
 but for **chess openings**.
