@@ -243,7 +243,12 @@ body {
 }
 .tree::-webkit-scrollbar { display: none; }
 .tree.is-panning, .tree.is-panning * { cursor: grabbing !important; }
-.tree-pan { position: relative; }
+/* Dot grid on the pannable content plane, so the dots move with the tree. */
+.tree-pan {
+  position: relative;
+  background-image: radial-gradient(rgba(255,255,255,.05) 1.1px, transparent 1.6px);
+  background-size: 26px 26px;
+}
 .tree-map { display: block; position: absolute; max-width: none; overflow: visible; transform-origin: 0 0; }
 /* foreignObject clips to its tight box, which chops node box-shadows into a hard
    rectangle — let it overflow so the soft shadow renders. */
