@@ -760,7 +760,7 @@ html:has(.tree-modal-bg.open) { overflow: hidden; }
 .tree-inspector-description {
   margin: 11px 0 0 !important; color: var(--muted) !important; font-size: 13px !important; line-height: 1.5;
 }
-.tree-inspector-description p { margin: 0; }
+.tree-inspector-description p { margin: 0; font-size: inherit; }
 .tree-inspector-description p + p { margin-top: 8px; }
 .tree-inspector-desc-toggle {
   display: block; margin: 5px 0 0; padding: 0; border: none; background: none;
