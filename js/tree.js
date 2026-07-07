@@ -346,12 +346,10 @@ function layoutTree(displayRoot, el, view) {
     const pitchFactor = leafCount <= 4 ? PITCH_FACTOR : Math.min(1, PITCH_FACTOR + (leafCount - 4) * .015);
 
     // A parent with 4+ children radiates that many lines into a knot just
-    // below it, where they cross. Flag the whole fan so the layout drops it
-    // farther from the parent, giving the lines vertical room to splay apart.
-    // Counting children (not just a contiguous leaf run) catches the puzzle
-    // case where the target spine sits in the middle and splits the leaves.
-    const fanSize = kids.length >= 4 ? kids.length : 0;
-    for (const child of kids) child.fanSize = fanSize;
+    // below it, where they cross. Flag it so the layout can drop the fan
+    // farther down. Counting children (not a contiguous leaf run) catches the
+    // puzzle case where the target spine splits the leaves down the middle.
+    node.fanSize = kids.length >= 4 ? kids.length : 0;
 
     const layout = [];
     let cursor = 0;
@@ -388,12 +386,18 @@ function layoutTree(displayRoot, el, view) {
   for (const n of allNodes)
     if (n.lane === 1) levelDrop[n.level] = LANE_OFFSET;
 
-  // Extra room above a big fan's row: the wider the fan, the more vertical
-  // travel its connectors need to splay apart instead of knotting at the
-  // parent. Reserved per level (the level a big fan's leaves land on).
+  // A big fan needs extra vertical room below its parent so the connectors
+  // splay apart instead of knotting. But a taller sibling at the parent's
+  // level already pushes the fan's row down by (levelHeights - parent height);
+  // subtract that so the fan ends with the same clearance either way and we
+  // don't stack redundant height when a tall sibling is already doing the job.
   const fanGap = [];
-  for (const n of allNodes)
-    if (n.fanSize) fanGap[n.level] = Math.max(fanGap[n.level] || 0, Math.min(150, 40 + (n.fanSize - 4) * 28));
+  for (const n of allNodes) {
+    if (!n.fanSize) continue;
+    const base = Math.min(155, 45 + (n.fanSize - 4) * 28);
+    const siblingRoom = levelHeights[n.level] - n.height;
+    fanGap[n.level + 1] = Math.max(fanGap[n.level + 1] || 0, Math.max(0, base - siblingRoom));
+  }
 
   const levelTops = [];
   let nextTop = PAD;
