@@ -1,3 +1,19 @@
+/*
+ * Openle — a daily chess opening puzzle.
+ * Copyright (C) 2026 Petros Efraim Koukios
+ *
+ * This program is free software: you can redistribute it and/or modify it under
+ * the terms of the GNU Affero General Public License as published by the Free
+ * Software Foundation, either version 3 of the License, or (at your option) any
+ * later version.
+ *
+ * This program is distributed in the hope that it will be useful, but WITHOUT
+ * ANY WARRANTY; without even the implied warranty of MERCHANTABILITY or FITNESS
+ * FOR A PARTICULAR PURPOSE. See the GNU Affero General Public License for more
+ * details. You should have received a copy of the license along with this
+ * program; if not, see <https://www.gnu.org/licenses/>.
+ */
+
 /* Entry point: modal helpers, event wiring, boot, and the window.__OT hook
    that the test harness (tests.html) reads. Importing this module pulls in the
    whole graph, so the self-wiring modules (search, history) initialise too. */
