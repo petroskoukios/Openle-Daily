@@ -2,13 +2,39 @@
 
 [![CI](https://github.com/petroskoukios/Openle-Daily/actions/workflows/ci.yml/badge.svg)](https://github.com/petroskoukios/Openle-Daily/actions/workflows/ci.yml)
 
+### ▶ Play it live: **[openledaily.com](https://openledaily.com)**
+
 Guess the chess opening. A daily puzzle game in the spirit of Wordle and Metazooa,
 but for **chess openings**.
+
+![Openle — solving a daily puzzle by navigating the opening tree](assets/demo.gif)
 
 Each day a hidden **target opening** is chosen. You guess other openings, and the
 only feedback is how far you travel down the **same branches of the opening tree**
 before your line splits away from the target's. The goal is to feel like you're
 *navigating the opening tree*, gradually learning how openings relate to one another.
+
+## Engineering highlights
+
+Built as a **zero-dependency static site** — vanilla ES modules, plain CSS, no
+framework and no build step — deployed as flat files. The parts I'm most proud of:
+
+- **Custom opening-tree layout** (`js/tree.js`) — a from-scratch tidy-tree layout for
+  variable-width boxes: staggered sibling lanes, contour-based horizontal packing so
+  deep branches tuck under shallow neighbours, adaptive spacing that opens up wide fans,
+  and edge routing that threads the gaps instead of cutting through boxes. Rendered as
+  hand-built SVG with pan/zoom, no graph library.
+- **Hand-written SAN chess engine** (`chess.js`) — replays algebraic move lists to
+  reconstruct any board position, so the board can show exactly how deep a guess matched.
+- **Deterministic daily puzzles** (`js/daily.js`) — the same puzzle for everyone
+  worldwide, per tier, from a seeded shuffle (`xmur3` + `mulberry32`) keyed to the UTC
+  date. No backend, no database — the calendar *is* the server.
+- **Difficulty modelling** (`openings.js`, `js/data.js`) — 569 hand-curated openings
+  across five tiers, with exclusive *target* pools (what the answer can be) layered over
+  cumulative *guess* pools (what you're allowed to guess).
+- **Dependency-free test harness** (`tests.html`) — loads the real app in an iframe and
+  runs 100+ assertions over the SAN engine, daily selection, comparison/budget rules,
+  and layout invariants; runs headless in CI on every push via Playwright.
 
 ## How it plays
 
@@ -147,3 +173,15 @@ Medium 50, Hard 130, Expert 261, and the remaining 89 entries are marked `reserv
   ["Cburnett" set](https://en.wikipedia.org/wiki/File:Chess_klt45.svg) — licensed
   [CC BY-SA](https://creativecommons.org/licenses/by-sa/3.0/). The attribution comments
   inside each SVG are preserved, and any redistribution of the graphics stays under CC BY-SA.
+
+## License
+
+Copyright (C) 2026 Petros Efraim Koukios.
+
+The application code is released under the
+[GNU Affero General Public License v3.0](LICENSE) (AGPL-3.0). You're free to use,
+study, and modify it, but any modified version you distribute **or run as a hosted
+service** must make its complete source available under the same license.
+
+The bundled chess piece graphics (`pieces-svg/`) remain under CC BY-SA as noted above,
+and the opening data derives from a CC0 source — see [Credits](#credits).
