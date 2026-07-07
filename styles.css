@@ -513,18 +513,8 @@ button.tree-node:focus-visible { outline: 2px solid var(--accent-hover); outline
 }
 .btn:hover { background: var(--panel-3); border-color: rgba(255,255,255,.09); }
 .btn:active { transform: translateY(1px); }
-/* The primary is a genuinely raised accent key: light-to-dark face, crisp top
-   rim, and a darker bottom edge it visually sinks into when pressed. */
-.btn.primary {
-  background: linear-gradient(180deg, #7db3e3, #5b93c6);
-  border-color: rgba(255,255,255,.12); color: #0e1624;
-  box-shadow: inset 0 1px 0 rgba(255,255,255,.28), 0 2px 0 var(--accent-dark), 0 8px 18px rgba(66,113,161,.32);
-}
-.btn.primary:hover { background: linear-gradient(180deg, #8abce8, #67a0d3); border-color: rgba(255,255,255,.2); }
-.btn.primary:active {
-  transform: translateY(2px);
-  box-shadow: inset 0 1px 0 rgba(255,255,255,.28), 0 0 0 var(--accent-dark), 0 4px 10px rgba(66,113,161,.28);
-}
+.btn.primary { background: rgba(97,152,202,.13); border-color: var(--accent); color: var(--accent-hover); }
+.btn.primary:hover { background: rgba(97,152,202,.22); border-color: var(--accent-hover); }
 .btn.ghost { background: transparent; border-color: transparent; color: var(--muted); font-weight: 600; }
 .btn.ghost:hover { background: var(--panel-2); color: var(--text); }
 
