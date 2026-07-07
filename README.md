@@ -7,7 +7,7 @@
 Guess the chess opening. A daily puzzle game in the spirit of Wordle and Metazooa,
 but for **chess openings**.
 
-![Openle — solving a daily puzzle by navigating the opening tree](assets/demo.gif)
+![Openle — solving a daily puzzle by navigating the opening tree](assets/openle-demo.gif)
 
 Each day a hidden **target opening** is chosen. You guess other openings, and the
 only feedback is how far you travel down the **same branches of the opening tree**
