@@ -353,6 +353,7 @@ document.getElementById("statsDiff").addEventListener("click", e => {
 document.getElementById("shareBtn").addEventListener("click", doShare);
 document.getElementById("winShareBtn").addEventListener("click", doShare);
 document.getElementById("winPracticeBtn").addEventListener("click", startPracticeFromWin);
+document.getElementById("dailyPracticeBtn").addEventListener("click", startPracticeFromWin);
 document.getElementById("boardPrev").addEventListener("click", () => stepBoard(-1));
 document.getElementById("boardNext").addEventListener("click", () => stepBoard(1));
 ["boardFlip", "boardFlipMobile"].forEach(id =>
