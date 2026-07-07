@@ -345,6 +345,14 @@ function layoutTree(displayRoot, el, view) {
     const leafCount = kids.filter(isLeaf).length;
     const pitchFactor = leafCount <= 4 ? PITCH_FACTOR : Math.min(1, PITCH_FACTOR + (leafCount - 4) * .015);
 
+    // A parent with 4+ children radiates that many lines into a knot just
+    // below it, where they cross. Flag the whole fan so the layout drops it
+    // farther from the parent, giving the lines vertical room to splay apart.
+    // Counting children (not just a contiguous leaf run) catches the puzzle
+    // case where the target spine sits in the middle and splits the leaves.
+    const fanSize = kids.length >= 4 ? kids.length : 0;
+    for (const child of kids) child.fanSize = fanSize;
+
     const layout = [];
     let cursor = 0;
     for (let i = 0; i < kids.length; ) {
@@ -380,9 +388,17 @@ function layoutTree(displayRoot, el, view) {
   for (const n of allNodes)
     if (n.lane === 1) levelDrop[n.level] = LANE_OFFSET;
 
+  // Extra room above a big fan's row: the wider the fan, the more vertical
+  // travel its connectors need to splay apart instead of knotting at the
+  // parent. Reserved per level (the level a big fan's leaves land on).
+  const fanGap = [];
+  for (const n of allNodes)
+    if (n.fanSize) fanGap[n.level] = Math.max(fanGap[n.level] || 0, Math.min(150, 40 + (n.fanSize - 4) * 28));
+
   const levelTops = [];
   let nextTop = PAD;
   for (let i = 0; i < levelHeights.length; i++) {
+    nextTop += (fanGap[i] || 0);
     levelTops[i] = nextTop;
     nextTop += levelHeights[i] + (levelDrop[i] || 0) + V_GAP;
   }
