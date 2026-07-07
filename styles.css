@@ -35,7 +35,8 @@
 html, body { margin: 0; padding: 0; }
 body {
   background:
-    radial-gradient(1100px 540px at 50% -8%, rgba(70,92,116,.26), transparent 60%) fixed,
+    radial-gradient(1100px 540px at 50% -8%, rgba(70,92,116,.28), transparent 60%) fixed,
+    radial-gradient(1000px 640px at 106% 110%, rgba(58,78,101,.16), transparent 55%) fixed,
     linear-gradient(170deg, #2e3d4f 0%, #2d323b 45%, #272a30 100%) fixed, #2b2d33;
   color: var(--text);
   font-family: var(--sans);
@@ -64,6 +65,7 @@ body {
   background: var(--border-solid); border-radius: 999px;
   border: 3px solid transparent; background-clip: padding-box;  /* inset pill */
 }
+::-webkit-scrollbar-thumb:hover { background-color: var(--panel-3); }
 ::-webkit-scrollbar-corner { background: transparent; }
 /* End-cap arrow buttons (custom scrollbars hide these by default). Chevrons are
    inline SVGs tinted to match the thumb; the hash in the color is %23-encoded. */
@@ -157,7 +159,7 @@ body {
 }
 .meta .gcount b { color: var(--text); }
 .gcount-bar { height: 6px; border-radius: 999px; background: var(--surface); border: 1px solid var(--border-solid); overflow: hidden; }
-.gcount-fill { display: block; height: 100%; background: linear-gradient(90deg, var(--accent-dark), var(--accent)); border-radius: 999px; transition: width .25s ease; }
+.gcount-fill { display: block; height: 100%; background: linear-gradient(90deg, var(--accent-dark), var(--accent)); border-radius: 999px; transition: width .25s ease; box-shadow: 0 0 8px rgba(104,160,211,.35); }
 
 /* ---- Search / autocomplete ---- */
 .search { position: relative; margin-bottom: 8px; }
@@ -169,6 +171,7 @@ body {
   transition: border-color .15s, box-shadow .15s;
 }
 .search input::placeholder { color: var(--muted-2); }
+.search input:hover:not(:focus):not(:disabled) { border-color: #454c5c; }
 .search input:focus { border-color: var(--accent); box-shadow: inset 0 1px 4px rgba(0,0,0,.3), 0 3px 12px rgba(0,0,0,.2), 0 0 0 3px rgba(104,160,211,.2); }
 .search input:disabled { cursor: not-allowed; color: var(--muted-2); }
 /* Touch devices need >=16px or iOS auto-zooms on focus; the smaller text is
@@ -182,7 +185,7 @@ body {
   display: none;
 }
 .suggest.open { display: block; }
-.suggest li { list-style: none; padding: 9px 11px; border-radius: 8px; cursor: pointer; display: flex; align-items: baseline; gap: 10px; }
+.suggest li { list-style: none; padding: 9px 11px; border-radius: 8px; cursor: pointer; display: flex; align-items: baseline; gap: 10px; transition: background .1s; }
 .suggest li.active, .suggest li:hover { background: var(--accent-soft); }
 .suggest .nm { font-weight: 600; flex: 1; min-width: 0; }
 .suggest .nm em { color: var(--accent-hover); font-style: normal; }
@@ -195,6 +198,7 @@ body {
   position: fixed; left: 50%; top: 22px; transform: translateX(-50%) translateY(-12px);
   background: rgba(30,36,48,.94); backdrop-filter: blur(8px);
   color: var(--text); border: 1px solid rgba(255,255,255,.09);
+  border-left: 3px solid var(--accent);
   padding: 10px 16px; border-radius: 10px; box-shadow: var(--shadow); font-size: 14px; font-weight: 600;
   opacity: 0; pointer-events: none; transition: opacity .2s, transform .2s; z-index: 100;
 }
@@ -204,9 +208,15 @@ body {
 .panel {
   background: linear-gradient(180deg, rgba(255,255,255,.03), rgba(255,255,255,0) 130px), var(--panel);
   border: 1px solid var(--hairline); border-radius: 14px; padding: 16px 18px; margin-bottom: 16px;
-  box-shadow: 0 4px 18px rgba(0,0,0,.28);
+  box-shadow: inset 0 1px 0 rgba(255,255,255,.045), 0 6px 22px rgba(0,0,0,.32);
 }
 .panel > h2 { margin: 0 0 12px; font-size: 11px; letter-spacing: .13em; text-transform: uppercase; color: var(--muted); font-weight: 800; }
+/* A small accent tick in front of section kickers gives the panels a shared
+   visual rhythm without shouting. */
+.panel > h2::before, .panel-heading h2::before {
+  content: ""; display: inline-block; width: 4px; height: 4px; border-radius: 50%;
+  background: var(--accent); margin-right: 8px; vertical-align: 2px;
+}
 .panel .hint { color: var(--muted-2); font-size: 13px; }
 .tree-panel { padding: 10px 12px 12px; }
 .tree-panel > .tree {
@@ -266,12 +276,13 @@ body {
   position: relative;
   display: flex; align-items: center; justify-content: center; gap: 3px;
   border: 1px solid var(--border-solid); border-radius: 999px;
-  background: var(--surface); color: var(--text); box-shadow: 0 2px 6px rgba(0,0,0,.2);
+  background: var(--surface); color: var(--text); box-shadow: 0 2px 8px rgba(0,0,0,.26);
   font-family: var(--sans); font-size: 11px; line-height: 1.15; text-align: center;
   overflow: hidden;
+  transition: filter .12s, box-shadow .12s;
 }
 button.tree-node { cursor: pointer; }
-button.tree-node:hover { filter: brightness(1.18); }
+button.tree-node:hover { filter: brightness(1.18); box-shadow: 0 4px 12px rgba(0,0,0,.32); }
 button.tree-node:focus-visible { outline: 2px solid var(--accent-hover); outline-offset: 2px; }
 .tree-node--root { color: var(--text); font-size: 10.5px; font-weight: 700; border-radius: 5px; }
 .tree-node--root.tree-node--target {
@@ -312,7 +323,7 @@ button.tree-node:focus-visible { outline: 2px solid var(--accent-hover); outline
 /* A guess/answer box plays that opening's whole line on the board when clicked
    (the inner move tokens keep their own per-ply navigation). */
 .tree-node--clickable { cursor: pointer; }
-.tree-node--clickable:hover { filter: brightness(1.18); }
+.tree-node--clickable:hover { filter: brightness(1.18); box-shadow: 0 4px 12px rgba(0,0,0,.32); }
 .tree-node--clickable:focus-visible { outline: 2px solid var(--accent-hover); outline-offset: 2px; }
 .tree-node.is-board-position {
   border-color: rgba(148,157,171,.7);
@@ -331,10 +342,16 @@ button.tree-node:focus-visible { outline: 2px solid var(--accent-hover); outline
 .tree-node--tip {
   flex-direction: column; gap: 0; background: linear-gradient(rgba(104,160,211,.08), rgba(104,160,211,.08)), var(--surface);
   border-color: var(--good-dim); border-style: dashed; color: var(--accent-hover);
+  animation: tip-breathe 2.8s ease-in-out infinite;
+}
+/* The hidden-answer "?" box breathes very gently — it's the goal, after all. */
+@keyframes tip-breathe {
+  50% { border-color: var(--accent); box-shadow: 0 2px 8px rgba(0,0,0,.26), 0 0 12px rgba(104,160,211,.28); }
 }
 .tree-node__question { font-family: var(--mono); font-size: 14px; font-weight: 700; line-height: 1; }
 .tree-node--answer.tree-node--target {
   background: linear-gradient(var(--accent-soft), var(--accent-soft)), var(--surface); border-color: var(--good-dim); color: var(--accent-hover);
+  box-shadow: 0 2px 8px rgba(0,0,0,.26), 0 0 14px rgba(104,160,211,.16);
 }
 /* When selected, the answer leaf takes the brighter selected-blue border like
    the main tree's selected target nodes (the base rule above would dim it). */
@@ -350,13 +367,15 @@ button.tree-node:focus-visible { outline: 2px solid var(--accent-hover); outline
 }
 @media (prefers-reduced-motion: reduce) {
   .tree-node.is-latest,
-  .tree-edge.is-latest { animation: none; }
+  .tree-edge.is-latest,
+  .tree-node--tip { animation: none; }
+  .modal { transition: none; transform: none; }
 }
 
 /* ---- Guess log ---- */
-.ghist-item { padding: 10px 12px; border-radius: 9px; border: 1px solid transparent; margin-bottom: 6px; background: var(--surface); }
+.ghist-item { padding: 10px 12px; border-radius: 9px; border: 1px solid rgba(255,255,255,.04); margin-bottom: 6px; background: var(--surface); transition: filter .12s, border-color .12s; }
 .ghist-item[data-history-guess] { cursor: pointer; }
-.ghist-item[data-history-guess]:hover { filter: brightness(1.15); }
+.ghist-item[data-history-guess]:hover { filter: brightness(1.15); border-color: rgba(255,255,255,.09); }
 .ghist-item[data-history-guess]:focus-visible { outline: 2px solid var(--accent-hover); outline-offset: 2px; }
 .ghist-item:last-child { margin-bottom: 0; }
 .ghist-item.best { background: rgba(104,160,211,.1); border-color: var(--good-dim); }
@@ -492,10 +511,20 @@ button.tree-node:focus-visible { outline: 2px solid var(--accent-hover); outline
   text-decoration: none;
   transition: background .12s, color .12s, border-color .12s, box-shadow .12s, transform .05s;
 }
-.btn:hover { background: var(--panel-3); }
+.btn:hover { background: var(--panel-3); border-color: rgba(255,255,255,.09); }
 .btn:active { transform: translateY(1px); }
-.btn.primary { background: rgba(97,152,202,.13); border-color: var(--accent); color: var(--accent-hover); }
-.btn.primary:hover { background: rgba(97,152,202,.22); border-color: var(--accent-hover); }
+/* The primary is a genuinely raised accent key: light-to-dark face, crisp top
+   rim, and a darker bottom edge it visually sinks into when pressed. */
+.btn.primary {
+  background: linear-gradient(180deg, #7db3e3, #5b93c6);
+  border-color: rgba(255,255,255,.12); color: #0e1624;
+  box-shadow: inset 0 1px 0 rgba(255,255,255,.28), 0 2px 0 var(--accent-dark), 0 8px 18px rgba(66,113,161,.32);
+}
+.btn.primary:hover { background: linear-gradient(180deg, #8abce8, #67a0d3); border-color: rgba(255,255,255,.2); }
+.btn.primary:active {
+  transform: translateY(2px);
+  box-shadow: inset 0 1px 0 rgba(255,255,255,.28), 0 0 0 var(--accent-dark), 0 4px 10px rgba(66,113,161,.28);
+}
 .btn.ghost { background: transparent; border-color: transparent; color: var(--muted); font-weight: 600; }
 .btn.ghost:hover { background: var(--panel-2); color: var(--text); }
 
@@ -510,10 +539,10 @@ button.tree-node:focus-visible { outline: 2px solid var(--accent-hover); outline
   background: linear-gradient(180deg, rgba(255,255,255,.035), rgba(255,255,255,0) 90px), var(--panel);
   border: 1px solid rgba(255,255,255,.08); border-radius: 18px;
   max-width: 540px; width: 100%; margin: auto; padding: 24px 26px;
-  box-shadow: 0 28px 70px rgba(0,0,0,.55); position: relative;
-  transform: translateY(8px); transition: transform .18s ease;
+  box-shadow: inset 0 1px 0 rgba(255,255,255,.05), 0 28px 70px rgba(0,0,0,.55); position: relative;
+  transform: translateY(10px) scale(.985); transition: transform .22s cubic-bezier(.2,.8,.3,1);
 }
-.modal-bg.open .modal { transform: translateY(0); }
+.modal-bg.open .modal { transform: none; }
 .modal h2 { margin: 0 0 4px; font-size: 20px; letter-spacing: -.01em; }
 .modal h3 { font-size: 14px; color: var(--accent-hover); margin: 20px 0 8px; }
 .modal p, .modal li { color: var(--text); font-size: 14px; }
@@ -834,6 +863,7 @@ html:has(.tree-modal-bg.open) { overflow: hidden; }
 .stat {
   display: flex; flex-direction: column; align-items: center; gap: 6px; min-width: 0;
   padding: 14px 6px; border-radius: 12px; background: var(--surface); border: 1px solid var(--hairline);
+  box-shadow: inset 0 1px 0 rgba(255,255,255,.03);
 }
 .stat-ic { color: var(--accent-hover); }
 .stat-ic svg { width: 19px; height: 19px; display: block; }
@@ -842,7 +872,7 @@ html:has(.tree-modal-bg.open) { overflow: hidden; }
 .dist { margin-top: 14px; padding: 14px 16px; border-radius: 12px; background: var(--surface); border: 1px solid var(--hairline); }
 .dist-row { display: flex; align-items: center; gap: 8px; margin: 5px 0; font-size: 13px; }
 .dist-row .k { width: 22px; color: var(--muted); font-variant-numeric: tabular-nums; text-align: right; }
-.dist-row .bar { background: var(--good-dim); color: var(--text); border-radius: 6px; padding: 2px 8px; min-width: 22px; text-align: right; font-variant-numeric: tabular-nums; font-size: 12px; }
+.dist-row .bar { background: var(--good-dim); color: var(--text); border-radius: 999px; padding: 2px 9px; min-width: 22px; text-align: right; font-variant-numeric: tabular-nums; font-size: 12px; }
 .dist-row .bar.cur { background: linear-gradient(180deg, #7db3e3, #5b93c6); color: #0e1624; font-weight: 700; }
 
 /* ---- Win modal ---- */
@@ -853,6 +883,9 @@ html:has(.tree-modal-bg.open) { overflow: hidden; }
   background: radial-gradient(circle, rgba(104,160,211,.24), rgba(104,160,211,.05));
   box-shadow: 0 0 0 1px rgba(104,160,211,.45), 0 0 32px rgba(104,160,211,.3);
 }
+.modal-bg.open .win-badge { animation: win-badge-pop .55s cubic-bezier(.2,1.4,.4,1) both; }
+@keyframes win-badge-pop { from { transform: scale(.55); opacity: 0; } }
+@media (prefers-reduced-motion: reduce) { .modal-bg.open .win-badge { animation: none; } }
 .win-badge svg { width: 30px; height: 30px; }
 .win-modal h2 { margin: 0 0 8px; color: var(--text); font-size: 26px; font-weight: 800; letter-spacing: -.01em; }
 .win-sub { margin: 0 0 18px; color: var(--muted); font-size: 14px; }
