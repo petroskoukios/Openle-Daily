@@ -221,18 +221,25 @@ function buildDisplayTree(state, boardNavigationEnabled, openingsOnly) {
     const { width, height } = seqMetrics(run);
     const branches = [...end.children.values()].map(child => child.onTarget ? displayTargetMove(child) : displayOffPath(child));
 
-    // A guess whose line simply ends here (one opening, no further branching)
-    // becomes a single labelled leaf — moves and name in one box — instead of a
-    // moves node with the name dangling below it. Fewer nodes, and it lets
-    // sibling guesses pack into staggered lanes.
-    if (branches.length === 0 && end.guesses.length === 1) {
+    // A position that IS a guessed opening gets the name and moves merged into
+    // one labelled box, with any deeper continuations hanging beneath it —
+    // rather than a moves node with the name dangling beside the continuation
+    // as if it were a separate variation (a Berlin Defense that continues into
+    // the Rio Gambit is one line, not a fork). Also fewer nodes, and terminal
+    // leaves still pack into staggered lanes.
+    if (end.guesses.length === 1) {
       const g = end.guesses[0];
-      return create(
+      const node = create(
         "guess", "off", Math.max(width, 138), height + 24,
         `<span class="tree-node__name" title="${esc(g.name)}">${esc(g.name)}</span>` +
           `<span class="tree-node__sequence">${sequence}</span>`,
-        { latest: g.id === latestGuessId, sortKey: g.name, edgeTone: "off", openingId: g.id, lineId: registerLine(g.moves, g.moves.length) },
+        {
+          latest: latestGuessId != null && (g.id === latestGuessId || run.some(item => item.guessIds.has(latestGuessId))),
+          sortKey: g.name, edgeTone: "off", openingId: g.id, lineId: registerLine(g.moves, g.moves.length),
+        },
       );
+      node.children = orderChildren(branches);
+      return node;
     }
 
     const node = create(
@@ -265,17 +272,36 @@ function buildDisplayTree(state, boardNavigationEnabled, openingsOnly) {
       moveToken(`${seqTokenNum(node, i)}${esc(node.move)}`, targetBoardLine, node.depth)
     ).join(" ");
     const { width, height } = seqMetrics(run);
+    const latest = latestGuessId != null && run.some(item => item.guessIds.has(latestGuessId));
+    const branches = [...end.children.values()].map(child => child.onTarget ? displayTargetMove(child) : displayOffPath(child));
+
+    // A trunk position that IS a guessed opening merges the name into the blue
+    // trunk box itself — the tip / deeper continuations hang beneath it — so the
+    // label doesn't dangle beside the trunk like a diverging variation. The
+    // answer reveal at the end of the line keeps its own leaf.
+    if (!end.isTargetEnd && end.guesses.length === 1) {
+      const g = end.guesses[0];
+      const node = create(
+        "guess", targetTone, Math.max(width, 138), height + 24,
+        `<span class="tree-node__name" title="${esc(g.name)}">${esc(g.name)}</span>` +
+          `<span class="tree-node__sequence">${sequence}</span>`,
+        { main: true, latest, sortKey: raw.move, openingId: g.id, lineId: registerLine(g.moves, g.moves.length) },
+      );
+      const leaves = (end === tip && !state.solved && !state.gaveUp) ? [tipLeaf()] : [];
+      node.children = orderChildren([...branches, ...leaves]);
+      return node;
+    }
+
     const node = create(
       "sequence", targetTone, width, height,
       `<span class="tree-node__sequence">${sequence}</span>`,
       {
         main: true,
-        latest: latestGuessId != null && run.some(item => item.guessIds.has(latestGuessId)),
+        latest,
         sortKey: raw.move,
         lineId: registerLine(targetBoardLine, end.depth), // clicking the box → its last move
       },
     );
-    const branches = [...end.children.values()].map(child => child.onTarget ? displayTargetMove(child) : displayOffPath(child));
     const leaves = end.isTargetEnd
       ? [answerLeaf()]
       : end.guesses.map(g => guessLeaf(g, g.id === latestGuessId));

@@ -86,10 +86,6 @@
       <button data-mode="practice">Practice</button>
     </div>
     <div class="spacer"></div>
-    <label class="move-toggle" title="Search openings by move order instead of name">
-      <input id="moveSearchToggle" type="checkbox" />
-      <span>Search using notation</span>
-    </label>
     <button class="iconbtn" id="soundBtn" type="button" title="Sound on/off" aria-label="Toggle sound">
       <svg class="sound-on" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="M11 5 6 9H2v6h4l5 4V5z"/><path d="M15.5 8.5a5 5 0 0 1 0 7"/><path d="M19 5a9 9 0 0 1 0 14"/></svg>
       <svg class="sound-off" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="M11 5 6 9H2v6h4l5 4V5z"/><path d="m17 9 5 5M22 9l-5 5"/></svg>
@@ -117,9 +113,13 @@
 
   <div class="layout">
     <div class="col-left">
-      <div class="search">
+      <div class="search search--with-toggle">
         <input id="guessInput" type="text" autocomplete="off" spellcheck="false"
                placeholder="Search an opening to guess — e.g. Sicilian, Ruy Lopez…" />
+        <label class="move-toggle" title="Search openings by move order instead of name">
+          <input id="moveSearchToggle" type="checkbox" />
+          <span>Search using notation</span>
+        </label>
         <ul class="suggest" id="suggest"></ul>
       </div>
 

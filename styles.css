@@ -163,6 +163,11 @@ body {
 
 /* ---- Search / autocomplete ---- */
 .search { position: relative; margin-bottom: 8px; }
+/* Guess search carries the notation toggle beside the input, where it's
+   discoverable — the input gives up the width the pill needs. */
+.search--with-toggle { display: flex; align-items: stretch; gap: 8px; }
+.search--with-toggle input { flex: 1; min-width: 0; }
+.search--with-toggle .move-toggle { height: auto; flex-shrink: 0; }
 .search input {
   width: 100%; padding: 11px 15px; font-size: 15px; font-family: inherit;
   background: var(--surface); color: var(--text);
@@ -304,6 +309,12 @@ button.tree-node:focus-visible { outline: 2px solid var(--accent-hover); outline
 .tree-node--guess,
 .tree-node--answer { flex-direction: column; gap: 1px; padding: 3px 5px; border-radius: 5px; }
 .tree-node--guess.tree-node--off { color: var(--miss); border-color: rgba(148,157,171,.35); }
+/* A guessed opening that sits on the confirmed target path: its name+moves box
+   is part of the blue trunk, styled like the other on-path nodes. */
+.tree-node--guess.tree-node--target {
+  background: linear-gradient(var(--accent-soft), var(--accent-soft)), var(--surface);
+  border-color: var(--good-dim); color: var(--accent-hover);
+}
 /* Custom-tree remove handle: a corner × revealed when hovering the opening box. */
 .tree-node__remove {
   position: absolute; top: 1px; right: 2px; width: 15px; height: 15px;
