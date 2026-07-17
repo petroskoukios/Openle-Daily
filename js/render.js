@@ -67,9 +67,14 @@ export function render() {
     tick();
     nextPuzzleTimer = setInterval(tick, 30000);
   } else {
+    // The search hint is too long for a phone's narrow input (which also shares
+    // its row with the notation toggle), so use a short form on small screens.
+    const searchHint = matchMedia("(max-width: 620px)").matches
+      ? "Search an opening…"
+      : "Search an opening to guess — e.g. Sicilian, Ruy Lopez…";
     input.placeholder = state.solved ? "Puzzle completed"
       : state.gaveUp ? "Puzzle failed"
-      : "Search an opening to guess — e.g. Sicilian, Ruy Lopez…";
+      : searchHint;
   }
 
   // panels

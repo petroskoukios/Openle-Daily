@@ -395,6 +395,10 @@ document.getElementById("boardNext").addEventListener("click", () => stepBoard(1
   placeSearch(stacked);
   stacked.addEventListener("change", placeSearch);
 }
+
+// The search placeholder has a short mobile form (chosen in render()); re-render
+// when the phone breakpoint is crossed so a resize/rotation refreshes it.
+matchMedia("(max-width: 620px)").addEventListener("change", () => render());
 const soundBtn = document.getElementById("soundBtn");
 soundBtn.classList.toggle("is-muted", isMuted());
 soundBtn.addEventListener("click", () => soundBtn.classList.toggle("is-muted", toggleMute()));
