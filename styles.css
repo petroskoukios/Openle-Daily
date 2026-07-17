@@ -132,17 +132,23 @@ body {
 #soundBtn.is-muted .sound-on { display: none; }
 #soundBtn.is-muted .sound-off { display: block; }
 #soundBtn.is-muted { color: var(--muted-2); }
+/* Sits beside the guess input and dresses like it: same inset surface, border,
+   and soft-cornered box rather than a pill. */
 .move-toggle {
   display: inline-flex; align-items: center; gap: 7px;
   height: 36px; padding: 0 13px; flex-shrink: 0;
-  background: var(--panel); border: 1px solid var(--hairline); border-radius: 999px;
+  background: var(--surface); border: 1px solid var(--border-solid); border-radius: 12px;
+  box-shadow: inset 0 1px 4px rgba(0,0,0,.3), 0 3px 12px rgba(0,0,0,.2);
   color: var(--muted); font-size: 12.5px; font-weight: 700;
   cursor: pointer; user-select: none; white-space: nowrap;
   transition: color .12s, background .12s, border-color .12s;
 }
-.move-toggle:hover { color: var(--text); }
+.move-toggle:hover { color: var(--text); border-color: #454c5c; }
 .move-toggle input { width: 14px; height: 14px; margin: 0; accent-color: var(--good); cursor: pointer; }
+/* Checked state, twice on purpose: a shared selector list would be dropped
+   entirely by engines that can't parse :has(), taking the class rule with it. */
 .move-toggle:has(input:checked) { color: var(--accent-hover); background: var(--accent-soft); border-color: rgba(104,160,211,.35); }
+.move-toggle.is-on { color: var(--accent-hover); background: var(--accent-soft); border-color: rgba(104,160,211,.35); }
 /* Compact date variant — shown only on narrow screens (see media query). */
 .sub-short { display: none; }
 

@@ -10,6 +10,10 @@ const moveSearchToggle = document.getElementById("moveSearchToggle");
 const MOVE_SEARCH_KEY = "ot.moveSearch";
 let moveSearchEnabled = LS.get(MOVE_SEARCH_KEY, false) === true;
 moveSearchToggle.checked = moveSearchEnabled;
+// The pill's checked styling keys off this class (with :has() as a backstop).
+const syncMoveToggleClass = () =>
+  moveSearchToggle.closest(".move-toggle")?.classList.toggle("is-on", moveSearchEnabled);
+syncMoveToggleClass();
 let activeIdx = -1, currentList = [];
 
 export function isMoveSearchEnabled() { return moveSearchEnabled; }
@@ -134,6 +138,7 @@ input.addEventListener("focus", () => { if (input.value.trim()) renderSuggest(in
 moveSearchToggle.addEventListener("change", () => {
   moveSearchEnabled = moveSearchToggle.checked;
   LS.set(MOVE_SEARCH_KEY, moveSearchEnabled);
+  syncMoveToggleClass();
   if (input.value.trim()) renderSuggest(input.value);
   input.focus();
 });
