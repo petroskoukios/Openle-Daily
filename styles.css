@@ -144,6 +144,7 @@ body {
   transition: color .12s, background .12s, border-color .12s;
 }
 .move-toggle:hover { color: var(--text); border-color: #454c5c; }
+.move-toggle .mt-short { display: none; }  /* compact label is phones-only */
 .move-toggle input { width: 14px; height: 14px; margin: 0; accent-color: var(--good); cursor: pointer; }
 /* Checked state, twice on purpose: a shared selector list would be dropped
    entirely by engines that can't parse :has(), taking the class rule with it. */
@@ -953,8 +954,10 @@ html:has(.tree-modal-bg.open) { overflow: hidden; }
   .modes button { padding: 7px 12px; font-size: 13.5px; }
   .iconbtn { width: 36px; height: 36px; font-size: 15px; }
   .iconbtn svg { width: 17px; height: 17px; }
-  /* Notation toggle is desktop-only; hide it on phones to declutter the top bar. */
-  .move-toggle { display: none; }
+  /* Phones keep the notation toggle but with the compact label. */
+  .move-toggle { padding: 0 11px; }
+  .move-toggle .mt-long { display: none; }
+  .move-toggle .mt-short { display: inline; }
   .meta { gap: 8px 12px; margin-top: 12px; margin-bottom: 16px; }   /* gap above the meta bar (app bar zeroes its own bottom margin on phones) */
   /* Drop the .modes 8px indent so the difficulty bar lines up under the title. */
   .meta .diff { margin-left: 0; }
