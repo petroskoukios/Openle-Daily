@@ -176,10 +176,10 @@
   /* ---------------- Difficulty pools ---------------- */
   function suitePools(OT) {
     group("Difficulty pools — cumulative invariants");
-    eq("pool sizes are 39 / 89 / 219 / 480",
-      OT.DIFFS.map(d => OT.POOLS[d].length), [39, 89, 219, 480]);
+    eq("pool sizes are 39 / 82 / 219 / 480",
+      OT.DIFFS.map(d => OT.POOLS[d].length), [39, 82, 219, 480]);
     eq("DIFF_LIMITS matches pool sizes",
-      OT.DIFF_LIMITS, { easy: 39, medium: 89, hard: 219, expert: 480 });
+      OT.DIFF_LIMITS, { easy: 39, medium: 82, hard: 219, expert: 480 });
 
     const ids = d => new Set(OT.POOLS[d].map(o => o.id));
     const subset = (a, b) => [...a].every(x => b.has(x));
@@ -203,8 +203,8 @@
     check("no pool contains an above-tier opening", leak.length === 0, offenders(leak));
 
     // Target pools are exclusive: solution comes only from that tier.
-    eq("target-pool sizes are 32 / 50 / 130 / 261",
-      OT.DIFFS.map(d => OT.TARGET_POOLS[d].length), [32, 50, 130, 261]);
+    eq("target-pool sizes are 32 / 43 / 137 / 261",
+      OT.DIFFS.map(d => OT.TARGET_POOLS[d].length), [32, 43, 137, 261]);
     const tgtLeak = [];
     for (const d of OT.DIFFS)
       for (const o of OT.TARGET_POOLS[d])

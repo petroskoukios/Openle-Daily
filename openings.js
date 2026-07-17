@@ -537,7 +537,7 @@ window.OPENINGS = [
     "n": "Center Game Accepted",
     "e": "C21",
     "m": "e4 e5 d4 exd4",
-    "tier": "medium"
+    "tier": "hard"
   },
   {
     "n": "Czech Defense",
@@ -813,7 +813,7 @@ window.OPENINGS = [
     "n": "English Opening: Symmetrical Variation",
     "e": "A30",
     "m": "c4 c5",
-    "tier": "medium"
+    "tier": "hard"
   },
   {
     "n": "English Opening: Symmetrical Variation, Botvinnik System",
@@ -1623,7 +1623,7 @@ window.OPENINGS = [
     "n": "Latvian Gambit",
     "e": "C40",
     "m": "e4 e5 Nf3 f5",
-    "tier": "medium"
+    "tier": "hard"
   },
   {
     "n": "Latvian Gambit Accepted",
@@ -2715,7 +2715,7 @@ window.OPENINGS = [
     "n": "Sicilian Defense: Accelerated Dragon",
     "e": "B32",
     "m": "e4 c5 Nf3 Nc6 d4 cxd4 Nxd4 g6",
-    "tier": "medium"
+    "tier": "hard"
   },
   {
     "n": "Sicilian Defense: Accelerated Dragon, Maróczy Bind",
@@ -3063,7 +3063,7 @@ window.OPENINGS = [
     "n": "Sicilian Defense: Open",
     "e": "B32",
     "m": "e4 c5 Nf3 Nc6 d4",
-    "tier": "medium"
+    "tier": "hard"
   },
   {
     "n": "Sicilian Defense: Richter-Rauzer Variation",
@@ -3237,7 +3237,7 @@ window.OPENINGS = [
     "n": "Tarrasch Defense",
     "e": "D32",
     "m": "d4 d5 c4 e6 Nc3 c5",
-    "tier": "medium"
+    "tier": "hard"
   },
   {
     "n": "Tarrasch Defense: Rubinstein System",
@@ -3255,7 +3255,7 @@ window.OPENINGS = [
     "n": "Three Knights Opening",
     "e": "C46",
     "m": "e4 e5 Nf3 Nc6 Nc3",
-    "tier": "medium"
+    "tier": "hard"
   },
   {
     "n": "Torre Attack: Classical Defense",
