@@ -20,7 +20,10 @@ function announceBoardDestination(moves, depth) {
 // Board pieces are CC BY-SA SVGs by Uray M. János in pieces-svg/ (see README credits).
 function pieceImg(p, cls = "") {
   const color = pieceColor(p);
-  return `<img class="pc ${color}${cls}" src="pieces-svg/${PIECE_NAME[p.toLowerCase()]}-${color}.svg" alt="" draggable="false">`;
+  // decoding="sync" makes a freshly-created piece rasterize before it paints,
+  // so a moving piece landing on a new square doesn't flash a blank frame while
+  // the SVG decodes (visible on mobile).
+  return `<img class="pc ${color}${cls}" src="pieces-svg/${PIECE_NAME[p.toLowerCase()]}-${color}.svg" alt="" draggable="false" decoding="sync">`;
 }
 
 export const BOARD_PLAYBACK_STEP_MS = 220; // Keep in sync with .move-ghost in styles.css.
@@ -95,7 +98,7 @@ function paintBoard(boardEl, boardArr, changed, hide, captured, flipped, slides)
     const p = boardArr[r][f];
     let img = sq.querySelector(".pc");
     if (!p) { if (img) img.remove(); return; }
-    if (!img) { img = document.createElement("img"); img.alt = ""; img.draggable = false; sq.appendChild(img); }
+    if (!img) { img = document.createElement("img"); img.alt = ""; img.draggable = false; img.decoding = "sync"; sq.appendChild(img); }
     // Only touch src/base class when the piece on this square changed — that's
     // what avoids the SVG re-decode. Transient classes toggle every frame.
     if (img.dataset.piece !== p) {
