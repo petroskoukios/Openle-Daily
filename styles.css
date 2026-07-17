@@ -44,6 +44,9 @@ body {
   line-height: 1.5;
   -webkit-font-smoothing: antialiased;
   min-height: 100vh;
+  /* Kill iOS double-tap-to-zoom (fires on quick repeated taps of the board
+     arrows etc.) while keeping scrolling and pinch-zoom of the page. */
+  touch-action: manipulation;
 }
 
 ::selection { background: rgba(104,160,211,.36); color: var(--text); }
@@ -153,7 +156,7 @@ body {
   flex: none; width: 13px; height: 13px; margin: 0;
   display: inline-grid; place-content: center;
   border: 1px solid var(--border-solid); border-radius: 3px;
-  background: var(--surface); cursor: pointer;
+  background: #fff; cursor: pointer;   /* white interior, like a native checkbox */
 }
 /* Checked: fill with the accent and show a white tick, like the old native
    accent-color checkbox. */
@@ -205,7 +208,10 @@ body {
 .search > input::placeholder { color: var(--muted-2); }
 .search > input:hover:not(:focus):not(:disabled) { border-color: #454c5c; }
 .search > input:focus { border-color: var(--accent); box-shadow: inset 0 1px 4px rgba(0,0,0,.3), 0 3px 12px rgba(0,0,0,.2), 0 0 0 3px rgba(104,160,211,.2); }
-.search > input:disabled { cursor: not-allowed; color: var(--muted-2); }
+/* iOS Safari fades disabled inputs (opacity + text-fill); pin both so the
+   finished-puzzle search bar looks the same as on desktop. */
+.search > input:disabled { cursor: not-allowed; color: var(--muted-2); opacity: 1; -webkit-text-fill-color: var(--muted-2); }
+.search > input:disabled::placeholder { color: var(--muted-2); opacity: 1; -webkit-text-fill-color: var(--muted-2); }
 /* Touch devices need >=16px or iOS auto-zooms on focus; the smaller text is
    mouse/desktop only. */
 @media (pointer: coarse) { .search > input { font-size: 16px; } }

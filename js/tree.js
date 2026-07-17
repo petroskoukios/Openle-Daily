@@ -924,9 +924,28 @@ export function setTreeZoom(el, zoom) {
 export function enableTreeViewport(el) {
   let drag = null;
   let suppressClick = false;
+  // Two-finger pinch zooms the tree (the element's touch-action: none keeps
+  // the browser from zooming the page instead).
+  const touches = new Map();   // pointerId -> {x, y}
+  let pinch = null;            // { dist, zoom } at pinch start
+
+  const pinchDist = () => {
+    const [a, b] = [...touches.values()];
+    return Math.hypot(a.x - b.x, a.y - b.y);
+  };
 
   el.addEventListener("pointerdown", e => {
     if (e.button !== 0) return;
+    touches.set(e.pointerId, { x: e.clientX, y: e.clientY });
+    if (touches.size === 2) {
+      // Second finger: stop panning, start pinching from the current zoom.
+      drag = null;
+      suppressClick = true;
+      el.classList.remove("is-panning");
+      try { el.setPointerCapture(e.pointerId); } catch {}  // inactive id (e.g. synthetic events)
+      pinch = { dist: pinchDist(), zoom: treeView(el).zoom };
+      return;
+    }
     drag = {
       id: e.pointerId, x: e.clientX, y: e.clientY,
       left: el.scrollLeft, top: el.scrollTop, moved: false,
@@ -934,19 +953,29 @@ export function enableTreeViewport(el) {
     suppressClick = false;
   });
   el.addEventListener("pointermove", e => {
+    if (touches.has(e.pointerId)) touches.set(e.pointerId, { x: e.clientX, y: e.clientY });
+    if (pinch && touches.size >= 2) {
+      const [a, b] = [...touches.values()];
+      const view = treeView(el);
+      const want = pinch.zoom * (pinchDist() / pinch.dist);
+      zoomTree(el, want - view.zoom, (a.x + b.x) / 2, (a.y + b.y) / 2);
+      return;
+    }
     if (!drag || drag.id !== e.pointerId) return;
     const dx = e.clientX - drag.x;
     const dy = e.clientY - drag.y;
     if (!drag.moved && Math.hypot(dx, dy) < 4) return;
     if (!drag.moved) {
       drag.moved = true;
-      el.setPointerCapture(e.pointerId);
+      try { el.setPointerCapture(e.pointerId); } catch {}  // inactive id (e.g. synthetic events)
       el.classList.add("is-panning");
     }
     el.scrollLeft = drag.left - dx;
     el.scrollTop = drag.top - dy;
   });
   const endDrag = e => {
+    touches.delete(e.pointerId);
+    if (pinch && touches.size < 2) pinch = null;   // lift a finger to end the pinch
     if (!drag || drag.id !== e.pointerId) return;
     suppressClick = drag.moved;
     drag = null;
@@ -954,6 +983,9 @@ export function enableTreeViewport(el) {
   };
   el.addEventListener("pointerup", endDrag);
   el.addEventListener("pointercancel", endDrag);
+  // Older iOS Safari can still page-zoom via its proprietary gesture events.
+  el.addEventListener("gesturestart", e => e.preventDefault());
+  el.addEventListener("gesturechange", e => e.preventDefault());
   el.addEventListener("click", e => {
     if (!suppressClick) return;
     e.preventDefault();
