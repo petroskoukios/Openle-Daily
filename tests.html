@@ -328,6 +328,58 @@
     eq("navCeiling: queued takes precedence", OT.navCeiling(v, 6), T.length);
   }
 
+  /* ---------------- Search: accent folding ---------------- */
+  // Regression for the launch bug where "reti" couldn't find the Réti Opening
+  // and "grunfeld" couldn't find Grünfeld (37 accented names were unreachable).
+  function suiteSearchFold(OT) {
+    group("Search — accent folding");
+    eq("fold strips single accents", OT.fold("réti grünfeld sämisch göring".normalize()), "reti grunfeld samisch goring");
+    check("fold leaves unaccented text untouched", OT.fold("sicilian defense") === "sicilian defense");
+
+    // Indexed names are pre-folded, so a plain-letter query matches.
+    for (const [name, query] of [["Réti Opening", "reti"], ["Grünfeld Defense", "grunfeld"], ["Scotch Game: Göring Gambit", "goring"]]) {
+      const o = OT.byName(name);
+      check(`${name}: nameLower is accent-folded`, o && !/[éüö]/.test(o.nameLower));
+      check(`"${query}" matches ${name}`, o && OT.scoreMatch(o, [query], query) > -1);
+    }
+    // Accents in the query still work, and non-matches still miss.
+    const reti = OT.byName("Réti Opening");
+    check(`accented query "réti" still matches`, OT.scoreMatch(reti, [OT.fold("réti")], OT.fold("réti")) > -1);
+    check(`"sicilian" does not match Réti`, OT.scoreMatch(reti, ["sicilian"], "sicilian") === -1);
+  }
+
+  /* ---------------- Board: move diff ---------------- */
+  // movingPieces drives the FLIP slide animation — matching each square that
+  // gained a piece to the one that lost it. Regression for the mobile-flash
+  // rework (a wrong match would slide the wrong element / land it on the wrong square).
+  function suiteMoveDiff(C, OT) {
+    group("Board move diff — movingPieces()");
+    const between = (moves, from, to) => OT.movingPieces(C.positionAfter(moves, from), C.positionAfter(moves, to));
+    const slideTo = (slides, f, r) => slides.find(s => s.toF === f && s.toR === r);
+
+    // Quiet pawn move 1.e4: one slide, e2 (f4,r1) -> e4 (f4,r3).
+    let s = between(["e4"], 0, 1);
+    eq("1.e4: exactly one slide", s.length, 1);
+    check("1.e4: pawn e2->e4", s[0].fromF === 4 && s[0].fromR === 1 && s[0].toF === 4 && s[0].toR === 3 && s[0].p === "P");
+
+    // Capture dxc4 (QGA): the capturer slides; the captured piece is NOT a slide.
+    const qga = ["d4", "d5", "c4", "dxc4"];
+    s = between(qga, 3, 4);
+    eq("dxc4: only the capturer slides (1)", s.length, 1);
+    const cap = slideTo(s, 2, 3);   // c4 = file c (2), rank 4 (r3)
+    check("dxc4: black d5 pawn takes on c4", cap && cap.p === "p" && cap.fromF === 3 && cap.fromR === 4);
+
+    // Castling O-O: two slides — king e1->g1 and rook h1->f1 — both on rank 1.
+    const ruy = ["e4", "e5", "Nf3", "Nc6", "Bb5", "a6", "Ba4", "Nf6", "O-O"];
+    s = between(ruy, 8, 9);
+    eq("O-O: two slides (king + rook)", s.length, 2);
+    check("O-O: king e1->g1", (slideTo(s, 6, 0) || {}).p === "K");
+    check("O-O: rook h1->f1", (slideTo(s, 5, 0) || {}).p === "R");
+
+    // No-op (same position) produces no slides.
+    eq("no move: no slides", between(["e4"], 1, 1).length, 0);
+  }
+
   /* ---------------- Runner ---------------- */
   function render() {
     out.innerHTML = logEntries.map(e => {
@@ -351,7 +403,9 @@
     suiteLimits(OT);
     suiteBudget(OT);
     suiteParsing(OT);
+    suiteSearchFold(OT);
     suiteBoardView(OT);
+    suiteMoveDiff(C, OT);
     suiteData(C, OT);
     render();
   }

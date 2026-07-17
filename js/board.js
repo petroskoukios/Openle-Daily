@@ -205,25 +205,33 @@ export function boardMaxDepth(state) {
 // the same move-ghost overlay as the live board, so secondary boards can play
 // their moves in order rather than snapping to the final position.
 export function renderStaticBoard(moves, depth, slide = null) {
-  const board = OTChess.positionAfter(moves, depth);
-  const slideFrom = slide ? OTChess.positionAfter(slide.fromMoves, slide.fromDepth) : null;
-  const movingForward = slideFrom && depth > slide.fromDepth;
+  const { board, slideFrom, movingForward, changed, slides, captured } =
+    moveDiff(moves, depth, slide ? slide.fromMoves : null, slide ? slide.fromDepth : null);
   // Forward shows the old position so a captured piece lingers until impact;
   // reverse shows the new position so the mover reveals what it left behind.
-  const shownBoard = slideFrom ? (movingForward ? slideFrom : board) : board;
-  const prev = OTChess.positionAfter(moves, Math.max(0, depth - 1));
-  const comparison = slideFrom || prev;
+  const shownBoard = slideFrom && movingForward ? slideFrom : board;
+  const hide = new Set();
+  for (const m of slides)
+    hide.add((movingForward ? m.fromR : m.toR) * 8 + (movingForward ? m.fromF : m.toF));
+  return squaresHtml(shownBoard, changed, hide, captured, inspectorFlipped) + ghostsHtml(slides, inspectorFlipped);
+}
+
+// Everything a one-ply step needs, shared by the live and inspector boards:
+// the position, changed-square highlights, the moving pieces, which pieces
+// were captured, and the move/capture sound side effect.
+function moveDiff(moves, depth, slideMoves, slideDepth) {
+  const board = OTChess.positionAfter(moves, depth);
+  const slideFrom = slideDepth != null ? OTChess.positionAfter(slideMoves, slideDepth) : null;
+  const movingForward = slideFrom && depth > slideDepth;
+  const comparison = slideFrom || OTChess.positionAfter(moves, Math.max(0, depth - 1));
   const changed = new Set();
   if (slideFrom || depth > 0) for (let r = 0; r < 8; r++) for (let f = 0; f < 8; f++)
     if (board[r][f] !== comparison[r][f]) changed.add(r * 8 + f);
   const slides = slideFrom ? movingPieces(slideFrom, board) : [];
-  if (slideFrom && slides.length) {
-    const san = movingForward ? moves[depth - 1] : (slide.fromMoves[slide.fromDepth - 1] || "");
+  if (slides.length) {
+    const san = movingForward ? moves[depth - 1] : (slideMoves[slideDepth - 1] || "");
     play(movingForward && san && san.includes("x") ? "capture" : "move");
   }
-  const hide = new Set();
-  for (const m of slides)
-    hide.add((movingForward ? m.fromR : m.toR) * 8 + (movingForward ? m.fromF : m.toF));
   const captured = new Set();
   if (movingForward) {
     const origins = new Set(slides.map(m => m.fromR * 8 + m.fromF));
@@ -232,10 +240,13 @@ export function renderStaticBoard(moves, depth, slide = null) {
       if (slideFrom[r][f] && slideFrom[r][f] !== board[r][f] && !origins.has(key)) captured.add(key);
     }
   }
-  return squaresHtml(shownBoard, changed, hide, captured, inspectorFlipped) + ghostsHtml(slides, inspectorFlipped);
+  return { board, slideFrom, movingForward, changed, slides, captured };
 }
 
-function movingPieces(fromBoard, toBoard) {
+// Match each square that gained a piece to one that lost the same piece (exact
+// piece first, then same colour), yielding the from→to slides that drive the
+// move animation. Exported for the test harness. Exposed for tests.
+export function movingPieces(fromBoard, toBoard) {
   const removed = [], added = [];
   for (let r = 0; r < 8; r++) for (let f = 0; f < 8; f++) {
     const from = fromBoard[r][f], to = toBoard[r][f];
@@ -262,31 +273,8 @@ export function renderBoard(state) {
   const { playing, depth, lineMoves } = resolveBoardView(view, liveMax, tgt.moves);
   if (view.manualDepth != null && view.manualDepth !== depth) view.manualDepth = depth;
 
-  const sliding = view.slideFromDepth != null;
-  const slideMoves = view.slideFromMoves || lineMoves;
-  const board = OTChess.positionAfter(lineMoves, depth);
-  const slideFrom = sliding ? OTChess.positionAfter(slideMoves, view.slideFromDepth) : null;
-  const movingForward = slideFrom && depth > view.slideFromDepth;
-  const prev = OTChess.positionAfter(lineMoves, Math.max(0, depth - 1));
-  const comparisonBoard = slideFrom || prev;
-  const changed = new Set();
-  if (slideFrom || depth > 0) for (let r = 0; r < 8; r++) for (let f = 0; f < 8; f++)
-    if (board[r][f] !== comparisonBoard[r][f]) changed.add(r * 8 + f);
-  const slides = slideFrom ? movingPieces(slideFrom, board) : [];
-  if (slideFrom && slides.length) {
-    const san = movingForward ? lineMoves[depth - 1] : (slideMoves[view.slideFromDepth - 1] || "");
-    play(movingForward && san && san.includes("x") ? "capture" : "move");
-  }
-  const captured = new Set();
-  if (movingForward) {
-    const movingOrigins = new Set(slides.map(m => m.fromR * 8 + m.fromF));
-    for (let r = 0; r < 8; r++) for (let f = 0; f < 8; f++) {
-      const key = r * 8 + f;
-      if (slideFrom[r][f] && slideFrom[r][f] !== board[r][f] && !movingOrigins.has(key)) {
-        captured.add(key);
-      }
-    }
-  }
+  const { board, changed, slides, captured } = moveDiff(lineMoves, depth,
+    view.slideFromMoves || lineMoves, view.slideFromDepth);
 
   // Always paint the final position; movers FLIP-slide in from their origin,
   // captured pieces linger as fading overlays (see paintBoard).

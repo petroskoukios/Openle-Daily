@@ -20,11 +20,11 @@
 import { OPENINGS, POOLS, TARGET_POOLS, DIFFS, DIFF_LIMITS, GUESS_LIMITS, HINT_COST, tierOf, customBaseOptions } from "./data.js";
 import { dailyTarget } from "./daily.js";
 import { compare, guessLimit, confirmedDepth, hintsUsed, guessBudgetUsed, guessBudgetLeft } from "./domain.js";
-import { commonMoveDepth, esc } from "./format.js";
+import { commonMoveDepth, esc, fold } from "./format.js";
 import { state, setState, setDifficulty, freshDaily, freshPractice, freshCustom, LS } from "./state.js";
 import { render } from "./render.js";
 import { renderTreeInto, fitFullscreenTree, animateFitFullscreenTree, zoomTreeByFactor, setTreeZoom, enableTreeViewport } from "./tree.js";
-import { stepBoard, clearBoardPlayback, resetBoardNav, toggleBoardFlip } from "./board.js";
+import { stepBoard, clearBoardPlayback, resetBoardNav, toggleBoardFlip, movingPieces } from "./board.js";
 import { toggleMute, isMuted } from "./sound.js";
 import { createBoardView, resolveBoardView, navCeiling } from "./board-view.js";
 import { submitGuess, requestHint, giveUp } from "./actions.js";
@@ -98,79 +98,88 @@ function openTreeModal() {
   });
 }
 
+/* ---------- Shared suggest dropdown ---------- */
+// One implementation for the two auxiliary name-search dropdowns (custom-tree
+// add-opening and base picker): scoreMatch ranking, arrow-key cycling,
+// Enter/click to pick. Configs differ only in the pool, the empty-state
+// message, and what picking / Escape do.
+function wireSuggest({ input: inp, listEl, pool, exclude, emptyMessage, onPick, onEscape }) {
+  let list = [], activeIdx = -1;
+  const close = () => { listEl.classList.remove("open"); list = []; activeIdx = -1; };
+  const rank = q => {
+    const raw = normalizeQuery(q);
+    if (!raw) return [];
+    const tokens = raw.split(/\s+/).filter(Boolean);
+    const out = [];
+    for (const o of pool()) {
+      if (exclude && exclude(o)) continue;
+      const s = scoreMatch(o, tokens, raw);
+      if (s > -1) out.push([s, o]);
+    }
+    out.sort((a, b) => b[0] - a[0] || a[1].name.localeCompare(b[1].name));
+    return out.slice(0, 50).map(x => x[1]);
+  };
+  const render = () => {
+    const q = inp.value;
+    list = rank(q);
+    activeIdx = list.length ? 0 : -1;
+    if (!q.trim()) { close(); return; }
+    if (!list.length) {
+      listEl.innerHTML = `<li class="empty">${emptyMessage} “${esc(q)}”.</li>`;
+      listEl.classList.add("open"); return;
+    }
+    listEl.innerHTML = list.map((o, i) =>
+      `<li data-i="${i}" class="${i === activeIdx ? "active" : ""}">
+        <span class="nm">${esc(o.name)}</span>
+        <span class="mv">${esc(o.moves.slice(0, 6).join(" ") + (o.moves.length > 6 ? "…" : ""))}</span></li>`).join("");
+    listEl.classList.add("open");
+  };
+  const setActive = i => {
+    const items = listEl.querySelectorAll("li[data-i]");
+    if (!items.length) return;
+    activeIdx = (i + items.length) % items.length;
+    items.forEach(li => li.classList.toggle("active", +li.dataset.i === activeIdx));
+    items[activeIdx].scrollIntoView({ block: "nearest" });
+  };
+  inp.addEventListener("input", render);
+  inp.addEventListener("focus", () => { if (inp.value.trim()) render(); });
+  inp.addEventListener("keydown", e => {
+    if (!listEl.classList.contains("open")) {
+      if (e.key === "ArrowDown" && inp.value.trim()) render();
+      return;
+    }
+    if (e.key === "ArrowDown") { e.preventDefault(); setActive(activeIdx + 1); }
+    else if (e.key === "ArrowUp") { e.preventDefault(); setActive(activeIdx - 1); }
+    else if (e.key === "Enter") { e.preventDefault(); onPick(list[activeIdx]); }
+    else if (e.key === "Escape") { onEscape(e, close); }
+  });
+  listEl.addEventListener("mousedown", e => {
+    const li = e.target.closest("li[data-i]");
+    if (li) { e.preventDefault(); onPick(list[+li.dataset.i]); }
+  });
+  return { close };
+}
+
 /* ---------- Custom tree: tabs + add-opening search ---------- */
 const customInput = document.getElementById("treeCustomInput");
-const customSuggestEl = document.getElementById("treeCustomSuggest");
-let customList = [], customActiveIdx = -1;
-
-function closeCustomSuggest() { customSuggestEl.classList.remove("open"); customList = []; customActiveIdx = -1; }
-
-// Search every opening by name (the custom tree isn't tier-limited), excluding
-// ones already in the tree. Reuses the puzzle search's scoring.
-function rankCustom(q) {
-  const raw = normalizeQuery(q);
-  if (!raw) return [];
-  const tokens = raw.split(/\s+/).filter(Boolean);
-  const added = customTreeState().guessedIds;
-  const out = [];
-  for (const o of OPENINGS) {
-    if (added.has(o.id)) continue;
-    const s = scoreMatch(o, tokens, raw);
-    if (s > -1) out.push([s, o]);
-  }
-  out.sort((a, b) => b[0] - a[0] || a[1].name.localeCompare(b[1].name));
-  return out.slice(0, 50).map(x => x[1]);
-}
-
-function renderCustomSuggest() {
-  const q = customInput.value;
-  customList = rankCustom(q);
-  customActiveIdx = customList.length ? 0 : -1;
-  if (!q.trim()) { closeCustomSuggest(); return; }
-  if (!customList.length) {
-    customSuggestEl.innerHTML = `<li class="empty">No openings match “${esc(q)}”.</li>`;
-    customSuggestEl.classList.add("open"); return;
-  }
-  customSuggestEl.innerHTML = customList.map((o, i) =>
-    `<li data-i="${i}" class="${i === customActiveIdx ? "active" : ""}">
-      <span class="nm">${esc(o.name)}</span>
-      <span class="mv">${esc(o.moves.slice(0, 6).join(" ") + (o.moves.length > 6 ? "…" : ""))}</span></li>`).join("");
-  customSuggestEl.classList.add("open");
-}
-
-function setCustomActiveIdx(i) {
-  const items = customSuggestEl.querySelectorAll("li[data-i]");
-  if (!items.length) return;
-  customActiveIdx = (i + items.length) % items.length;
-  items.forEach(li => li.classList.toggle("active", +li.dataset.i === customActiveIdx));
-  items[customActiveIdx].scrollIntoView({ block: "nearest" });
-}
-
-function addFromCustom(o) {
-  if (!o) return;
-  addCustomOpening(o);
-  customInput.value = "";
-  closeCustomSuggest();
-  renderFullscreen();
-  customInput.focus();
-}
-
-customInput.addEventListener("input", renderCustomSuggest);
-customInput.addEventListener("focus", () => { if (customInput.value.trim()) renderCustomSuggest(); });
-customInput.addEventListener("keydown", e => {
-  if (!customSuggestEl.classList.contains("open")) {
-    if (e.key === "ArrowDown" && customInput.value.trim()) renderCustomSuggest();
-    return;
-  }
-  if (e.key === "ArrowDown") { e.preventDefault(); setCustomActiveIdx(customActiveIdx + 1); }
-  else if (e.key === "ArrowUp") { e.preventDefault(); setCustomActiveIdx(customActiveIdx - 1); }
-  else if (e.key === "Enter") { e.preventDefault(); addFromCustom(customList[customActiveIdx]); }
-  else if (e.key === "Escape") { e.stopPropagation(); closeCustomSuggest(); }
+const customSuggest = wireSuggest({
+  input: customInput,
+  listEl: document.getElementById("treeCustomSuggest"),
+  pool: () => OPENINGS,                                  // not tier-limited
+  exclude: o => customTreeState().guessedIds.has(o.id),  // already in the tree
+  emptyMessage: "No openings match",
+  onPick: o => {
+    if (!o) return;
+    addCustomOpening(o);
+    customInput.value = "";
+    customSuggest.close();
+    renderFullscreen();
+    customInput.focus();
+  },
+  // Close just the list, and keep the Escape from also closing the tree modal.
+  onEscape: (e, close) => { e.stopPropagation(); close(); },
 });
-customSuggestEl.addEventListener("mousedown", e => {
-  const li = e.target.closest("li[data-i]");
-  if (li) { e.preventDefault(); addFromCustom(customList[+li.dataset.i]); }
-});
+const closeCustomSuggest = () => customSuggest.close();
 document.addEventListener("click", e => {
   if (!e.target.closest("#treeCustomSearch")) closeCustomSuggest();
 });
@@ -185,16 +194,14 @@ document.addEventListener("ot:custom-remove-opening", e => {
 /* ---------- Custom practice: base-opening picker ---------- */
 const baseBar = document.getElementById("customBaseBar");
 const baseInput = document.getElementById("customBaseInput");
-const baseSuggestEl = document.getElementById("customBaseSuggest");
 const guessSearch = document.getElementById("guessInput").closest(".search");
-let baseList = [], baseActiveIdx = -1;
 
 // While picking a base the guess box is replaced by the base picker; once a base
 // is chosen (or the picker is dismissed) the guess box comes back.
 function closeCustomBasePicker() {
   baseBar.style.display = "none";
   guessSearch.style.display = "";
-  baseSuggestEl.classList.remove("open"); baseList = []; baseActiveIdx = -1;
+  baseSuggest.close();
   // Restore the active tier; Custom stays lit only if a custom game is running.
   document.querySelectorAll("#diff button").forEach(x => x.classList.toggle("active", x.dataset.diff === state.difficulty));
 }
@@ -203,74 +210,27 @@ function openCustomBasePicker() {
   guessSearch.style.display = "none";
   baseBar.style.display = "";
   baseInput.value = "";
-  baseSuggestEl.classList.remove("open");
+  baseSuggest.close();
   baseInput.focus();
   // Light up Custom on the tier bar immediately, before a base is chosen.
   document.querySelectorAll("#diff button").forEach(x => x.classList.toggle("active", x.dataset.diff === "custom"));
 }
 
-// Search the eligible base openings (those with enough variations) by name.
-function rankBases(q) {
-  const raw = normalizeQuery(q);
-  if (!raw) return [];
-  const tokens = raw.split(/\s+/).filter(Boolean);
-  const out = [];
-  for (const o of customBaseOptions()) {
-    const s = scoreMatch(o, tokens, raw);
-    if (s > -1) out.push([s, o]);
-  }
-  out.sort((a, b) => b[0] - a[0] || a[1].name.localeCompare(b[1].name));
-  return out.slice(0, 50).map(x => x[1]);
-}
-
-function renderBaseSuggest() {
-  const q = baseInput.value;
-  baseList = rankBases(q);
-  baseActiveIdx = baseList.length ? 0 : -1;
-  if (!q.trim()) { baseSuggestEl.classList.remove("open"); return; }
-  if (!baseList.length) {
-    baseSuggestEl.innerHTML = `<li class="empty">No openings with variations match “${esc(q)}”.</li>`;
-    baseSuggestEl.classList.add("open"); return;
-  }
-  baseSuggestEl.innerHTML = baseList.map((o, i) =>
-    `<li data-i="${i}" class="${i === baseActiveIdx ? "active" : ""}">
-      <span class="nm">${esc(o.name)}</span>
-      <span class="mv">${esc(o.moves.slice(0, 6).join(" ") + (o.moves.length > 6 ? "…" : ""))}</span></li>`).join("");
-  baseSuggestEl.classList.add("open");
-}
-
-function setBaseActiveIdx(i) {
-  const items = baseSuggestEl.querySelectorAll("li[data-i]");
-  if (!items.length) return;
-  baseActiveIdx = (i + items.length) % items.length;
-  items.forEach(li => li.classList.toggle("active", +li.dataset.i === baseActiveIdx));
-  items[baseActiveIdx].scrollIntoView({ block: "nearest" });
-}
-
-function pickCustomBase(o) {
-  if (!o) return;
-  if (state.mode === "practice" && guessBudgetUsed(state) && !state.solved && !state.gaveUp) recordPractice(false);
-  closeCustomBasePicker();
-  clearBoardPlayback();
-  resetBoardNav();
-  setState(freshCustom(o));
-  input.value = ""; render(); input.focus();
-}
-
-baseInput.addEventListener("input", renderBaseSuggest);
-baseInput.addEventListener("keydown", e => {
-  if (!baseSuggestEl.classList.contains("open")) {
-    if (e.key === "ArrowDown" && baseInput.value.trim()) renderBaseSuggest();
-    return;
-  }
-  if (e.key === "ArrowDown") { e.preventDefault(); setBaseActiveIdx(baseActiveIdx + 1); }
-  else if (e.key === "ArrowUp") { e.preventDefault(); setBaseActiveIdx(baseActiveIdx - 1); }
-  else if (e.key === "Enter") { e.preventDefault(); pickCustomBase(baseList[baseActiveIdx]); }
-  else if (e.key === "Escape") { closeCustomBasePicker(); }
-});
-baseSuggestEl.addEventListener("mousedown", e => {
-  const li = e.target.closest("li[data-i]");
-  if (li) { e.preventDefault(); pickCustomBase(baseList[+li.dataset.i]); }
+const baseSuggest = wireSuggest({
+  input: baseInput,
+  listEl: document.getElementById("customBaseSuggest"),
+  pool: customBaseOptions,       // only openings with enough variations
+  emptyMessage: "No openings with variations match",
+  onPick: o => {
+    if (!o) return;
+    if (state.mode === "practice" && guessBudgetUsed(state) && !state.solved && !state.gaveUp) recordPractice(false);
+    closeCustomBasePicker();
+    clearBoardPlayback();
+    resetBoardNav();
+    setState(freshCustom(o));
+    input.value = ""; render(); input.focus();
+  },
+  onEscape: () => closeCustomBasePicker(),   // dismissing bails out of the picker
 });
 document.addEventListener("click", e => {
   if (!e.target.closest("#customBaseBar") && !e.target.closest('[data-diff="custom"]')) closeCustomBasePicker();
@@ -451,7 +411,7 @@ window.__OT = {
   OPENINGS, POOLS, TARGET_POOLS, DIFFS, DIFF_LIMITS, GUESS_LIMITS, HINT_COST, guessLimit, tierOf, dailyTarget, compare, submitGuess, requestHint,
   // Pure helpers exposed for the test harness (tests.html):
   commonMoveDepth, confirmedDepth, hintsUsed, guessBudgetUsed, guessBudgetLeft, looksLikeMoves, moveTokens,
-  createBoardView, resolveBoardView, navCeiling,
+  createBoardView, resolveBoardView, navCeiling, scoreMatch, fold, movingPieces,
   byName: n => OPENINGS.find(o => o.name === n),
   byMoves: m => OPENINGS.find(o => o.movesStr === m),
   get moveSearchEnabled() { return isMoveSearchEnabled(); },
