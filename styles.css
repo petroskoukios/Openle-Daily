@@ -466,19 +466,23 @@ button.tree-node:focus-visible { outline: 2px solid var(--accent-hover); outline
   width: 100%; height: 100%; object-fit: contain;
   pointer-events: none; user-select: none; -webkit-user-drag: none;
   filter: drop-shadow(0 1.5px 1px rgba(0,0,0,.3));
-  /* Own compositing layer so the piece is painted once and recomposited. */
-  transform: translateZ(0);
 }
-/* Touch devices re-rasterize a filtered SVG <img> on every board repaint,
-   flashing the pieces. Drop the shadow there (barely visible at phone size)
-   so nothing needs re-rasterizing. */
-@media (pointer: coarse) { .pc { filter: none; } }
 .pc.hide { visibility: hidden; }
 .pc.captured-exit { animation: captured-piece-exit .22s ease-in forwards; }
 @keyframes captured-piece-exit {
   0%, 68% { opacity: 1; }
   100% { opacity: 0; }
 }
+/* Live-board slide: the real piece element is relocated to its destination
+   square and glides in via a transform (FLIP) — compositor-only, so it stays
+   smooth on phones where left/top animation janks. */
+.pc--sliding { z-index: 2; will-change: transform; }
+/* A captured piece lingers as an absolute overlay in its square (fading via
+   captured-exit) while the capturing piece slides onto it. */
+.pc--captured { position: absolute; inset: 0; }
+/* Ghost used by the inspector board: anchored at the origin square, sliding by
+   transform for the same compositor-smooth motion. Both axes are in the
+   ghost's own box units (one square = 100%). */
 .move-ghost {
   position: absolute;
   left: calc(var(--from-f) * 12.5%);
@@ -491,11 +495,12 @@ button.tree-node:focus-visible { outline: 2px solid var(--accent-hover); outline
   justify-content: center;
   pointer-events: none;
   animation: piece-slide .22s ease-in-out forwards;
+  will-change: transform;
 }
 @keyframes piece-slide {
   to {
-    left: calc(var(--to-f) * 12.5%);
-    top: calc((7 - var(--to-r)) * 12.5%);
+    transform: translate(calc((var(--to-f) - var(--from-f)) * 100%),
+                         calc((var(--from-r) - var(--to-r)) * 100%));
   }
 }
 .sq .rk, .sq .fl { position: absolute; font-size: 9px; font-weight: 700; font-family: var(--sans); z-index: 1; }

@@ -65,11 +65,17 @@ function ghostsHtml(slides, flipped) {
 
 // Paint the LIVE board in place instead of replacing innerHTML. Recreating the
 // whole board every move re-decodes all 32 piece SVGs, which flashes on mobile
-// (desktop keeps them cached). Reusing the square/piece elements and only
-// swapping a piece's src when it actually changed means the ~28 unmoved pieces
-// are never touched — no flash. Ghosts are few and transient, so recreated.
+// (desktop keeps them cached). Squares and piece elements are reused; a moving
+// piece is *relocated* to its destination and slides in via a FLIP transform —
+// no ghost, no fresh <img>, and transform animation stays compositor-only so
+// it's as smooth on phones as on desktop.
+// `anim` is null for a plain repaint, or { slides, captured } for one ply:
+// slides get the FLIP treatment, captured squares fade out in place.
 const pieceSrc = p => `pieces-svg/${PIECE_NAME[p.toLowerCase()]}-${pieceColor(p)}.svg`;
-function paintBoard(boardEl, boardArr, changed, hide, captured, flipped, slides) {
+const LIVE_PC = "img.pc:not(.pc--captured)";
+function paintBoard(boardEl, boardArr, changed, flipped, anim) {
+  const vRow = r => flipped ? r : 7 - r;      // board rank -> display row
+  const vCol = f => flipped ? 7 - f : f;      // board file -> display column
   const ranks = flipped ? [0, 1, 2, 3, 4, 5, 6, 7] : [7, 6, 5, 4, 3, 2, 1, 0];
   const files = flipped ? [7, 6, 5, 4, 3, 2, 1, 0] : [0, 1, 2, 3, 4, 5, 6, 7];
   const cells = [];
@@ -90,23 +96,39 @@ function paintBoard(boardEl, boardArr, changed, hide, captured, flipped, slides)
     squares = boardEl.querySelectorAll(".sq");
   }
 
+  // Settle anything left from a previous (possibly interrupted) step.
   boardEl.querySelectorAll(".move-ghost").forEach(g => g.remove());
+  boardEl.querySelectorAll(".pc").forEach(img => {
+    if (img.style.transform || img.style.transition) { img.style.transition = ""; img.style.transform = ""; }
+    img.classList.remove("pc--sliding");
+  });
+  boardEl.querySelectorAll(".pc--captured").forEach(img => img.remove());
+
+  // Capture linger: a piece vanishing this step becomes an absolute overlay in
+  // its square, fading via captured-exit while the capturer slides onto it.
+  // (Handles en passant too — the overlay sits wherever the victim was.)
+  if (anim) for (const key of anim.captured) {
+    const img = squares[vRow(key >> 3) * 8 + vCol(key & 7)]?.querySelector(LIVE_PC);
+    if (!img) continue;
+    img.classList.add("pc--captured", "captured-exit");
+    delete img.dataset.piece;
+  }
 
   // Current vs desired piece per display square.
   const curImg = [], curPiece = [], desired = [];
   cells.forEach(([r, f], i) => {
-    const img = squares[i].querySelector(".pc");
+    const img = squares[i].querySelector(LIVE_PC);
     curImg[i] = img || null;
     curPiece[i] = img ? img.dataset.piece : null;
     desired[i] = boardArr[r][f] || null;
   });
 
   // A piece that moved lands as a *new* square's requirement. Relocate the
-  // existing element instead of destroying it at the origin and creating a fresh
-  // one at the destination — a new <img> re-decodes its SVG and flashes on
-  // mobile. Match a square that needs piece P to a square losing that same P
-  // (covers ordinary moves, captures, castling, en passant). Only promotion
-  // (piece type changes) has no donor and legitimately makes a new element.
+  // existing element instead of destroying it at the origin and creating a
+  // fresh one at the destination — a new <img> re-decodes its SVG and flashes
+  // on mobile. Match a square that needs piece P to a square losing that same
+  // P (covers ordinary moves, captures, castling). Only promotion changes the
+  // element's image.
   const vacated = [], needs = [];
   for (let i = 0; i < 64; i++) {
     if (curPiece[i] && curPiece[i] !== desired[i]) vacated.push(i);
@@ -118,10 +140,9 @@ function paintBoard(boardEl, boardArr, changed, hide, captured, flipped, slides)
     if (donor == null) continue;
     used.add(donor);
     const img = curImg[donor];
-    const dest = squares[ni];
-    const occupant = dest.querySelector(".pc");
-    if (occupant && occupant !== img) occupant.remove();   // the captured piece leaves
-    dest.appendChild(img);                                  // moves the element (same node)
+    const occupant = squares[ni].querySelector(LIVE_PC);
+    if (occupant && occupant !== img) occupant.remove();
+    squares[ni].appendChild(img);                  // moves the element (same node)
     curImg[ni] = img; curPiece[ni] = desired[ni];
     curImg[donor] = null; curPiece[donor] = null;
   }
@@ -130,24 +151,36 @@ function paintBoard(boardEl, boardArr, changed, hide, captured, flipped, slides)
 
   cells.forEach(([r, f], i) => {
     const sq = squares[i];
-    const key = r * 8 + f;
-    sq.classList.toggle("hl", changed.has(key));
+    sq.classList.toggle("hl", changed.has(r * 8 + f));
     const p = desired[i];
-    let img = sq.querySelector(".pc");
+    let img = sq.querySelector(LIVE_PC);
     if (!p) { if (img) img.remove(); return; }
     if (!img) { img = document.createElement("img"); img.alt = ""; img.draggable = false; img.decoding = "sync"; sq.appendChild(img); }
-    // src only changes on a genuine piece-type change (e.g. promotion); moved
-    // pieces were relocated above with their src intact.
     if (img.dataset.piece !== p) {
       img.src = pieceSrc(p);
       img.dataset.piece = p;
       img.className = `pc ${pieceColor(p)}`;
     }
-    img.classList.toggle("hide", hide.has(key));
-    img.classList.toggle("captured-exit", captured.has(key));
   });
 
-  if (slides.length) boardEl.insertAdjacentHTML("beforeend", ghostsHtml(slides, flipped));
+  // FLIP: each mover now sits at its destination — start it visually at the
+  // origin (a transform offset in its own square units) and release to rest.
+  // The forced reflow between the two writes makes the transition take.
+  if (anim) for (const m of anim.slides) {
+    const img = squares[vRow(m.toR) * 8 + vCol(m.toF)]?.querySelector(LIVE_PC);
+    if (!img) continue;
+    const dx = vCol(m.toF) - vCol(m.fromF), dy = vRow(m.toR) - vRow(m.fromR);
+    img.classList.add("pc--sliding");
+    img.style.transform = `translate(${-dx * 100}%, ${-dy * 100}%)`;
+    void img.offsetWidth;
+    img.style.transition = `transform ${BOARD_PLAYBACK_STEP_MS}ms ease-in-out`;
+    img.style.transform = "";
+    img.addEventListener("transitionend", function done() {
+      img.style.transition = "";
+      img.classList.remove("pc--sliding");
+      img.removeEventListener("transitionend", done);
+    });
+  }
 }
 
 export function toggleBoardFlip() {
@@ -234,9 +267,6 @@ export function renderBoard(state) {
   const board = OTChess.positionAfter(lineMoves, depth);
   const slideFrom = sliding ? OTChess.positionAfter(slideMoves, view.slideFromDepth) : null;
   const movingForward = slideFrom && depth > view.slideFromDepth;
-  // Forward uses the old position so a captured piece remains until impact.
-  // Reverse uses the restored position so that piece is revealed as the mover leaves.
-  const shownBoard = slideFrom ? (movingForward ? slideFrom : board) : board;
   const prev = OTChess.positionAfter(lineMoves, Math.max(0, depth - 1));
   const comparisonBoard = slideFrom || prev;
   const changed = new Set();
@@ -246,12 +276,6 @@ export function renderBoard(state) {
   if (slideFrom && slides.length) {
     const san = movingForward ? lineMoves[depth - 1] : (slideMoves[view.slideFromDepth - 1] || "");
     play(movingForward && san && san.includes("x") ? "capture" : "move");
-  }
-  const hide = new Set();
-  for (const m of slides) {
-    const hiddenR = movingForward ? m.fromR : m.toR;
-    const hiddenF = movingForward ? m.fromF : m.toF;
-    hide.add(hiddenR * 8 + hiddenF);
   }
   const captured = new Set();
   if (movingForward) {
@@ -264,7 +288,10 @@ export function renderBoard(state) {
     }
   }
 
-  paintBoard(document.getElementById("board"), shownBoard, changed, hide, captured, mainFlipped, slides);
+  // Always paint the final position; movers FLIP-slide in from their origin,
+  // captured pieces linger as fading overlays (see paintBoard).
+  paintBoard(document.getElementById("board"), board, changed, mainFlipped,
+    slides.length ? { slides, captured } : null);
 
   const cap = document.getElementById("boardCap");
   const prevBtn = document.getElementById("boardPrev");
