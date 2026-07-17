@@ -547,10 +547,12 @@ button.tree-node:focus-visible { outline: 2px solid var(--accent-hover); outline
 
 @media (max-width: 840px) {
   .layout { grid-template-columns: 1fr; gap: 6px; }
-  .col-right { position: static; order: -1; }      /* board on top when stacked */
-  .layout > .search { order: -2; margin-bottom: 0; }  /* search sits snug above the board */
-  .board-panel { padding-top: 20px; }                 /* space above the board inside the box */
-  .col-right .board-wrap { max-width: 420px; margin: 0 auto; }
+  /* Stacked order: search, then tree, then board. The search is hoisted to the
+     top of .layout (order -2); the board is moved under the tree in JS since it
+     lives in a separate column. */
+  .col-right { position: static; }
+  .layout > .search { order: -2; margin-bottom: 0; }
+  .board-wrap { max-width: 420px; margin: 0 auto; }
   .tree-panel > .tree { height: clamp(280px, 52vh, 440px); }
 }
 

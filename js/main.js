@@ -335,25 +335,29 @@ document.getElementById("boardNext").addEventListener("click", () => stepBoard(1
 ["boardFlip", "boardFlipMobile"].forEach(id =>
   document.getElementById(id).addEventListener("click", () => toggleBoardFlip()));
 
-// When the layout stacks (phones/narrow), the search bar moves above the board;
-// side-by-side it stays at the top of the left/tree column. CSS can't pull it
-// out of .col-left across containers, so move it responsively here.
+// Stacked (phones/narrow) wants search → tree → board, but search and the board
+// live in different columns than the tree, so the CSS grid can't reorder across
+// them — move them responsively here. Side-by-side, everything returns home.
 {
   const layout = document.querySelector(".layout");
   const colLeft = document.querySelector(".col-left");
   const colRight = document.querySelector(".col-right");
+  const treePanel = document.querySelector(".tree-panel");
+  const boardPanel = document.querySelector(".board-panel");
   const stacked = matchMedia("(max-width: 840px)");
-  const placeSearch = e => {
+  const placeMobile = e => {
     if (e.matches) {
-      layout.insertBefore(guessSearch, colRight);
+      layout.insertBefore(guessSearch, colRight);   // search hoisted to the top
       layout.insertBefore(baseBar, colRight);
+      treePanel.after(boardPanel);                  // board directly under the tree
     } else {
       colLeft.insertBefore(baseBar, colLeft.firstChild);
       colLeft.insertBefore(guessSearch, colLeft.firstChild);
+      colRight.appendChild(boardPanel);             // board back to its sticky column
     }
   };
-  placeSearch(stacked);
-  stacked.addEventListener("change", placeSearch);
+  placeMobile(stacked);
+  stacked.addEventListener("change", placeMobile);
 }
 
 // The search placeholder has a short mobile form (chosen in render()); re-render
