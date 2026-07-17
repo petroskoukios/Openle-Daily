@@ -20,7 +20,7 @@
 import { OPENINGS, POOLS, TARGET_POOLS, DIFFS, DIFF_LIMITS, GUESS_LIMITS, HINT_COST, tierOf, customBaseOptions } from "./data.js";
 import { dailyTarget } from "./daily.js";
 import { compare, guessLimit, confirmedDepth, hintsUsed, guessBudgetUsed, guessBudgetLeft } from "./domain.js";
-import { commonMoveDepth, esc, fold } from "./format.js";
+import { commonMoveDepth, esc } from "./format.js";
 import { state, setState, setDifficulty, freshDaily, freshPractice, freshCustom, LS } from "./state.js";
 import { render } from "./render.js";
 import { renderTreeInto, fitFullscreenTree, animateFitFullscreenTree, zoomTreeByFactor, setTreeZoom, enableTreeViewport } from "./tree.js";
@@ -28,7 +28,7 @@ import { stepBoard, clearBoardPlayback, resetBoardNav, toggleBoardFlip } from ".
 import { toggleMute, isMuted } from "./sound.js";
 import { createBoardView, resolveBoardView, navCeiling } from "./board-view.js";
 import { submitGuess, requestHint, giveUp } from "./actions.js";
-import { looksLikeMoves, moveTokens, isMoveSearchEnabled, scoreMatch } from "./search.js";
+import { looksLikeMoves, moveTokens, isMoveSearchEnabled, scoreMatch, normalizeQuery } from "./search.js";
 import { isCustomActive, setCustomActive, customTreeState, addCustomOpening, removeCustomOpening } from "./custom-tree.js";
 import { openStats, renderStatsView, startPracticeFromWin, recordPractice } from "./stats.js";
 import { doShare } from "./share.js";
@@ -108,7 +108,7 @@ function closeCustomSuggest() { customSuggestEl.classList.remove("open"); custom
 // Search every opening by name (the custom tree isn't tier-limited), excluding
 // ones already in the tree. Reuses the puzzle search's scoring.
 function rankCustom(q) {
-  const raw = fold(q.trim().toLowerCase());
+  const raw = normalizeQuery(q);
   if (!raw) return [];
   const tokens = raw.split(/\s+/).filter(Boolean);
   const added = customTreeState().guessedIds;
@@ -211,7 +211,7 @@ function openCustomBasePicker() {
 
 // Search the eligible base openings (those with enough variations) by name.
 function rankBases(q) {
-  const raw = fold(q.trim().toLowerCase());
+  const raw = normalizeQuery(q);
   if (!raw) return [];
   const tokens = raw.split(/\s+/).filter(Boolean);
   const out = [];

@@ -18,6 +18,11 @@ let activeIdx = -1, currentList = [];
 
 export function isMoveSearchEnabled() { return moveSearchEnabled; }
 
+// One canonical query form — lowercased and accent-folded, matching how
+// data.js builds nameLower. Every name-search entry point must use this so
+// matching and display never drift apart.
+export function normalizeQuery(q) { return fold(q.trim().toLowerCase()); }
+
 export function scoreMatch(o, tokens, raw) {
   // Require every token to appear in the opening name.
   for (const tk of tokens) if (o.nameLower.indexOf(tk) === -1) return -1;
@@ -70,7 +75,7 @@ function moveSearch(raw) {
   return out.slice(0, 50);
 }
 function search(q) {
-  const raw = fold(q.trim().toLowerCase());
+  const raw = normalizeQuery(q);
   if (!raw) return { mode: "name", list: [] };
   if (moveSearchEnabled && looksLikeMoves(raw)) return { mode: "move", list: moveSearch(raw) };
   const tokens = raw.split(/\s+/).filter(Boolean);
@@ -83,19 +88,34 @@ function search(q) {
   return { mode: "name", list: out.slice(0, 50).map(x => x[1]) };
 }
 
-// Tokens arrive accent-folded; names keep their accents. Each base letter
-// matches its accented forms so "reti" still emphasises the é in "Réti".
-const ACCENT = { a: "àáâãä", c: "ç", e: "èéêë", i: "ìíîï", n: "ñ", o: "òóôõö", u: "ùúûü", y: "ýÿ" };
-const accentClass = ch =>
-  ACCENT[ch] ? "[" + ch + ACCENT[ch] + "]" : ch.replace(/[.*+?^${}()|[\]\\]/g, "\\$&");
-function highlight(name, tokens) {
-  let html = esc(name);
+// Mark every character covered by a token match, then build the HTML in one
+// pass. Matching runs on a per-character accent-folded copy so positions line
+// up with the original name and "reti" emphasises the é in "Réti" — and since
+// nothing is regex-replaced into the string, tokens can never mangle the
+// markup of an earlier match.
+function highlight(o, tokens) {
+  const name = o.name;
+  // nameLower is the precomputed accent-folded name; folding is 1:1 for this
+  // dataset, so its positions line up with the original. Guard with a
+  // per-character fold in case a future name ever folds unevenly.
+  const folded = o.nameLower.length === name.length
+    ? o.nameLower
+    : [...name].map(ch => { const f = fold(ch.toLowerCase()); return f.length === 1 ? f : ch.toLowerCase(); }).join("");
+  const marks = new Array(name.length).fill(false);
   for (const tk of tokens) {
     if (!tk) continue;
-    const re = new RegExp("(" + [...tk].map(accentClass).join("") + ")", "ig");
-    html = html.replace(re, "<em>$1</em>");
+    let i = folded.indexOf(tk);
+    while (i !== -1) {
+      for (let j = i; j < i + tk.length; j++) marks[j] = true;
+      i = folded.indexOf(tk, i + 1);
+    }
   }
-  return html;
+  let out = "", inEm = false;
+  for (let i = 0; i < name.length; i++) {
+    if (marks[i] !== inEm) { out += marks[i] ? "<em>" : "</em>"; inEm = marks[i]; }
+    out += esc(name[i]);
+  }
+  return inEm ? out + "</em>" : out;
 }
 
 // Move preview with the matched prefix emphasised.
@@ -107,7 +127,7 @@ function movePreview(o, matchedPlies) {
 }
 
 function renderSuggest(q) {
-  const tokens = q.trim().toLowerCase().split(/\s+/).filter(Boolean);
+  const tokens = normalizeQuery(q).split(/\s+/).filter(Boolean);
   const res = search(q);
   currentList = res.list;
   activeIdx = currentList.length ? 0 : -1;
@@ -119,7 +139,7 @@ function renderSuggest(q) {
   const matchedPlies = res.mode === "move" ? moveTokens(q).length : 0;
   // Only surface the moves when notation search is on; in name mode they're noise.
   suggestEl.innerHTML = currentList.map((o, i) => {
-    const nm = res.mode === "move" ? esc(o.name) : highlight(o.name, tokens);
+    const nm = res.mode === "move" ? esc(o.name) : highlight(o, tokens);
     const mv = !moveSearchEnabled ? ""
       : res.mode === "move" ? movePreview(o, matchedPlies)
       : esc(o.moves.slice(0, 6).join(" ") + (o.moves.length > 6 ? "…" : ""));
