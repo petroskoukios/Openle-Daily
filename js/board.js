@@ -60,6 +60,56 @@ function ghostsHtml(slides, flipped) {
   ).join("");
 }
 
+// Paint the LIVE board in place instead of replacing innerHTML. Recreating the
+// whole board every move re-decodes all 32 piece SVGs, which flashes on mobile
+// (desktop keeps them cached). Reusing the square/piece elements and only
+// swapping a piece's src when it actually changed means the ~28 unmoved pieces
+// are never touched — no flash. Ghosts are few and transient, so recreated.
+const pieceSrc = p => `pieces-svg/${PIECE_NAME[p.toLowerCase()]}-${pieceColor(p)}.svg`;
+function paintBoard(boardEl, boardArr, changed, hide, captured, flipped, slides) {
+  const ranks = flipped ? [0, 1, 2, 3, 4, 5, 6, 7] : [7, 6, 5, 4, 3, 2, 1, 0];
+  const files = flipped ? [7, 6, 5, 4, 3, 2, 1, 0] : [0, 1, 2, 3, 4, 5, 6, 7];
+  const cells = [];
+  for (const r of ranks) for (const f of files) cells.push([r, f]);
+
+  // Build the 64-square skeleton once; rebuild only when the flip flips (the
+  // rank/file coordinate labels sit on different edges) or the board is empty.
+  let squares = boardEl.querySelectorAll(".sq");
+  if (squares.length !== 64 || boardEl.dataset.flip !== String(flipped)) {
+    boardEl.dataset.flip = String(flipped);
+    const leftFile = flipped ? 7 : 0, bottomRank = flipped ? 7 : 0;
+    boardEl.innerHTML = cells.map(([r, f]) => {
+      const cls = (r + f) % 2 === 0 ? "d" : "l";
+      const coord = (f === leftFile ? `<span class="rk">${r + 1}</span>` : "") +
+                    (r === bottomRank ? `<span class="fl">${OTChess.FILES[f]}</span>` : "");
+      return `<div class="sq ${cls}">${coord}</div>`;
+    }).join("");
+    squares = boardEl.querySelectorAll(".sq");
+  }
+
+  boardEl.querySelectorAll(".move-ghost").forEach(g => g.remove());
+  cells.forEach(([r, f], i) => {
+    const sq = squares[i];
+    const key = r * 8 + f;
+    sq.classList.toggle("hl", changed.has(key));
+    const p = boardArr[r][f];
+    let img = sq.querySelector(".pc");
+    if (!p) { if (img) img.remove(); return; }
+    if (!img) { img = document.createElement("img"); img.alt = ""; img.draggable = false; sq.appendChild(img); }
+    // Only touch src/base class when the piece on this square changed — that's
+    // what avoids the SVG re-decode. Transient classes toggle every frame.
+    if (img.dataset.piece !== p) {
+      img.src = pieceSrc(p);
+      img.dataset.piece = p;
+      img.className = `pc ${pieceColor(p)}`;
+    }
+    img.classList.toggle("hide", hide.has(key));
+    img.classList.toggle("captured-exit", captured.has(key));
+  });
+
+  if (slides.length) boardEl.insertAdjacentHTML("beforeend", ghostsHtml(slides, flipped));
+}
+
 export function toggleBoardFlip() {
   mainFlipped = !mainFlipped;
   if (state) renderBoard(state);
@@ -174,8 +224,7 @@ export function renderBoard(state) {
     }
   }
 
-  document.getElementById("board").innerHTML =
-    squaresHtml(shownBoard, changed, hide, captured, mainFlipped) + ghostsHtml(slides, mainFlipped);
+  paintBoard(document.getElementById("board"), shownBoard, changed, hide, captured, mainFlipped, slides);
 
   const cap = document.getElementById("boardCap");
   const prevBtn = document.getElementById("boardPrev");
