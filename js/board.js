@@ -91,16 +91,53 @@ function paintBoard(boardEl, boardArr, changed, hide, captured, flipped, slides)
   }
 
   boardEl.querySelectorAll(".move-ghost").forEach(g => g.remove());
+
+  // Current vs desired piece per display square.
+  const curImg = [], curPiece = [], desired = [];
+  cells.forEach(([r, f], i) => {
+    const img = squares[i].querySelector(".pc");
+    curImg[i] = img || null;
+    curPiece[i] = img ? img.dataset.piece : null;
+    desired[i] = boardArr[r][f] || null;
+  });
+
+  // A piece that moved lands as a *new* square's requirement. Relocate the
+  // existing element instead of destroying it at the origin and creating a fresh
+  // one at the destination — a new <img> re-decodes its SVG and flashes on
+  // mobile. Match a square that needs piece P to a square losing that same P
+  // (covers ordinary moves, captures, castling, en passant). Only promotion
+  // (piece type changes) has no donor and legitimately makes a new element.
+  const vacated = [], needs = [];
+  for (let i = 0; i < 64; i++) {
+    if (curPiece[i] && curPiece[i] !== desired[i]) vacated.push(i);
+    if (desired[i] && desired[i] !== curPiece[i]) needs.push(i);
+  }
+  const used = new Set();
+  for (const ni of needs) {
+    const donor = vacated.find(vi => !used.has(vi) && curPiece[vi] === desired[ni]);
+    if (donor == null) continue;
+    used.add(donor);
+    const img = curImg[donor];
+    const dest = squares[ni];
+    const occupant = dest.querySelector(".pc");
+    if (occupant && occupant !== img) occupant.remove();   // the captured piece leaves
+    dest.appendChild(img);                                  // moves the element (same node)
+    curImg[ni] = img; curPiece[ni] = desired[ni];
+    curImg[donor] = null; curPiece[donor] = null;
+  }
+  for (const vi of vacated)
+    if (!used.has(vi) && curImg[vi]) { curImg[vi].remove(); curImg[vi] = null; }
+
   cells.forEach(([r, f], i) => {
     const sq = squares[i];
     const key = r * 8 + f;
     sq.classList.toggle("hl", changed.has(key));
-    const p = boardArr[r][f];
+    const p = desired[i];
     let img = sq.querySelector(".pc");
     if (!p) { if (img) img.remove(); return; }
     if (!img) { img = document.createElement("img"); img.alt = ""; img.draggable = false; img.decoding = "sync"; sq.appendChild(img); }
-    // Only touch src/base class when the piece on this square changed — that's
-    // what avoids the SVG re-decode. Transient classes toggle every frame.
+    // src only changes on a genuine piece-type change (e.g. promotion); moved
+    // pieces were relocated above with their src intact.
     if (img.dataset.piece !== p) {
       img.src = pieceSrc(p);
       img.dataset.piece = p;
