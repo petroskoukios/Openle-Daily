@@ -976,7 +976,7 @@ html:has(.tree-modal-bg.open) { overflow: hidden; }
   .iconbtn svg { width: 17px; height: 17px; }
   /* Phones keep the notation toggle but slimmed down — compact label, tight
      padding/gap and a small checkbox — so it eats less of the search bar. */
-  .move-toggle { padding: 0 8px; gap: 3px; font-size: 11px; }
+  .move-toggle { padding: 0 9px; gap: 6px; font-size: 12.5px; }
   .move-toggle .mt-long { display: none; }
   .move-toggle .mt-short { display: inline; }
   .meta { gap: 8px 12px; margin-top: 12px; margin-bottom: 16px; }   /* gap above the meta bar (app bar zeroes its own bottom margin on phones) */
