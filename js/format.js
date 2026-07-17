@@ -2,6 +2,11 @@
 
 export function esc(s) { return s.replace(/[&<>]/g, c => ({ "&": "&amp;", "<": "&lt;", ">": "&gt;" }[c])); }
 
+// Strip accents so "reti" finds "Réti" and "grunfeld" finds "Grünfeld".
+// NFD splits letters from their combining marks; every accented letter in the
+// opening data folds 1:1, so match positions still line up with the original.
+export function fold(s) { return s.normalize("NFD").replace(/\p{M}/gu, ""); }
+
 // Render an array of plies as "1.e4 e5 2.Nf3" with numbered spans.
 export function fmtMoves(moves, cls) {
   if (!moves.length) return "";

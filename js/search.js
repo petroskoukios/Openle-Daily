@@ -2,7 +2,7 @@
    openings) by name, or by move order when notation search is enabled. */
 import { state, LS } from "./state.js";
 import { POOLS, DIFF_LABEL } from "./data.js";
-import { esc } from "./format.js";
+import { esc, fold } from "./format.js";
 import { input, suggestEl } from "./dom.js";
 import { submitGuess } from "./actions.js";
 
@@ -70,7 +70,7 @@ function moveSearch(raw) {
   return out.slice(0, 50);
 }
 function search(q) {
-  const raw = q.trim().toLowerCase();
+  const raw = fold(q.trim().toLowerCase());
   if (!raw) return { mode: "name", list: [] };
   if (moveSearchEnabled && looksLikeMoves(raw)) return { mode: "move", list: moveSearch(raw) };
   const tokens = raw.split(/\s+/).filter(Boolean);
@@ -83,11 +83,16 @@ function search(q) {
   return { mode: "name", list: out.slice(0, 50).map(x => x[1]) };
 }
 
+// Tokens arrive accent-folded; names keep their accents. Each base letter
+// matches its accented forms so "reti" still emphasises the é in "Réti".
+const ACCENT = { a: "àáâãä", c: "ç", e: "èéêë", i: "ìíîï", n: "ñ", o: "òóôõö", u: "ùúûü", y: "ýÿ" };
+const accentClass = ch =>
+  ACCENT[ch] ? "[" + ch + ACCENT[ch] + "]" : ch.replace(/[.*+?^${}()|[\]\\]/g, "\\$&");
 function highlight(name, tokens) {
   let html = esc(name);
   for (const tk of tokens) {
     if (!tk) continue;
-    const re = new RegExp("(" + tk.replace(/[.*+?^${}()|[\]\\]/g, "\\$&") + ")", "ig");
+    const re = new RegExp("(" + [...tk].map(accentClass).join("") + ")", "ig");
     html = html.replace(re, "<em>$1</em>");
   }
   return html;

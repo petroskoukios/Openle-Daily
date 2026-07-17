@@ -1,6 +1,7 @@
 /* Opening database + difficulty tiers.
    Reads the raw dataset from window.OPENINGS (set by the classic openings.js
    script, which loads before any module). */
+import { fold } from "./format.js";
 
 const RAW = window.OPENINGS;
 
@@ -17,7 +18,7 @@ export const OPENINGS = RAW.map((o, i) => {
     moves,
     movesStr: o.m,
     plies: moves.length,
-    nameLower: o.n.toLowerCase(),
+    nameLower: fold(o.n.toLowerCase()),   // accent-folded so "reti" matches "Réti"
     segs,
     curatedTier: o.tier || "reserve",
   };

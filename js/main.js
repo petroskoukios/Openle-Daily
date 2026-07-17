@@ -20,7 +20,7 @@
 import { OPENINGS, POOLS, TARGET_POOLS, DIFFS, DIFF_LIMITS, GUESS_LIMITS, HINT_COST, tierOf, customBaseOptions } from "./data.js";
 import { dailyTarget } from "./daily.js";
 import { compare, guessLimit, confirmedDepth, hintsUsed, guessBudgetUsed, guessBudgetLeft } from "./domain.js";
-import { commonMoveDepth, esc } from "./format.js";
+import { commonMoveDepth, esc, fold } from "./format.js";
 import { state, setState, setDifficulty, freshDaily, freshPractice, freshCustom, LS } from "./state.js";
 import { render } from "./render.js";
 import { renderTreeInto, fitFullscreenTree, animateFitFullscreenTree, zoomTreeByFactor, setTreeZoom, enableTreeViewport } from "./tree.js";
@@ -108,7 +108,7 @@ function closeCustomSuggest() { customSuggestEl.classList.remove("open"); custom
 // Search every opening by name (the custom tree isn't tier-limited), excluding
 // ones already in the tree. Reuses the puzzle search's scoring.
 function rankCustom(q) {
-  const raw = q.trim().toLowerCase();
+  const raw = fold(q.trim().toLowerCase());
   if (!raw) return [];
   const tokens = raw.split(/\s+/).filter(Boolean);
   const added = customTreeState().guessedIds;
@@ -211,7 +211,7 @@ function openCustomBasePicker() {
 
 // Search the eligible base openings (those with enough variations) by name.
 function rankBases(q) {
-  const raw = q.trim().toLowerCase();
+  const raw = fold(q.trim().toLowerCase());
   if (!raw) return [];
   const tokens = raw.split(/\s+/).filter(Boolean);
   const out = [];
