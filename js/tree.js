@@ -105,7 +105,6 @@ function panTreeTo(el, left, top, smooth = false) {
 
 export function renderTreeInto(state, el) {
   const view = treeView(el);
-  const boardNavigationEnabled = true;
   // Fullscreen is an inspector: only whole openings are selectable there — not
   // the root, sequence boxes, or individual moves.
   const openingsOnly = el.id === "treeFullscreen";
@@ -115,17 +114,17 @@ export function renderTreeInto(state, el) {
     view.zoomTarget = view.zoom;
   }
 
-  const { displayRoot, treeLines } = buildDisplayTree(state, boardNavigationEnabled, openingsOnly);
+  const { displayRoot, treeLines } = buildDisplayTree(state, openingsOnly);
   const { allNodes, svgWidth, svgHeight } = layoutTree(displayRoot, el, view);
   const prevScroll = { left: el.scrollLeft, top: el.scrollTop };
-  paintTree(el, displayRoot, allNodes, svgWidth, svgHeight, view, boardNavigationEnabled, openingsOnly, state.custom);
+  paintTree(el, displayRoot, allNodes, svgWidth, svgHeight, view, openingsOnly, state.custom);
   wireTreeNav(el, treeLines);
   focusTree(el, state, view, allNodes, displayRoot, prevScroll);
 }
 
 // Phase 1 — turn game state into a tree of display nodes (boxes), collapsing
 // linear runs, merging single-guess leaves, and ordering siblings.
-function buildDisplayTree(state, boardNavigationEnabled, openingsOnly) {
+function buildDisplayTree(state, openingsOnly) {
   const { tip, baseNode } = buildTree(state);
   const latestGuessId = state.results.length ? state.results[state.results.length - 1].guessId : null;
   const targetTone = "target";
@@ -192,7 +191,7 @@ function buildDisplayTree(state, boardNavigationEnabled, openingsOnly) {
     showMoveNumber(node.depth, i) ? `<i>${moveParts(node.move, node.depth).number}</i>` : "";
   // In openings-only mode (fullscreen) moves aren't individually selectable, so
   // they render as plain text rather than clickable tokens.
-  const moveToken = (html, moves, depth) => (boardNavigationEnabled && !openingsOnly)
+  const moveToken = (html, moves, depth) => !openingsOnly
     ? `<span class="tree-seq__move" data-tree-line="${registerLine(moves, depth)}" role="button" tabindex="0" title="Show this position on the board">${html}</span>`
     : `<span>${html}</span>`;
 
@@ -527,7 +526,7 @@ function layoutTree(displayRoot, el, view) {
 }
 
 // Phase 3 — serialise edges + node boxes to SVG and write it into the element.
-function paintTree(el, displayRoot, allNodes, svgWidth, svgHeight, view, boardNavigationEnabled, openingsOnly, custom) {
+function paintTree(el, displayRoot, allNodes, svgWidth, svgHeight, view, openingsOnly, custom) {
   const slackX = view.padX, slackY = view.padY;
   const edges = [];
   const collectEdges = node => {
@@ -554,8 +553,8 @@ function paintTree(el, displayRoot, allNodes, svgWidth, svgHeight, view, boardNa
     // root and sequence boxes keep their data-* hooks (so the position highlight
     // still finds them) but render as plain, non-clickable boxes.
     const openingBox = node.openingId != null;
-    const depthClickable = boardNavigationEnabled && !openingsOnly && node.boardDepth != null;
-    const lineClickable = boardNavigationEnabled && node.lineId != null && (!openingsOnly || openingBox);
+    const depthClickable = !openingsOnly && node.boardDepth != null;
+    const lineClickable = node.lineId != null && (!openingsOnly || openingBox);
     const tag = depthClickable ? "button" : "div";
     let attrs = "";
     if (depthClickable) attrs = ` type="button" data-tree-depth="${node.boardDepth}" title="Show this position on the board"`;
