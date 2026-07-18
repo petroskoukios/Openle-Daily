@@ -4,8 +4,8 @@
 
 ### ▶ Play it live: **[openledaily.com](https://openledaily.com)**
 
-Guess the chess opening. A daily puzzle game in the spirit of Wordle and Metazooa,
-but for **chess openings**.
+Guess the chess opening. A daily puzzle in the spirit of Wordle and Metazooa,
+but for chess openings.
 
 ![Openle — solving a daily puzzle by navigating the opening tree](assets/openle-demo.gif)
 
@@ -16,19 +16,21 @@ before your line splits away from the target's. The goal is to feel like you're
 
 ## Engineering highlights
 
-Built as a **zero-dependency static site** — vanilla ES modules, plain CSS, no
-framework and no build step — deployed as flat files. The parts I'm most proud of:
+Built as a zero-dependency static site: vanilla ES modules, plain CSS, no framework
+and no build step, deployed as flat files. The parts I'm most proud of:
 
 - **Custom opening-tree layout** (`js/tree.js`) — a from-scratch tidy-tree layout for
-  variable-width boxes: staggered sibling lanes, contour-based horizontal packing so
-  deep branches tuck under shallow neighbours, adaptive spacing that opens up wide fans,
-  and edge routing that threads the gaps instead of cutting through boxes. Rendered as
-  hand-built SVG with pan/zoom, no graph library.
+  variable-width boxes, which most standard tree algorithms don't handle. It reserves a
+  safe column per subtree, then compacts against a *skyline* profile so deep branches
+  tuck under shallow neighbours; staggered sibling lanes and adaptive fan spacing keep
+  wide branchings legible, and edges route through the gaps instead of cutting across
+  boxes. Hand-built SVG with pan/zoom, no graph library. See the
+  [full write-up](docs/tree-layout.md).
 - **Hand-written SAN chess engine** (`chess.js`) — replays algebraic move lists to
   reconstruct any board position, so the board can show exactly how deep a guess matched.
 - **Deterministic daily puzzles** (`js/daily.js`) — the same puzzle for everyone
   worldwide, per tier, from a seeded shuffle (`xmur3` + `mulberry32`) keyed to the UTC
-  date. No backend, no database — the calendar *is* the server.
+  date. No backend and no database; the rotation is derived entirely from the date.
 - **Difficulty modelling** (`openings.js`, `js/data.js`) — 569 hand-curated openings
   across five tiers, with exclusive *target* pools (what the answer can be) layered over
   cumulative *guess* pools (what you're allowed to guess).
@@ -49,21 +51,21 @@ framework and no build step — deployed as flat files. The parts I'm most proud
 - **Hints reveal one more target move** on the tree and board, and each hint costs
   **3 guesses** from that tier's budget.
 - For every guess the game finds the **deepest common prefix of moves** with the
-  target — the point where your line splits away from the target's.
-- The feedback is the **opening tree itself** — that's the whole game. Confirmed-shared
-  moves form a blue trunk; each guess's wrong turn branches off in gray; the tip of the
-  trunk shows how deep you've confirmed. The target path turns gold ★ only when you
-  solve it; revealed-but-unsolved answers stay blue in the tree.
+  target: the point where your line splits away from the target's.
+- The **opening tree itself** is the main feedback. Confirmed-shared moves form a blue
+  trunk, each guess's wrong turn branches off in gray, and the tip of the trunk shows
+  how deep you've confirmed. The target path turns gold ★ only when you solve it;
+  revealed-but-unsolved answers stay blue in the tree.
 - The tree can be panned, zoomed, and opened in a fullscreen view. Selecting a move
   in the tree replays that position on the board.
 - A minimal **guess log** under the tree shows each guess's line with shared moves in
-  blue and the diverging move in gray — nothing else to read.
-- A **chess board** beside the tree shows *how far you've gotten* — the position at the
+  blue and the diverging move in gray.
+- A **chess board** beside the tree shows how far you've gotten: the position at the
   end of the deepest line you've confirmed shared with the target (the full target
   position once the puzzle ends). The position is rebuilt from the moves by a small
   built-in SAN engine and can be replayed with the on-screen controls or left/right
   arrow keys.
-- **Shareable results** — a clean, spoiler-free one-liner with the puzzle number,
+- **Shareable results** — a spoiler-free one-liner with the puzzle number,
   difficulty, and guesses used, plus a link back to the game.
 - **Practice mode** — endless random openings at any difficulty, with its own
   per-tier statistics.
@@ -72,7 +74,7 @@ framework and no build step — deployed as flat files. The parts I'm most proud
 
 ## Running it
 
-It's a fully static site — no build step and no package install.
+It's a fully static site, with no build step and no package install.
 
 Serve the repository with any static HTTP server. For example:
 
@@ -159,18 +161,18 @@ manually for recognizability and theoretical difficulty. Each tier has two pools
 
 A small **starter** tier of 7 super-fundamental openings (the basic king/queen pawn
 games, Queen's Gambit, Indian Defense, English, …) sits below Easy. These are
-guessable in *every* tier but are never the answer and are not a playable mode — they
+guessable in *every* tier but are never the answer and are not a playable mode; they
 exist so the foundational lines are always available as guesses.
 
 The `tier` metadata in `openings.js` is the source of truth: starter 7, Easy 32,
 Medium 43, Hard 137, Expert 261, and the remaining 89 entries are marked `reserve`
-(excluded from both targets and autocomplete) — 569 in total.
+(excluded from both targets and autocomplete), for 569 in total.
 
 ## Credits
 
 - **Opening data**: [lichess-org/chess-openings](https://github.com/lichess-org/chess-openings) (CC0).
 - **Chess piece graphics** (`pieces-svg/`): by Uray M. János, derived from the Wikipedia
-  ["Cburnett" set](https://en.wikipedia.org/wiki/File:Chess_klt45.svg) — licensed
+  ["Cburnett" set](https://en.wikipedia.org/wiki/File:Chess_klt45.svg), licensed
   [CC BY-SA](https://creativecommons.org/licenses/by-sa/3.0/). The attribution comments
   inside each SVG are preserved, and any redistribution of the graphics stays under CC BY-SA.
 
@@ -184,4 +186,4 @@ study, and modify it, but any modified version you distribute **or run as a host
 service** must make its complete source available under the same license.
 
 The bundled chess piece graphics (`pieces-svg/`) remain under CC BY-SA as noted above,
-and the opening data derives from a CC0 source — see [Credits](#credits).
+and the opening data derives from a CC0 source; see [Credits](#credits).
