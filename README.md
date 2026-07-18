@@ -142,18 +142,21 @@ are displayed in the page and written to the browser console.
 ### Headless / CI
 
 The same harness runs headlessly via Playwright, and on every push/PR through
-[GitHub Actions](.github/workflows/ci.yml):
+[GitHub Actions](.github/workflows/ci.yml) alongside an ESLint pass:
 
 ```bash
 npm install
 npx playwright install chromium   # first time only
 npm test
+npm run lint
 ```
 
 `npm test` serves the repo, opens `tests.html` in headless Chromium, waits for the
-suite to finish, and exits non-zero if any test fails.
+suite to finish, and exits non-zero if any test fails. `npm run lint` runs ESLint
+(flat config) over the modules, classic scripts, and service worker. CI runs the two
+as separate jobs, so a lint failure and a test failure are reported independently.
 
-There is no separate build, test runner, or package-manager command.
+The app itself has no build step; ESLint and Playwright are dev-only tooling.
 
 ## The data
 

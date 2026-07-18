@@ -13,7 +13,6 @@ export function fmtMoves(moves, cls) {
   let out = "", n = 1;
   for (let i = 0; i < moves.length; i++) {
     if (i % 2 === 0) out += `<span class="num">${n}.</span>`;
-    else if (i === 0) {} // never (first ply is white)
     out += `<span class="${cls || ""}">${esc(moves[i])}</span> `;
     if (i % 2 === 1) n++;
   }

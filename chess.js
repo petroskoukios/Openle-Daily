@@ -91,7 +91,6 @@ function applySan(state, sanRaw) {
   const b = state.b, side = state.side, opp = side === "w" ? "b" : "w";
   let san = sanRaw.replace(/[+#!?]/g, "");
   state.ep = null;
-  const newPawnPiece = side === "w" ? "P" : "p";
 
   if (san === "O-O" || san === "0-0") {
     const r = side === "w" ? 0 : 7;
@@ -170,7 +169,7 @@ function positionAfter(moves, n) {
   const count = Math.min(n, moves.length);
   for (let i = 0; i < count; i++) {
     try { applySan(state, moves[i]); }
-    catch (e) { break; }          // be forgiving; show as far as we got
+    catch { break; }              // be forgiving; show as far as we got
   }
   return state.b;
 }

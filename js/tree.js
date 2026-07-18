@@ -4,7 +4,6 @@
 
    renderTreeInto is a pipeline of named phases:
      buildDisplayTree → layoutTree → paintTree → wireTreeNav → focusTree */
-import { state } from "./state.js";
 import { OPENINGS } from "./data.js";
 import { confirmedDepth } from "./domain.js";
 import { esc } from "./format.js";
@@ -30,7 +29,7 @@ function buildTree(state) {
   };
 
   // Deepest confirmed-shared depth across all guesses.
-  let best = state.custom ? 0 : confirmedDepth(state);
+  const best = state.custom ? 0 : confirmedDepth(state);
 
   let tip = root;
   // The custom tree has no target: skip the trunk, tip and answer entirely and
@@ -125,7 +124,7 @@ export function renderTreeInto(state, el) {
 // Phase 1 — turn game state into a tree of display nodes (boxes), collapsing
 // linear runs, merging single-guess leaves, and ordering siblings.
 function buildDisplayTree(state, boardNavigationEnabled, openingsOnly) {
-  const { root, tip, baseNode } = buildTree(state);
+  const { tip, baseNode } = buildTree(state);
   const latestGuessId = state.results.length ? state.results[state.results.length - 1].guessId : null;
   const targetTone = "target";
   let nextId = 0;
@@ -757,7 +756,7 @@ function focusTree(el, state, view, allNodes, displayRoot, prevScroll) {
     } else {
       // Hold position, compensating for the tree re-centering as it grows wider.
       const dxRoot = view.prevRootCx == null ? 0 : (rootCx - view.prevRootCx) * view.zoom;
-      let left = prevScroll.left + dxRoot, top = prevScroll.top;
+      const left = prevScroll.left + dxRoot, top = prevScroll.top;
       const mx = el.clientWidth * 0.1, my = el.clientHeight * 0.1;
       const outOfView = focusPts.some(p => {
         const sx = slackX + p.x * view.zoom - left, sy = slackY + p.y * view.zoom - top;
