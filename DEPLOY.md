@@ -40,5 +40,5 @@ Openle is a static site (no backend, no build step). Recommended host:
 ## Note on the `?v=` cache-busters
 
 `index.html` versions a few files (`styles.css?v=`, `js/main.js?v=`). With the
-`_headers` revalidation above these are belt-and-suspenders — fresh code ships
-even if you forget to bump them — but bumping is still fine.
+`_headers` revalidation above these are a backup: fresh code ships even if you
+forget to bump them, but bumping is still fine.

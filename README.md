@@ -72,6 +72,24 @@ and no build step, deployed as flat files. The parts I'm most proud of:
 - **Custom puzzles** — pick any starting opening and the puzzle is built from its own
   variations, so you can drill a specific part of the tree.
 
+## Feedback and iteration
+
+Once there was a playable version I put it in front of real players and reworked it
+around what they actually ran into. Some of the changes that came out of that:
+
+- **Difficulty was miscalibrated.** Medium played much harder than the label
+  suggested, so the tiers were rebalanced and a batch of the most obscure Hard
+  openings moved up to Expert.
+- **The board felt broken on mobile.** Pieces flashed on every move and the animation
+  was janky. The cause was animating layout properties (`left`/`top`) and drawing a
+  throwaway ghost element per move; I rewrote it as a FLIP transform on the real piece,
+  so movement runs on the compositor and stays smooth.
+- **A wide branch looked like a tangle.** A six-way split off `1.e4` bunched its
+  connectors into a knot under the parent. That prompted the fan-spacing rule in the
+  layout, which drops a crowded row farther down so the lines have room to fan out.
+- **Names with accents weren't searchable.** Openings with diacritics (the Réti, for
+  one) didn't match plain-ASCII typing until the search was changed to fold accents.
+
 ## Running it
 
 It's a fully static site, with no build step and no package install.
