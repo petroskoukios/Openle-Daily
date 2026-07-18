@@ -66,7 +66,9 @@ function buildTree(state) {
     }
   }
 
-  return { root, tip, best, baseNode };
+  // baseNode is the display root (it defaults to `root` when there's no custom
+  // base); tip marks the deepest confirmed node. Callers need only these two.
+  return { tip, baseNode };
 }
 
 const TREE_ZOOM_MIN = .5;

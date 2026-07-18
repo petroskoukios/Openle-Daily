@@ -86,11 +86,10 @@ function attacked(b, tf, tr, bySide) {
   return false;
 }
 
-// Apply one SAN move to state {b, side, ep}. Mutates b; updates side/ep.
+// Apply one SAN move to state {b, side}. Mutates b; updates side.
 function applySan(state, sanRaw) {
   const b = state.b, side = state.side, opp = side === "w" ? "b" : "w";
   let san = sanRaw.replace(/[+#!?]/g, "");
-  state.ep = null;
 
   if (san === "O-O" || san === "0-0") {
     const r = side === "w" ? 0 : 7;
@@ -157,15 +156,12 @@ function applySan(state, sanRaw) {
   if (type === "P" && isCapture && b[tr][tf] === "") b[tr - (side === "w" ? 1 : -1)][tf] = "";
 
   b[tr][tf] = promo ? (side === "w" ? promo : promo.toLowerCase()) : mine;
-  if (src) {
-    b[src[1]][src[0]] = "";
-    if (type === "P" && Math.abs(tr - src[1]) === 2) state.ep = [tf, (tr + src[1]) / 2];
-  }
+  b[src[1]][src[0]] = "";   // src is guaranteed set here (illegal moves bailed above)
   state.side = opp;
 }
 
 function positionAfter(moves, n) {
-  const state = { b: initialBoard(), side: "w", ep: null };
+  const state = { b: initialBoard(), side: "w" };
   const count = Math.min(n, moves.length);
   for (let i = 0; i < count; i++) {
     try { applySan(state, moves[i]); }
