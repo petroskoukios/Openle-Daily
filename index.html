@@ -20,9 +20,7 @@
 <meta name="twitter:title" content="Openle — Guess the Chess Opening" />
 <meta name="twitter:description" content="A daily chess opening puzzle. Guess the hidden opening from how deep your guess shares the opening tree." />
 <meta name="twitter:image" content="https://openledaily.com/assets/openle-og.png" />
-<link rel="preconnect" href="https://fonts.googleapis.com" />
-<link rel="preconnect" href="https://fonts.gstatic.com" crossorigin />
-<link href="https://fonts.googleapis.com/css2?family=Montserrat:wght@500;600;700;800&display=swap" rel="stylesheet" />
+<link rel="preload" href="/fonts/montserrat-latin.woff2" as="font" type="font/woff2" crossorigin />
 <link rel="stylesheet" href="styles.css?v=49" />
 <link rel="icon" href="/favicon.ico" sizes="any" />
 <link rel="icon" type="image/png" sizes="96x96" href="/assets/favicon-96.png" />
@@ -80,7 +78,7 @@
   <h1 class="sr-only">Openle — the daily chess opening guessing game</h1>
 
   <header class="appbar">
-    <div class="brand"><img class="brand-logo" src="assets/openle-logo.png" alt="Openle" /><small>guess the opening</small></div>
+    <div class="brand"><img class="brand-logo" src="assets/openle-logo.png" alt="Openle" width="290" height="72" /><small>guess the opening</small></div>
     <div class="modes" id="modes">
       <button data-mode="daily" class="active">Daily</button>
       <button data-mode="practice">Practice</button>

@@ -6,6 +6,19 @@
    NOTE: tree-node font metrics are load-bearing — js/tree.js
    estimates node pixel widths from them. Don't change them.
    ============================================================ */
+
+/* Self-hosted Montserrat (variable font, latin subset) — replaces the
+   render-blocking Google Fonts request. One woff2 covers weights 500–800 via the
+   weight axis. Metrics are identical to Google's Montserrat, so tree-node width
+   estimates are unaffected. */
+@font-face {
+  font-family: "Montserrat";
+  font-style: normal;
+  font-weight: 500 800;
+  font-display: swap;
+  src: url("/fonts/montserrat-latin.woff2") format("woff2");
+}
+
 :root {
   --bg: #1e2128;           /* page base (gradient applied on body) */
   --panel: #20242d;        /* raised cards/panels */
