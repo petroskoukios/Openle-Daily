@@ -158,6 +158,17 @@ as separate jobs, so a lint failure and a test failure are reported independentl
 
 The app itself has no build step; ESLint and Playwright are dev-only tooling.
 
+## Performance and accessibility
+
+On Lighthouse the live site scores **100 for Accessibility** and **100 for SEO**. The
+font is self-hosted, so there's no render-blocking Google Fonts request; that alone
+roughly halved First Contentful Paint on throttled mobile (about 2.9 s to 1.4 s).
+Images carry explicit dimensions sized to their display box to avoid layout shift. The
+remaining performance headroom is a deliberate trade-off: with no build step,
+JavaScript and CSS ship unminified, and most files use short cache lifetimes so a
+deploy is live within seconds instead of waiting out a long cache TTL. Truly static
+assets (piece art, the self-hosted font) are cached for a year.
+
 ## The data
 
 The source dataset contains 3,167 uniquely-named openings and variations. Openle
